@@ -10,13 +10,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/jpillora/backoff"
 	"github.com/smancke/guble/protocol"
-)
-
-var (
-	URL                = "https://rest.nexmo.com/sms/json?"
-	MaxIdleConnections = 100
-	RequestTimeout     = 500 * time.Millisecond
 )
 
 type ResponseCode int
@@ -44,10 +39,16 @@ const (
 )
 
 var (
+	URL                = "https://rest.nexmo.com/sms/json?"
+	MaxIdleConnections = 100
+	RequestTimeout     = 500 * time.Millisecond
+
 	ErrNoSMSSent                 = errors.New("No sms was sent to Nexmo")
-	ErrIncompleteSMSSent         = errors.New("Nexmo sms was only partial delivered.One or more part returned an error")
+	ErrHttpClientError           = errors.New("Http client sending to Nexmo Failed.No sms was sent.")
+	ErrNexmoResponseStatusNotOk  = errors.New("Nexmo response status not ResponseSuccess.")
 	ErrSMSResponseDecodingFailed = errors.New("Nexmo response decoding failed.")
-	ErrNoRetry                   = errors.New("SMS failed. No retrying.")
+	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid.")
+	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long.")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -93,21 +94,19 @@ type NexmoMessageResponse struct {
 }
 
 func (nm NexmoMessageResponse) Check() error {
-	if nm.MessageCount == 0 {
-		return ErrNoSMSSent
+	if nm.MessageCount != 0 {
+		logger.WithField("message_count", nm.MessageCount).Error("Nexmo message count error.")
+		return ErrMultipleSmsSent
 	}
-	for i := 0; i < nm.MessageCount; i++ {
-		if nm.Messages[i].Status != ResponseSuccess {
-			logger.WithField("status", nm.Messages[i].Status).
-				WithField("error", nm.Messages[i].ErrorText).
-				Error("Error received from Nexmo")
+	if nm.Messages[0].Status != ResponseSuccess {
+		logger.WithField("status", nm.Messages[0].Status).WithField("error", nm.Messages[0].ErrorText).
+			Error("Error received from Nexmo")
 
-			if nm.Messages[i].Status == ResponseInvalidSenderAddress {
-				return nil
-			}
-
-			return ErrIncompleteSMSSent
+		if nm.Messages[0].Status == ResponseInvalidSenderAddress {
+			logger.Info("Invalid Sender detected.No retries will be made.")
+			return ErrInvalidSender
 		}
+		return ErrNexmoResponseStatusNotOk
 	}
 	return nil
 }
@@ -137,7 +136,26 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		logger.WithField("error", err.Error()).Error("Could not decode message body to send to nexmo")
 		return err
 	}
-	nexmoSMSResponse, err := ns.sendSms(nexmoSMS)
+
+	sendSms := func() (*NexmoMessageResponse, error) {
+		return ns.sendSms(nexmoSMS)
+	}
+	withRetry := &retryable{
+		maxTries: 3,
+		Backoff: backoff.Backoff{
+			Min:    50 * time.Millisecond,
+			Max:    250 * time.Millisecond,
+			Factor: 2,
+			Jitter: true,
+		},
+	}
+
+	nexmoSMSResponse, err := withRetry.execute(sendSms)
+	if err != nil && err == ErrRetryFailed {
+		log.Info("Retry failed.Moving on")
+		return nil
+	}
+
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Could not decode nexmo response message body")
 		return err
@@ -145,6 +163,31 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 	logger.WithField("response", nexmoSMSResponse).Info("Decoded nexmo response")
 
 	return nexmoSMSResponse.Check()
+}
+
+func (r *retryable) execute(op func() (*NexmoMessageResponse, error)) (*NexmoMessageResponse, error) {
+	tryCounter := 0
+
+	for {
+		tryCounter++
+		result, err := op()
+		if err == nil {
+			return result, nil
+		} else {
+
+			if err == ErrInvalidSender {
+				return nil, ErrRetryFailed
+			}
+
+			if tryCounter >= r.maxTries {
+				return nil, ErrRetryFailed
+			}
+			d := r.Duration()
+			logger.WithField("error", err.Error()).WithField("duration", d).Info("Retry in")
+			time.Sleep(d)
+			continue
+		}
+	}
 }
 
 func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
@@ -164,9 +207,8 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Error doing the request to nexmo endpoint")
-		ns.createHttpClient()
 		mTotalSendErrors.Add(1)
-		return nil, ErrNoSMSSent
+		return nil, ErrHttpClientError
 	}
 	defer resp.Body.Close()
 
@@ -197,4 +239,9 @@ func (ns *NexmoSender) createHttpClient() {
 		},
 		Timeout: RequestTimeout,
 	}
+}
+
+type retryable struct {
+	maxTries int
+	backoff.Backoff
 }

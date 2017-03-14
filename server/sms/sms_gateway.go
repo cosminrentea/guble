@@ -121,25 +121,10 @@ func (g *gateway) Run() {
 		}
 	}()
 
-	currentMsg, err := g.proxyLoop()
+	err := g.proxyLoop()
 	if err != nil && provideErr == nil {
-		g.logger.WithFields(log.Fields{
-			"error":             err.Error(),
-			"is_incomplete_sms": err == ErrIncompleteSMSSent,
-		}).Error("Error returned by gateway proxy loop")
-
-		if err == ErrIncompleteSMSSent {
-			err2 := g.retry(currentMsg)
-			if err2 != nil {
-				g.logger.WithField("error", err2.Error()).Error("Error returned by retry.")
-				if err3 := g.SetLastSentID(currentMsg.ID); err3 != nil {
-					g.logger.WithField("error", err3.Error()).Error("Error setting last ID")
-				}
-			}
-		}
-
 		// If Route channel closed, try restarting
-		if isRestartableErr(err) {
+		if err == connector.ErrRouteChannelClosed {
 			g.Restart()
 			return
 		}
@@ -161,16 +146,10 @@ func (g *gateway) Run() {
 		}
 	}
 }
-func isRestartableErr(err error) bool {
-	return err == connector.ErrRouteChannelClosed ||
-		err == ErrNoSMSSent ||
-		err == ErrIncompleteSMSSent ||
-		err == ErrSMSResponseDecodingFailed
-}
 
 // proxyLoop returns the current processed message alongside the error that
 // occured during sending of the message
-func (g *gateway) proxyLoop() (*protocol.Message, error) {
+func (g *gateway) proxyLoop() error {
 	var (
 		opened      bool = true
 		receivedMsg *protocol.Message
@@ -186,43 +165,30 @@ func (g *gateway) proxyLoop() (*protocol.Message, error) {
 			}
 
 			err := g.send(receivedMsg)
-			if err != nil {
-				return receivedMsg, err
+			if err != nil && err == ErrRetryFailed {
+			SET_ID:
+				if err2 := g.SetLastSentID(receivedMsg.ID); err2 != nil {
+					g.logger.WithField("error", err2.Error()).Error("Error setting last ID")
+					time.Sleep(100 * time.Millisecond)
+					goto SET_ID
+				}
+				continue
+			} else {
+				return err
 			}
 		case <-g.ctx.Done():
 			// If the parent context is still running then only this subscriber context
 			// has been cancelled
 			if g.ctx.Err() == nil {
-				return nil, g.ctx.Err()
+				return g.ctx.Err()
 			}
-			return nil, nil
+			return nil
 		}
 	}
 
 	//TODO Cosmin Bogdan returning this error can mean 2 things: overflow of route's channel, or intentional stopping of router / gubled.
-	return nil, connector.ErrRouteChannelClosed
+	return  connector.ErrRouteChannelClosed
 }
-
-func (g *gateway) retry(msg *protocol.Message) error {
-	l := logger.WithField("message", msg)
-	l.Info("Retrying to send message")
-	for i := 0; i < 3; i++ {
-		l.WithField("retry", i+1).Info("Sending message")
-		err := g.send(msg)
-		if err != nil {
-			l.WithFields(log.Fields{
-				"retry": i + 1,
-				"err":   err.Error(),
-			}).Error("Retry failed")
-		} else {
-			l.WithField("retry", i+1).Info("Retry success")
-			return nil
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	return ErrRetryFailed
-}
-
 func (g *gateway) send(receivedMsg *protocol.Message) error {
 	err := g.sender.Send(receivedMsg)
 	if err != nil {
