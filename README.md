@@ -3,13 +3,13 @@
 Guble is a simple user-facing messaging and data replication server written in Go.
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f3b9a351201b416db4fe6df8faea363b)](https://www.codacy.com/app/cosminrentea/guble?utm_source=github.com&utm_medium=referral&utm_content=smancke/guble&utm_campaign=badger)
-[![Release](https://img.shields.io/github/release/smancke/guble.svg)](https://github.com/smancke/guble/releases/latest)
+[![Release](https://img.shields.io/github/release/smancke/guble.svg)](https://github.com/cosminrentea/gobbler/releases/latest)
 [![Docker](https://img.shields.io/docker/pulls/smancke/guble.svg)](https://hub.docker.com/r/smancke/guble/)
 [![Build Status](https://api.travis-ci.org/smancke/guble.svg?branch=master)](https://travis-ci.org/smancke/guble)
-[![Go Report Card](https://goreportcard.com/badge/github.com/smancke/guble)](https://goreportcard.com/report/github.com/smancke/guble)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cosminrentea/gobbler)](https://goreportcard.com/report/github.com/cosminrentea/gobbler)
 [![codebeat badge](https://codebeat.co/badges/7f317892-0a7b-4e31-97f4-a530cf779889)](https://codebeat.co/projects/github-com-smancke-guble)
 [![Coverage Status](https://coveralls.io/repos/smancke/guble/badge.svg?branch=master&service=github)](https://coveralls.io/github/smancke/guble?branch=master)
-[![GoDoc](https://godoc.org/github.com/smancke/guble?status.svg)](https://godoc.org/github.com/smancke/guble)
+[![GoDoc](https://godoc.org/github.com/cosminrentea/gobbler?status.svg)](https://godoc.org/github.com/cosminrentea/gobbler)
 [![Awesome-Go](https://camo.githubusercontent.com/13c4e50d88df7178ae1882a203ed57b641674f94/68747470733a2f2f63646e2e7261776769742e636f6d2f73696e647265736f726875732f617765736f6d652f643733303566333864323966656437386661383536353265336136336531353464643865383832392f6d656469612f62616467652e737667)](https://awesome-go.com)
 
 # Overview
@@ -102,7 +102,7 @@ This is the current (and fast changing) roadmap and todo list:
 ## Roadmap Release 0.7
 * HTTPS support in the service
 * Minimal example: chat application
-* Stable JavaScript client: https://github.com/smancke/guble-js
+* Stable JavaScript client: https://github.com/cosminrentea/gobbler-js
 * (TBD) Improved authentication and access-management
 * (TBD) Add Consul as KV Backend
 * (TBD) Index-based search of messages using [GoLucene](https://github.com/balzaczyy/golucene)
@@ -144,7 +144,7 @@ You can execute it within a running guble container and connect to the server:
 docker run -d --name guble smancke/guble
 docker exec -it guble /usr/local/bin/guble-cli
 ```
-Visit the [`guble-cli` documentation](https://github.com/smancke/guble/tree/master/guble-cli) for more details.
+Visit the [`guble-cli` documentation](https://github.com/cosminrentea/gobbler/tree/master/guble-cli) for more details.
 
 # Build and Run
 Since Go makes it very easy to build from source, you can compile guble using a single command.
@@ -158,7 +158,7 @@ export GOPATH=`pwd`
 ## Build and Start the Server
 Build and start guble with the following commands (assuming that directory `/var/lib/guble` is already created with read-write rights for the current user):
 ```
-go get github.com/smancke/guble
+go get github.com/cosminrentea/gobbler
 bin/guble --log=info
 ```
 
@@ -224,15 +224,15 @@ bin/guble --log=info
 
 ## Run All Tests
 ```
-go get -t github.com/smancke/guble/...
-go test github.com/smancke/guble/...
+go get -t github.com/cosminrentea/gobbler/...
+go test github.com/cosminrentea/gobbler/...
 ```
 
 # Clients
 The following clients are available:
-* __Commandline Client__: https://github.com/smancke/guble/tree/master/guble-cli
-* __Go client library__: https://github.com/smancke/guble/tree/master/client
-* __JavaScript library__: (in early stage) https://github.com/smancke/guble-js
+* __Commandline Client__: https://github.com/cosminrentea/gobbler/tree/master/guble-cli
+* __Go client library__: https://github.com/cosminrentea/gobbler/tree/master/client
+* __JavaScript library__: (in early stage) https://github.com/cosminrentea/gobbler-js
 
 # Protocol Reference
 
