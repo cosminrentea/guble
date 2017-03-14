@@ -11,7 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jpillora/backoff"
-	"github.com/smancke/guble/protocol"
+	"github.com/cosminrentea/gobbler/protocol"
 )
 
 type ResponseCode int
@@ -207,6 +207,7 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Error doing the request to nexmo endpoint")
+		ns.createHttpClient()
 		mTotalSendErrors.Add(1)
 		return nil, ErrHttpClientError
 	}
