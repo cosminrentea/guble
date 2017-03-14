@@ -10,8 +10,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/jpillora/backoff"
 	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/jpillora/backoff"
 )
 
 type ResponseCode int
@@ -94,7 +94,7 @@ type NexmoMessageResponse struct {
 }
 
 func (nm NexmoMessageResponse) Check() error {
-	if nm.MessageCount != 0 {
+	if nm.MessageCount != 1 {
 		logger.WithField("message_count", nm.MessageCount).Error("Nexmo message count error.")
 		return ErrMultipleSmsSent
 	}

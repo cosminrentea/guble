@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"expvar"
-	"github.com/golang/mock/gomock"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store/dummystore"
+	"github.com/golang/mock/gomock"
 )
 
 func Test_StartStop(t *testing.T) {
@@ -65,7 +65,7 @@ func Test_SendOneSms(t *testing.T) {
 	ctrl, finish := testutil.NewMockCtrl(t)
 	defer finish()
 
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	mockSmsSender := NewMockSender(ctrl)
@@ -98,7 +98,6 @@ func Test_SendOneSms(t *testing.T) {
 
 	err = gw.Start()
 	a.NoError(err)
-
 	sms := NexmoSms{
 		To:   "toNumber",
 		From: "FromNUmber",
@@ -117,7 +116,6 @@ func Test_SendOneSms(t *testing.T) {
 	a.NotNil(gw.route)
 	gw.route.Deliver(&msg, true)
 	time.Sleep(100 * time.Millisecond)
-
 	err = gw.Stop()
 	a.NoError(err)
 
@@ -161,7 +159,7 @@ func Test_Restart(t *testing.T) {
 	routerMock.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
 		a.Equal(strings.Split(topic, "/")[1], r.Path.Partition())
 		return r, nil
-	}).Times(2)
+	})
 
 	gw, err := New(routerMock, mockSmsSender, config)
 	a.NoError(err)

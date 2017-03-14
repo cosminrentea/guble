@@ -33,6 +33,7 @@ func TestNexmoSender_Send(t *testing.T) {
 }
 
 func TestNexmoSender_SendWithError(t *testing.T) {
+	defer testutil.EnableDebugForMethod()
 	RequestTimeout = time.Second
 	a := assert.New(t)
 	sender, err := NewNexmoSender(KEY, SECRET)
@@ -56,5 +57,5 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 
 	err = sender.Send(&msg)
 	a.Error(err)
-	a.Equal(ErrRetryFailed, err)
+	a.Equal(ErrNexmoResponseStatusNotOk, err)
 }

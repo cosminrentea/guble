@@ -14,6 +14,7 @@ import (
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store"
+	"fmt"
 )
 
 const (
@@ -202,6 +203,7 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 }
 
 func (g *gateway) Restart() error {
+	fmt.Println("asgfasgasgas")
 	g.logger.WithField("LastIDSent", g.LastIDSent).Debug("Restart in progress")
 
 	g.Cancel()
@@ -222,7 +224,9 @@ func (g *gateway) Restart() error {
 
 func (g *gateway) Stop() error {
 	g.logger.Debug("Stopping gateway")
-	g.cancelFunc()
+	if g.cancelFunc != nil {
+		g.cancelFunc()
+	}
 	g.logger.Debug("Stopped gateway")
 	return nil
 }
