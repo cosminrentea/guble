@@ -14,6 +14,7 @@ import (
 	"github.com/smancke/guble/server/apns"
 	"github.com/smancke/guble/server/fcm"
 	"github.com/smancke/guble/server/sms"
+	"github.com/smancke/guble/server/websocket"
 )
 
 const (
@@ -71,6 +72,7 @@ type (
 		FCM             fcm.Config
 		APNS            apns.Config
 		SMS             sms.Config
+		WS		websocket.Config
 		Cluster         ClusterConfig
 	}
 )
