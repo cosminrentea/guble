@@ -93,6 +93,7 @@ func (g *gateway) initRoute() {
 	g.route = router.NewRoute(router.RouteConfig{
 		Path:         protocol.Path(*g.config.SMSTopic),
 		ChannelSize:  5000,
+		QueueSize:    -1,
 		FetchRequest: g.fetchRequest(),
 	})
 }
