@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosminrentea/gobbler/server/auth"
+	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store/dummystore"
 	"github.com/cosminrentea/gobbler/testutil"
@@ -44,31 +45,20 @@ func Test_NexmoHTTPError(t *testing.T) {
 
 	expectedRequestNo := 3
 	go dummyNexmoEndpointWithHandlerFunc(t, &expectedRequestNo, port, noResponseFromNexmoHandler)
-
-	sender := createNexmoSender(t)
-	config := createConfig()
 	kvStore, f := createKVStore(t, "/guble_sms_nexmo_error")
 	defer os.Remove(f)
-	msgStore := dummystore.New(kvStore)
-	accessManager := auth.NewAllowAllAccessManager(true)
 
-	unstartedRouter := router.New(accessManager, msgStore, kvStore, nil)
-
-	gw, err := New(unstartedRouter, sender, config)
-	a.NoError(err)
-	err = gw.Start()
-	a.NoError(err)
+	gw := createGateway(t, kvStore)
 
 	msg := encodeProtocolMessage(t, 2)
-	err = gw.route.Deliver(&msg, false)
+
+	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 	time.Sleep(5 * timeInterval)
 	a.Equal(0, expectedRequestNo, "Three retries should be made by sender.")
 	a.Equal(msg.ID, gw.LastIDSent, "Retry failed.Last id  sent should be msgId")
 
-	err = gw.Stop()
-	time.Sleep(timeInterval)
-	a.NoError(err)
+	stopGateway(t, gw)
 }
 
 func Test_NexmoInvalidSenderError(t *testing.T) {
@@ -80,31 +70,23 @@ func Test_NexmoInvalidSenderError(t *testing.T) {
 
 	expectedRequestNo := 1
 	go dummyNexmoEndpointWithHandlerFunc(t, &expectedRequestNo, port, invalidSenderNexmoHandler)
-
-	sender := createNexmoSender(t)
-	config := createConfig()
 	kvStore, f := createKVStore(t, "/guble_sms_nexmo_invalid_sender_error")
 	defer os.Remove(f)
-	msgStore := dummystore.New(kvStore)
-	accessManager := auth.NewAllowAllAccessManager(true)
 
-	unstartedRouter := router.New(accessManager, msgStore, kvStore, nil)
-
-	gw, err := New(unstartedRouter, sender, config)
-	a.NoError(err)
-	err = gw.Start()
-	a.NoError(err)
+	gw := createGateway(t, kvStore)
 
 	msg := encodeProtocolMessage(t, 2)
-	err = gw.route.Deliver(&msg, false)
+	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 	time.Sleep(timeInterval)
 	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
 
-	err = gw.Stop()
-	time.Sleep(timeInterval)
-	a.NoError(err)
+	stopGateway(t, gw)
+}
+
+func Test_NexmoMultipleErrorsFollowedBySuccess(t *testing.T) {
+
 }
 
 func Test_NexmoResponseCodeError(t *testing.T) {
@@ -116,11 +98,26 @@ func Test_NexmoResponseCodeError(t *testing.T) {
 
 	expectedRequestNo := 3
 	go dummyNexmoEndpointWithHandlerFunc(t, &expectedRequestNo, port, responseInternalErrorNexmoHandler)
+	kvStore, f := createKVStore(t, "/guble_sms_nexmo_responde_code_error")
+	defer os.Remove(f)
+
+	gw := createGateway(t, kvStore)
+
+	msg := encodeProtocolMessage(t, 2)
+	err := gw.route.Deliver(&msg, false)
+	a.NoError(err)
+	time.Sleep(5 * timeInterval)
+	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
+	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
+
+	stopGateway(t, gw)
+}
+
+func createGateway(t *testing.T, kvStore kvstore.KVStore) *gateway {
+	a := assert.New(t)
 
 	sender := createNexmoSender(t)
 	config := createConfig()
-	kvStore, f := createKVStore(t, "/guble_sms_nexmo_responde_code_error")
-	defer os.Remove(f)
 	msgStore := dummystore.New(kvStore)
 	accessManager := auth.NewAllowAllAccessManager(true)
 
@@ -129,16 +126,16 @@ func Test_NexmoResponseCodeError(t *testing.T) {
 	gw, err := New(unstartedRouter, sender, config)
 	a.NoError(err)
 	err = gw.Start()
-	a.NoError(err)
+	if err != nil {
+		a.FailNow("Sms gateway could not be started.")
+	}
 
-	msg := encodeProtocolMessage(t, 2)
-	err = gw.route.Deliver(&msg, false)
-	a.NoError(err)
-	time.Sleep(5 * timeInterval)
-	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
-	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
+	return gw
+}
 
-	err = gw.Stop()
+func stopGateway(t *testing.T, gw *gateway) {
+	a := assert.New(t)
+	err := gw.Stop()
 	time.Sleep(timeInterval)
 	a.NoError(err)
 }

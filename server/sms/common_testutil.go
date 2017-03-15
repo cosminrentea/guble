@@ -94,3 +94,4 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	}
 	return msg
 }
+
