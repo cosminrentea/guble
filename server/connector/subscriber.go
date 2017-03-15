@@ -49,6 +49,7 @@ func (sd *SubscriberData) newRoute() *router.Route {
 	return router.NewRoute(router.RouteConfig{
 		Path:         sd.Topic,
 		RouteParams:  sd.Params,
+		QueueSize:    -1,
 		FetchRequest: fr,
 	})
 }
