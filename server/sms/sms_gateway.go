@@ -3,12 +3,8 @@ package sms
 import (
 	"context"
 	"encoding/json"
-	"errors"
-
 	"github.com/cosminrentea/gobbler/server/connector"
-
 	"time"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/metrics"
