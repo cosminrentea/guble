@@ -23,6 +23,7 @@ import (
 func initServerAndClients(t *testing.T) (*service.Service, client.Client, client.Client, func()) {
 	*Config.HttpListen = "localhost:0"
 	*Config.KVS = "memory"
+	*Config.WS.Enabled = true
 	s := StartService()
 
 	time.Sleep(time.Millisecond * 100)

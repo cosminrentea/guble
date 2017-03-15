@@ -17,7 +17,8 @@ import (
 
 // Config is used for configuring the Websocket module.
 type Config struct {
-	Enabled              *bool
+	Enabled *bool
+	Prefix  *string
 }
 
 var webSocketUpgrader = websocket.Upgrader{

@@ -54,7 +54,7 @@ type expectedValues struct {
 
 // Test that restarting the service continues to fetch messages from store for a subscription from lastID
 func TestFCMRestart(t *testing.T) {
-	// defer testutil.EnableDebugForMethod()()
+	defer testutil.EnableDebugForMethod()()
 	defer testutil.ResetDefaultRegistryHealthCheck()
 
 	a := assert.New(t)
@@ -62,6 +62,7 @@ func TestFCMRestart(t *testing.T) {
 	receiveC := make(chan bool)
 	s, cleanup := serviceSetUp(t)
 	defer cleanup()
+	defer s.Stop()
 
 	assertMetrics(a, s, expectedValues{true, 0, 0, 0})
 
@@ -135,6 +136,8 @@ func serviceSetUp(t *testing.T) (*service.Service, func()) {
 	*Config.Cluster.NodeID = 0
 	*Config.StoragePath = dir
 	*Config.MetricsEndpoint = "/admin/metrics"
+	*Config.WS.Enabled = true
+	*Config.WS.Prefix = "/stream/"
 	*Config.FCM.Enabled = true
 	*Config.FCM.APIKey = "WILL BE OVERWRITTEN"
 	*Config.FCM.Prefix = "/fcm/"

@@ -118,15 +118,15 @@ var CreateMessageStore = func() store.MessageStore {
 // see package `service` for terminological details.
 var CreateModules = func(router router.Router) (modules []interface{}) {
 
+	modules = append(modules, rest.NewRestMessageAPI(router, "/api/"))
+
 	if *Config.WS.Enabled {
-		if wsHandler, err := websocket.NewWSHandler(router, "/stream/"); err != nil {
+		if wsHandler, err := websocket.NewWSHandler(router, *Config.WS.Prefix); err != nil {
 			logger.WithError(err).Error("Error loading WSHandler module")
 		} else {
 			modules = append(modules, wsHandler)
 		}
 	}
-
-	modules = append(modules, rest.NewRestMessageAPI(router, "/api/"))
 
 	if *Config.FCM.Enabled {
 		logger.Info("Firebase Cloud Messaging: enabled")

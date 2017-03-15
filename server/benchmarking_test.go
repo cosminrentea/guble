@@ -48,6 +48,7 @@ func TestThroughput(t *testing.T) {
 	*Config.KVS = "memory"
 	*Config.MS = "file"
 	*Config.StoragePath = dir
+	*Config.WS.Enabled = true
 
 	service := StartService()
 
