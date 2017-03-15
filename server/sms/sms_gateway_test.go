@@ -3,8 +3,6 @@ package sms
 import (
 	"testing"
 
-	"encoding/json"
-
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
@@ -14,12 +12,11 @@ import (
 
 	"expvar"
 	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store/dummystore"
 	"github.com/golang/mock/gomock"
 	"os"
-	"io/ioutil"
-	"github.com/cosminrentea/gobbler/server/connector"
 )
 
 const timeInterval = 100 * time.Millisecond
@@ -38,19 +35,10 @@ func Test_StartStop(t *testing.T) {
 
 	msgStore := dummystore.New(kvStore)
 	routerMock.EXPECT().MessageStore().AnyTimes().Return(msgStore, nil)
-	topic := "sms"
-	worker := 1
-	intervalMetrics := true
-	config := Config{
-		Workers:         &worker,
-		SMSTopic:        &topic,
-		Name:            "test_gateway",
-		Schema:          SMSSchema,
-		IntervalMetrics: &intervalMetrics,
-	}
+	config := createConfig()
 
 	routerMock.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
-		a.Equal(topic, r.Path.Partition())
+		a.Equal("sms", r.Path.Partition())
 		return r, nil
 	})
 
@@ -70,7 +58,6 @@ func Test_SendOneSms(t *testing.T) {
 	ctrl, finish := testutil.NewMockCtrl(t)
 	defer finish()
 
-	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	mockSmsSender := NewMockSender(ctrl)
@@ -82,19 +69,10 @@ func Test_SendOneSms(t *testing.T) {
 	msgStore := dummystore.New(kvStore)
 	routerMock.EXPECT().MessageStore().AnyTimes().Return(msgStore, nil)
 
-	topic := "/sms"
-	worker := 1
-	intervalMetrics := true
-	config := Config{
-		Workers:         &worker,
-		SMSTopic:        &topic,
-		Name:            "test_gateway",
-		Schema:          SMSSchema,
-		IntervalMetrics: &intervalMetrics,
-	}
+	config := createConfig()
 
 	routerMock.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
-		a.Equal(topic, string(r.Path))
+		a.Equal(*config.SMSTopic, string(r.Path))
 		return r, nil
 	})
 
@@ -103,19 +81,7 @@ func Test_SendOneSms(t *testing.T) {
 
 	err = gw.Start()
 	a.NoError(err)
-	sms := NexmoSms{
-		To:   "toNumber",
-		From: "FromNUmber",
-		Text: "body",
-	}
-	d, err := json.Marshal(&sms)
-	a.NoError(err)
-
-	msg := protocol.Message{
-		Path: protocol.Path(topic),
-		ID:   uint64(4),
-		Body: d,
-	}
+	msg := encodeProtocolMessage(t, 4)
 
 	mockSmsSender.EXPECT().Send(gomock.Eq(&msg)).Return(nil)
 	a.NotNil(gw.route)
@@ -149,20 +115,10 @@ func Test_Restart(t *testing.T) {
 	msgStore := NewMockMessageStore(ctrl)
 	routerMock.EXPECT().MessageStore().AnyTimes().Return(msgStore, nil)
 
-	topic := "/sms"
-	worker := 1
-	intervalMetrics := true
-	config := Config{
-		Workers:  &worker,
-		SMSTopic: &topic,
-		Name:     "test_gateway",
-		Schema:   SMSSchema,
-
-		IntervalMetrics: &intervalMetrics,
-	}
+	config := createConfig()
 
 	routerMock.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
-		a.Equal(strings.Split(topic, "/")[1], r.Path.Partition())
+		a.Equal(strings.Split(*config.SMSTopic, "/")[1], r.Path.Partition())
 		return r, nil
 	}).Times(2)
 
@@ -172,21 +128,7 @@ func Test_Restart(t *testing.T) {
 	err = gw.Start()
 	a.NoError(err)
 
-	sms := NexmoSms{
-		To:   "toNumber",
-		From: "FromNUmber",
-		Text: "body",
-	}
-	d, err := json.Marshal(&sms)
-	a.NoError(err)
-
-	msg := protocol.Message{
-		Path:          protocol.Path(topic),
-		UserID:        "samsa",
-		ApplicationID: "sms",
-		ID:            uint64(4),
-		Body:          d,
-	}
+	msg := encodeProtocolMessage(t, 4)
 
 	mockSmsSender.EXPECT().Send(gomock.Eq(&msg)).Times(1).Return(connector.ErrRouteChannelClosed)
 
@@ -214,14 +156,7 @@ func TestReadLastID(t *testing.T) {
 	msgStore := dummystore.New(kvStore)
 	routerMock.EXPECT().MessageStore().AnyTimes().Return(msgStore, nil)
 
-	topic := "/sms"
-	worker := 1
-	config := Config{
-		Workers:  &worker,
-		SMSTopic: &topic,
-		Name:     "test_gateway",
-		Schema:   SMSSchema,
-	}
+	config := createConfig()
 
 	gw, err := New(routerMock, mockSmsSender, config)
 	a.NoError(err)
@@ -278,22 +213,7 @@ func Test_RetryLoop(t *testing.T) {
 	err = gateway.Start()
 	a.NoError(err)
 
-	//create a new sms message
-	sms := NexmoSms{
-		To:   "toNumber",
-		From: "FromNUmber",
-		Text: "body",
-	}
-	d, err := json.Marshal(&sms)
-	a.NoError(err)
-
-	msg := protocol.Message{
-		Path:          protocol.Path(topic),
-		UserID:        "samsa",
-		ApplicationID: "sms",
-		ID:            uint64(4),
-		Body:          d,
-	}
+	msg := encodeProtocolMessage(t, 4)
 
 	// when sms is sent simulate an error.No Sms will be delivered with success for 4 times.
 	mockSmsSender.EXPECT().Send(gomock.Eq(&msg)).Times(1).Return(ErrRetryFailed)
@@ -306,28 +226,12 @@ func Test_RetryLoop(t *testing.T) {
 	a.Equal(uint64(4), gateway.LastIDSent, "Last id sent should be the msgID since the retry failed.Already try it for 4 time.Anymore retries would be useless")
 
 	//Send a new message afterwards.
-	successMsg := protocol.Message{
-		Path:          protocol.Path(topic),
-		UserID:        "samsa",
-		ApplicationID: "sms",
-		ID:            uint64(9),
-		Body:          d,
-	}
+	successMsg := encodeProtocolMessage(t, 9)
 
 	//no error will be raised for second message.
 	mockSmsSender.EXPECT().Send(gomock.Eq(&successMsg)).Times(1).Return(nil)
 	gateway.route.Deliver(&successMsg, true)
 	//wait for db to save the last id.
 	time.Sleep(timeInterval)
-	//a.Equal(uint64(9), gateway.LastIDSent, "Last id sent should be successMsgId")
-
-}
-
-func tempFilename(name string) string {
-	file, err := ioutil.TempFile("/tmp", name)
-	if err != nil {
-		panic(err)
-	}
-	file.Close()
-	return file.Name()
+	a.Equal(uint64(9), gateway.LastIDSent, "Last id sent should be successMsgId")
 }

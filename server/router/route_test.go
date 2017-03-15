@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/store"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -3,10 +3,10 @@ package apns
 import (
 	"errors"
 	"fmt"
-	"github.com/sideshow/apns2"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
+	"github.com/sideshow/apns2"
 	"time"
 )
 

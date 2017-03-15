@@ -48,7 +48,7 @@ var (
 	ErrSMSResponseDecodingFailed = errors.New("Nexmo response decoding failed.")
 	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid.")
 	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long.")
-	ErrRetryFailed = errors.New("Failed retrying to send message.")
+	ErrRetryFailed               = errors.New("Failed retrying to send message.")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
