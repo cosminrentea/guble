@@ -1,11 +1,9 @@
 package sms
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,8 +28,6 @@ func Test_HttpClientRecreation(t *testing.T) {
 	time.Sleep(timeInterval)
 }
 
-
-
 func TestNexmoSender_SendWithError(t *testing.T) {
 	defer testutil.EnableDebugForMethod()
 	RequestTimeout = time.Second
@@ -39,21 +35,7 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 	sender, err := NewNexmoSender(KEY, SECRET)
 	a.NoError(err)
 
-	sms := NexmoSms{
-		To:   "toNumber",
-		From: "FromNUmber",
-		Text: "body",
-	}
-	d, err := json.Marshal(&sms)
-	a.NoError(err)
-
-	msg := protocol.Message{
-		Path:          protocol.Path(SMSDefaultTopic),
-		UserID:        "samsa",
-		ApplicationID: "sms",
-		ID:            uint64(4),
-		Body:          d,
-	}
+	msg := encodeProtocolMessage(t, 0)
 
 	err = sender.Send(&msg)
 	a.Error(err)
