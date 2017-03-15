@@ -57,5 +57,5 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 
 	err = sender.Send(&msg)
 	a.Error(err)
-	a.Equal(ErrNexmoResponseStatusNotOk, err)
+	a.Equal(ErrRetryFailed, err)
 }
