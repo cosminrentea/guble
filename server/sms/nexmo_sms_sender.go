@@ -43,12 +43,12 @@ var (
 	MaxIdleConnections = 100
 	RequestTimeout     = 500 * time.Millisecond
 
-	ErrNoSMSSent                 = errors.New("No sms was sent to Nexmo")
 	ErrHttpClientError           = errors.New("Http client sending to Nexmo Failed.No sms was sent.")
 	ErrNexmoResponseStatusNotOk  = errors.New("Nexmo response status not ResponseSuccess.")
 	ErrSMSResponseDecodingFailed = errors.New("Nexmo response decoding failed.")
 	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid.")
 	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long.")
+	ErrRetryFailed = errors.New("Failed retrying to send message.")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -150,43 +150,44 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		},
 	}
 
-	nexmoSMSResponse, err := withRetry.execute(sendSms)
+	err = withRetry.executeAndCheck(sendSms)
 	if err != nil && err == ErrRetryFailed {
-		log.Info("Retry failed.Moving on")
-		return nil
+		logger.WithField("msg", msg).Info("Retry failed or not necessary.Moving on")
 	}
 
-	if err != nil {
-		logger.WithField("error", err.Error()).Error("Could not decode nexmo response message body")
-		return err
-	}
-	logger.WithField("response", nexmoSMSResponse).Info("Decoded nexmo response")
-
-	return nexmoSMSResponse.Check()
+	return err
 }
 
-func (r *retryable) execute(op func() (*NexmoMessageResponse, error)) (*NexmoMessageResponse, error) {
+func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error)) error {
 	tryCounter := 0
 
 	for {
 		tryCounter++
-		result, err := op()
+		nexmoSMSResponse, err := op()
 		if err == nil {
-			return result, nil
-		} else {
+			logger.WithField("response", nexmoSMSResponse).WithField("try", tryCounter).Info("Decoded nexmo response")
+			err = nexmoSMSResponse.Check()
+			if err == nil {
+				return nil
+			}
 
 			if err == ErrInvalidSender {
-				return nil, ErrRetryFailed
+				return ErrRetryFailed
 			}
 
-			if tryCounter >= r.maxTries {
-				return nil, ErrRetryFailed
+		} else {
+			if err == ErrInvalidSender {
+				return ErrRetryFailed
 			}
-			d := r.Duration()
-			logger.WithField("error", err.Error()).WithField("duration", d).Info("Retry in")
-			time.Sleep(d)
-			continue
 		}
+
+		if tryCounter >= r.maxTries {
+			return ErrRetryFailed
+		}
+		d := r.Duration()
+		logger.WithField("error", err.Error()).WithField("duration", d).Info("Retry in")
+		time.Sleep(d)
+
 	}
 }
 

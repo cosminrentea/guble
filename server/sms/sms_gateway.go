@@ -14,16 +14,11 @@ import (
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store"
-	"fmt"
 )
 
 const (
 	SMSSchema       = "sms_notifications"
 	SMSDefaultTopic = "/sms"
-)
-
-var (
-	ErrRetryFailed = errors.New("Failed retrying to send message.")
 )
 
 type Sender interface {
@@ -168,15 +163,21 @@ func (g *gateway) proxyLoop() error {
 			err := g.send(receivedMsg)
 			if err != nil && err == ErrRetryFailed {
 			SET_ID:
+				// THIS MAY BE BLOCKING.Maybe not a good idea.
 				if err2 := g.SetLastSentID(receivedMsg.ID); err2 != nil {
-					g.logger.WithField("error", err2.Error()).Error("Error setting last ID")
+					g.logger.WithField("error", err2.Error()).Error("Error setting last ID.Retrying")
 					time.Sleep(100 * time.Millisecond)
 					goto SET_ID
 				}
+				g.logger.WithField("id", receivedMsg.ID).Info("Set last id to ")
 				continue
-			} else {
+			} else if err != nil {
+				g.logger.WithField("err", err.Error()).Error("Exiting from proxyLoop.")
 				return err
+			} else {
+				continue
 			}
+
 		case <-g.ctx.Done():
 			// If the parent context is still running then only this subscriber context
 			// has been cancelled
@@ -188,7 +189,7 @@ func (g *gateway) proxyLoop() error {
 	}
 
 	//TODO Cosmin Bogdan returning this error can mean 2 things: overflow of route's channel, or intentional stopping of router / gubled.
-	return  connector.ErrRouteChannelClosed
+	return connector.ErrRouteChannelClosed
 }
 func (g *gateway) send(receivedMsg *protocol.Message) error {
 	err := g.sender.Send(receivedMsg)
@@ -203,7 +204,6 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 }
 
 func (g *gateway) Restart() error {
-	fmt.Println("asgfasgasgas")
 	g.logger.WithField("LastIDSent", g.LastIDSent).Debug("Restart in progress")
 
 	g.Cancel()

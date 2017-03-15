@@ -242,7 +242,7 @@ func Test_RetryLoop(t *testing.T) {
 
 	//create a mockSms Sender to simulate Nexmo error
 	mockSmsSender := NewMockSender(ctrl)
-	f := tempFilename()
+	f := tempFilename("guble_test_retry_sms_loop")
 	defer os.Remove(f)
 
 	//create a KVStore with sqlite3
@@ -323,12 +323,11 @@ func Test_RetryLoop(t *testing.T) {
 
 }
 
-func tempFilename() string {
-	file, err := ioutil.TempFile("/tmp", "guble_sms_retry")
+func tempFilename(name string) string {
+	file, err := ioutil.TempFile("/tmp", name)
 	if err != nil {
 		panic(err)
 	}
 	file.Close()
-	os.Remove(file.Name())
 	return file.Name()
 }
