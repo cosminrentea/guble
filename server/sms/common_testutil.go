@@ -4,12 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/kvstore"
+	"github.com/cosminrentea/gobbler/server/router"
+	"github.com/cosminrentea/gobbler/server/store/dummystore"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"math/rand"
 	"testing"
 	"time"
+)
+
+var (
+	timeInterval = 100 * time.Millisecond
+	KEY          = "ce40b46d"
+	SECRET       = "153d2b2c72985370"
 )
 
 func tempFilename(name string) string {
@@ -95,3 +104,38 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	return msg
 }
 
+func createGateway(t *testing.T, kvStore kvstore.KVStore) *gateway {
+	a := assert.New(t)
+
+	sender := createNexmoSender(t)
+	config := createConfig()
+	msgStore := dummystore.New(kvStore)
+	accessManager := auth.NewAllowAllAccessManager(true)
+
+	unstartedRouter := router.New(accessManager, msgStore, kvStore, nil)
+
+	gw, err := New(unstartedRouter, sender, config)
+	a.NoError(err)
+	err = gw.Start()
+	if err != nil {
+		a.FailNow("Sms gateway could not be started.")
+	}
+
+	return gw
+}
+
+func stopGateway(t *testing.T, gw *gateway) {
+	a := assert.New(t)
+	err := gw.Stop()
+	time.Sleep(timeInterval)
+	a.NoError(err)
+}
+
+func createNexmoSender(t *testing.T) Sender {
+	a := assert.New(t)
+	nexmoSender, err := NewNexmoSender(KEY, SECRET)
+	if err != nil {
+		a.FailNow("Nexmo sender could not be created.")
+	}
+	return nexmoSender
+}

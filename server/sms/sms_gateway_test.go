@@ -19,8 +19,6 @@ import (
 	"os"
 )
 
-const timeInterval = 100 * time.Millisecond
-
 func Test_StartStop(t *testing.T) {
 	ctrl, finish := testutil.NewMockCtrl(t)
 	defer finish()

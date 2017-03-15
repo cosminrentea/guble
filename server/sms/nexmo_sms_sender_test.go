@@ -10,27 +10,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	KEY    = "ce40b46d"
-	SECRET = "153d2b2c72985370"
-)
-
-func TestNexmoSender_Send(t *testing.T) {
+func Test_HttpClientRecreation(t *testing.T) {
+	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
-	testutil.SkipIfDisabled(t)
-	sender, err := NewNexmoSender(KEY, SECRET)
-	a.NoError(err)
 
-	sms := new(NexmoSms)
-	sms.To = "+40746278186"
-	sms.From = "REWE Lieferservice"
-	sms.Text = "Lieber Kunde! Ihre Lieferung kommt heute zwischen 12.04 und 12.34 Uhr. Vielen Dank für Ihre Bestellung! Ihr REWE Lieferservice"
+	port := createRandomPort(7000, 8000)
+	URL = "http://127.0.0.1" + port
+	expectedRequestNo := 3
 
-	response, err := sender.sendSms(sms)
-	a.Equal(1, response.MessageCount)
-	a.Equal(ResponseSuccess, response.Messages[0].Status)
-	a.NoError(err)
+	go dummyNexmoEndpointWithHandlerFunc(t, &expectedRequestNo, port, noResponseFromNexmoHandler)
+
+	sender := createNexmoSender(t)
+	msg := encodeProtocolMessage(t, 2)
+
+	err := sender.Send(&msg)
+	a.Equal(ErrRetryFailed, err)
+
+	a.Equal(0, expectedRequestNo, "Three retries should be made by sender.")
+	time.Sleep(timeInterval)
 }
+
+
 
 func TestNexmoSender_SendWithError(t *testing.T) {
 	defer testutil.EnableDebugForMethod()

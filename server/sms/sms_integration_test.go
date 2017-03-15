@@ -3,10 +3,6 @@ package sms
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosminrentea/gobbler/server/auth"
-	"github.com/cosminrentea/gobbler/server/kvstore"
-	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/cosminrentea/gobbler/server/store/dummystore"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -15,26 +11,6 @@ import (
 	"testing"
 	"time"
 )
-
-func Test_HttpClientRecreation(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
-	a := assert.New(t)
-
-	port := createRandomPort(7000, 8000)
-	URL = "http://127.0.0.1" + port
-	expectedRequestNo := 3
-
-	go dummyNexmoEndpointWithHandlerFunc(t, &expectedRequestNo, port, noResponseFromNexmoHandler)
-
-	sender := createNexmoSender(t)
-	msg := encodeProtocolMessage(t, 2)
-
-	err := sender.Send(&msg)
-	a.Equal(ErrRetryFailed, err)
-
-	a.Equal(0, expectedRequestNo, "Three retries should be made by sender.")
-	time.Sleep(timeInterval)
-}
 
 func Test_NexmoHTTPError(t *testing.T) {
 	defer testutil.EnableDebugForMethod()()
@@ -78,7 +54,7 @@ func Test_NexmoInvalidSenderError(t *testing.T) {
 	msg := encodeProtocolMessage(t, 2)
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
-	time.Sleep(timeInterval)
+	time.Sleep(2 * timeInterval)
 	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
 
@@ -111,42 +87,6 @@ func Test_NexmoResponseCodeError(t *testing.T) {
 	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
 
 	stopGateway(t, gw)
-}
-
-func createGateway(t *testing.T, kvStore kvstore.KVStore) *gateway {
-	a := assert.New(t)
-
-	sender := createNexmoSender(t)
-	config := createConfig()
-	msgStore := dummystore.New(kvStore)
-	accessManager := auth.NewAllowAllAccessManager(true)
-
-	unstartedRouter := router.New(accessManager, msgStore, kvStore, nil)
-
-	gw, err := New(unstartedRouter, sender, config)
-	a.NoError(err)
-	err = gw.Start()
-	if err != nil {
-		a.FailNow("Sms gateway could not be started.")
-	}
-
-	return gw
-}
-
-func stopGateway(t *testing.T, gw *gateway) {
-	a := assert.New(t)
-	err := gw.Stop()
-	time.Sleep(timeInterval)
-	a.NoError(err)
-}
-
-func createNexmoSender(t *testing.T) Sender {
-	a := assert.New(t)
-	nexmoSender, err := NewNexmoSender(KEY, SECRET)
-	if err != nil {
-		a.FailNow("Nexmo sender could not be created.")
-	}
-	return nexmoSender
 }
 
 func noResponseFromNexmoHandler(t *testing.T, noOfReq *int) http.HandlerFunc {
