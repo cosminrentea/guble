@@ -2,10 +2,10 @@ package websocket
 
 import (
 	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/smancke/guble/server/auth"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -88,39 +88,6 @@ func Test_AnIncomingMessageIsDelivered(t *testing.T) {
 	time.Sleep(time.Millisecond * 2)
 }
 
-func Test_AnIncomingMessageIsNotAllowed(t *testing.T) {
-	ctrl, finish := testutil.NewMockCtrl(t)
-	defer finish()
-
-	wsconn, routerMock, _ := createDefaultMocks([]string{})
-
-	tam := NewMockAccessManager(ctrl)
-	tam.EXPECT().IsAllowed(auth.READ, "testuser", protocol.Path("/foo")).Return(false)
-	handler := NewWebSocket(
-		testWSHandler(routerMock, tam),
-		wsconn,
-		"testuser",
-	)
-	go func() {
-		handler.Start()
-	}()
-	time.Sleep(time.Millisecond * 2)
-
-	handler.sendChannel <- aTestMessage.Bytes()
-	time.Sleep(time.Millisecond * 2)
-	//nothing shall have been sent
-
-	//now allow
-	tam.EXPECT().IsAllowed(auth.READ, "testuser", protocol.Path("/foo")).Return(true)
-
-	wsconn.EXPECT().Send(aTestMessage.Bytes())
-
-	time.Sleep(time.Millisecond * 2)
-
-	handler.sendChannel <- aTestMessage.Bytes()
-	time.Sleep(time.Millisecond * 2)
-}
-
 func Test_BadCommands(t *testing.T) {
 	_, finish := testutil.NewMockCtrl(t)
 	defer finish()
@@ -160,13 +127,11 @@ func TestExtractUserId(t *testing.T) {
 }
 
 func testWSHandler(
-	routerMock *MockRouter,
-	accessManager auth.AccessManager) *WSHandler {
+	routerMock *MockRouter) *WSHandler {
 
 	return &WSHandler{
-		router:        routerMock,
-		prefix:        "/prefix",
-		accessManager: accessManager,
+		router: routerMock,
+		prefix: "/prefix",
 	}
 }
 
@@ -180,7 +145,7 @@ func runNewWebSocket(
 		accessManager = auth.NewAllowAllAccessManager(true)
 	}
 	websocket := NewWebSocket(
-		testWSHandler(routerMock, accessManager),
+		testWSHandler(routerMock),
 		wsconn,
 		"testuser",
 	)

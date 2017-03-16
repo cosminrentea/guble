@@ -7,12 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/store"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -407,7 +406,7 @@ func TestRoute_Provide_MultipleFetch(t *testing.T) {
 	memoryKV := kvstore.NewMemoryKVStore()
 
 	msMock := NewMockMessageStore(ctrl)
-	router := New(auth.AllowAllAccessManager(true), msMock, memoryKV, nil)
+	router := New(msMock, memoryKV, nil)
 
 	if startable, ok := router.(startable); ok {
 		startable.Start()
