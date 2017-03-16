@@ -22,10 +22,10 @@ func Test_HttpClientRecreation(t *testing.T) {
 	msg := encodeProtocolMessage(t, 2)
 
 	err := sender.Send(&msg)
-	a.Equal(ErrRetryFailed, err)
+	time.Sleep(3 * timeInterval)
 
+	a.Equal(ErrRetryFailed, err)
 	a.Equal(0, expectedRequestNo, "Three retries should be made by sender.")
-	time.Sleep(timeInterval)
 }
 
 func TestNexmoSender_SendWithError(t *testing.T) {
@@ -38,6 +38,7 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 	msg := encodeProtocolMessage(t, 0)
 
 	err = sender.Send(&msg)
+	time.Sleep(3 * timeInterval)
 	a.Error(err)
 	a.Equal(ErrRetryFailed, err)
 }
