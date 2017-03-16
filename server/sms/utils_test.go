@@ -104,6 +104,18 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	return msg
 }
 
+
+func encodeUnmarshableProtocolMessage(ID int) protocol.Message {
+	msg := protocol.Message{
+		Path:          protocol.Path(SMSDefaultTopic),
+		UserID:        "samsa",
+		ApplicationID: "sms",
+		ID:            uint64(ID),
+		Body:          []byte("undecodable"),
+	}
+	return msg
+}
+
 func createGateway(t *testing.T, kvStore kvstore.KVStore) *gateway {
 	a := assert.New(t)
 

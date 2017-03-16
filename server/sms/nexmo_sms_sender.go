@@ -49,6 +49,7 @@ var (
 	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid.")
 	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long.")
 	ErrRetryFailed               = errors.New("Failed retrying to send message.")
+	ErrEncodeFailed              = errors.New("Encoding of message to be sent to Nexmo  failed.")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -133,8 +134,8 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 	nexmoSMS := new(NexmoSms)
 	err := json.Unmarshal(msg.Body, nexmoSMS)
 	if err != nil {
-		logger.WithField("error", err.Error()).Error("Could not decode message body to send to nexmo")
-		return err
+		logger.WithField("msg", msg).WithField("error", err.Error()).Error("Could not decode message body to send to nexmo.No retries will be made for this message.")
+		return ErrRetryFailed
 	}
 
 	sendSms := func() (*NexmoMessageResponse, error) {
@@ -175,10 +176,6 @@ func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error)) er
 				return ErrRetryFailed
 			}
 
-		} else {
-			if err == ErrInvalidSender {
-				return ErrRetryFailed
-			}
 		}
 
 		if tryCounter >= r.maxTries {
@@ -187,18 +184,16 @@ func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error)) er
 		d := r.Duration()
 		logger.WithField("error", err.Error()).WithField("duration", d).Info("Retry in")
 		time.Sleep(d)
-
 	}
 }
 
 func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
-	// log before encoding
 	logger.WithField("sms_details", sms).Info("sendSms")
 
 	smsEncoded, err := sms.EncodeNexmoSms(ns.ApiKey, ns.ApiSecret)
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Error encoding sms")
-		return nil, err
+		return nil, ErrEncodeFailed
 	}
 
 	req, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(smsEncoded))

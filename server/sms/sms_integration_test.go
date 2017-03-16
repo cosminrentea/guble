@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/cosminrentea/gobbler/testutil"
+	//"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 )
 
 func Test_NexmoHTTPError(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)
@@ -40,7 +40,7 @@ func Test_NexmoHTTPError(t *testing.T) {
 }
 
 func Test_NexmoInvalidSenderError(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)
@@ -64,7 +64,7 @@ func Test_NexmoInvalidSenderError(t *testing.T) {
 }
 
 func Test_NexmoMultipleErrorsFollowedBySuccess(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)
@@ -88,7 +88,7 @@ func Test_NexmoMultipleErrorsFollowedBySuccess(t *testing.T) {
 }
 
 func Test_NexmoResponseCodeError(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)
@@ -111,8 +111,25 @@ func Test_NexmoResponseCodeError(t *testing.T) {
 	stopGateway(t, gw)
 }
 
+func Test_WrongEncodedSmsInRouterMessage(t *testing.T) {
+	a := assert.New(t)
+
+	kvStore, f := createKVStore(t, "/guble_sms_nexmo_responde_code_error")
+	defer os.Remove(f)
+
+	gw := createGateway(t, kvStore)
+
+	msg := encodeUnmarshableProtocolMessage(2)
+	err := gw.route.Deliver(&msg, false)
+	a.NoError(err)
+	time.Sleep(timeInterval)
+	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
+
+	stopGateway(t, gw)
+}
+
 func Test_GatewaySanity(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)
@@ -129,7 +146,7 @@ func Test_GatewaySanity(t *testing.T) {
 	msg := encodeProtocolMessage(t, 2)
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
-	time.Sleep(timeInterval)
+	time.Sleep(2 * timeInterval)
 	a.Equal(16, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(msg.ID, gw.LastIDSent, fmt.Sprintf("Sucess.No Retry needed.Last id  sent should be %d", msg.ID))
 
@@ -137,7 +154,7 @@ func Test_GatewaySanity(t *testing.T) {
 	invalidSenderMsg := encodeProtocolMessage(t, 5)
 	err = gw.route.Deliver(&invalidSenderMsg, false)
 	a.NoError(err)
-	time.Sleep(timeInterval)
+	time.Sleep(2 * timeInterval)
 	a.Equal(15, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(invalidSenderMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Invalid Sender.No Retry needed.Last id  sent should be %d", invalidSenderMsg.ID))
@@ -146,7 +163,7 @@ func Test_GatewaySanity(t *testing.T) {
 	successMsg := encodeProtocolMessage(t, 6)
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
-	time.Sleep(timeInterval)
+	time.Sleep(2 * timeInterval)
 	a.Equal(14, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(successMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Success.No Retry needed.Last id  sent should be %d", successMsg.ID))
@@ -164,7 +181,7 @@ func Test_GatewaySanity(t *testing.T) {
 	successMsg = encodeProtocolMessage(t, 10)
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
-	time.Sleep(timeInterval)
+	time.Sleep(2 * timeInterval)
 	a.Equal(10, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(successMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Success.No Retry needed.Last id  sent should be %d", successMsg.ID))
@@ -173,7 +190,7 @@ func Test_GatewaySanity(t *testing.T) {
 	randomNexmoErrMsg := encodeProtocolMessage(t, 11)
 	err = gw.route.Deliver(&randomNexmoErrMsg, false)
 	a.NoError(err)
-	time.Sleep(5 * timeInterval)
+	time.Sleep(6 * timeInterval)
 	a.Equal(7, expectedRequestNo, "3 Retries should be made by sender.")
 	a.Equal(randomNexmoErrMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", randomNexmoErrMsg.ID))
@@ -182,7 +199,7 @@ func Test_GatewaySanity(t *testing.T) {
 	undecodableNexmoResponseMsg := encodeProtocolMessage(t, 13)
 	err = gw.route.Deliver(&undecodableNexmoResponseMsg, false)
 	a.NoError(err)
-	time.Sleep(5 * timeInterval)
+	time.Sleep(6 * timeInterval)
 	a.Equal(4, expectedRequestNo, "3 Retries should be made by sender.")
 	a.Equal(undecodableNexmoResponseMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", undecodableNexmoResponseMsg.ID))
@@ -191,7 +208,7 @@ func Test_GatewaySanity(t *testing.T) {
 	wrongMessageCountMsg := encodeProtocolMessage(t, 14)
 	err = gw.route.Deliver(&wrongMessageCountMsg, false)
 	a.NoError(err)
-	time.Sleep(5 * timeInterval)
+	time.Sleep(7 * timeInterval)
 	a.Equal(1, expectedRequestNo, "3 Retries should be made by sender.")
 	a.Equal(wrongMessageCountMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", wrongMessageCountMsg.ID))
@@ -200,7 +217,7 @@ func Test_GatewaySanity(t *testing.T) {
 	successMsg = encodeProtocolMessage(t, 16)
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
-	time.Sleep(timeInterval)
+	time.Sleep(3 * timeInterval)
 	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(successMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Success.No Retry needed.Last id  sent should be %d", successMsg.ID))
@@ -208,7 +225,7 @@ func Test_GatewaySanity(t *testing.T) {
 	//now close the route channel.Restart loop should happen.
 	err = gw.route.Close()
 	a.Equal(router.ErrInvalidRoute, err)
-	time.Sleep(timeInterval)
+	time.Sleep(3 * timeInterval)
 
 	a.Equal(successMsg.ID, gw.LastIDSent, "LastID read should be same after restart.")
 	stopGateway(t, gw)
@@ -331,7 +348,7 @@ func responseInternalErrorNexmoHandler(t *testing.T, noOfReq *int) http.HandlerF
 func dummyNexmoEndpointWithHandlerFunc(t *testing.T, expectedRequestNo *int, port string, handler func(t *testing.T, no *int) http.HandlerFunc) {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc("/", handler(t, expectedRequestNo))
-	fmt.Println(port)
+	logger.Info("Started Http server on port")
 	http.ListenAndServe(port, serveMux)
 }
 
