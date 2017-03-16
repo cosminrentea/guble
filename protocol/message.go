@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -29,6 +30,13 @@ type Message struct {
 	// Filters applied to this message. The message will be sent only to the
 	// routes that match the filters
 	Filters map[string]string
+
+	// Expires field specifies until when the message is valid to be processed
+	// If this field is set and the message is expired the connectors should
+	// consider the message as processed and log the action
+	//
+	// RFC3339 format
+	Expires *time.Time
 
 	// The time of publishing, as Unix Timestamp date
 	Time int64
