@@ -166,6 +166,58 @@ func TestReadLastID(t *testing.T) {
 	a.Equal(uint64(10), gw.LastIDSent)
 }
 
+func Test_SmsRouteProvideError(t *testing.T) {
+	ctrl, finish := testutil.NewMockCtrl(t)
+	defer finish()
+
+	defer testutil.EnableDebugForMethod()()
+	a := assert.New(t)
+
+	//create a mockSms Sender to simulate Nexmo error
+	mockSmsSender := NewMockSender(ctrl)
+	f := tempFilename("guble_test_retry_sms_loop")
+	defer os.Remove(f)
+
+	//create a KVStore with sqlite3
+	kvStore := kvstore.NewSqliteKVStore(f, false)
+	err := kvStore.Open()
+	a.NoError(err)
+	a.NotNil(kvStore)
+
+	//create a new mock router
+	routerMock := NewMockRouter(testutil.MockCtrl)
+	routerMock.EXPECT().KVStore().AnyTimes().Return(kvStore, nil)
+
+	//create a new mock msg store
+	mockMessageStore := NewMockMessageStore(ctrl)
+	routerMock.EXPECT().MessageStore().AnyTimes().Return(mockMessageStore, nil)
+
+	//setup a new sms gateway
+	config := createConfig()
+	gateway, err := New(routerMock, mockSmsSender, config)
+	a.NoError(err)
+
+	//create a new route on which the gateway will subscribe on /sms
+	route := router.NewRoute(router.RouteConfig{
+		Path:         protocol.Path(*gateway.config.SMSTopic),
+		ChannelSize:  5000,
+		FetchRequest: gateway.fetchRequest(),
+	})
+
+	//expect 2 subscribe.
+	// One for Start which will return a ErrInvalidRoute
+	routerMock.EXPECT().Subscribe(gomock.Any()).Times(1).Return(route, router.ErrInvalidRoute)
+	//second will be done for restart caused by the subscribed which failed
+	routerMock.EXPECT().Subscribe(gomock.Any()).Times(1).Return(route, nil)
+
+	err = gateway.Start()
+	a.NoError(err)
+
+	time.Sleep(timeInterval)
+	err = gateway.Stop()
+	a.NoError(err)
+}
+
 func Test_RetryLoop(t *testing.T) {
 	ctrl, finish := testutil.NewMockCtrl(t)
 	defer finish()
