@@ -271,6 +271,8 @@ func (r *Route) consume() {
 		)
 
 		for {
+			r.logger.WithField("size", r.queue.size()).Debug("Queue size")
+
 			if r.isInvalid() {
 				r.logger.Debug("Stopping to consume because route is invalid.")
 				mTotalDeliverMessageErrors.Add(1)
@@ -289,7 +291,10 @@ func (r *Route) consume() {
 			}
 
 			if err = r.send(msg); err != nil {
-				r.logger.WithField("message", msg).Error("Error sending message through route")
+				r.logger.WithFields(log.Fields{
+					"message": msg,
+					"error":   err.Error(),
+				}).Error("Error sending message through route")
 				if err == errTimeout || err == ErrInvalidRoute {
 					// channel been closed, ending the consumer
 					return
@@ -309,7 +314,7 @@ func (r *Route) send(msg *protocol.Message) error {
 	r.logger.WithField("message", msg).Debug("Sending message through route channel")
 
 	// no timeout, means we don't close the channel
-	if r.timeout == -1 {
+	if r.Timeout == -1 {
 		r.messagesC <- msg
 		r.logger.WithField("size", len(r.messagesC)).Debug("Channel size")
 		return nil
@@ -320,7 +325,7 @@ func (r *Route) send(msg *protocol.Message) error {
 		return nil
 	case <-r.closeC:
 		return ErrInvalidRoute
-	case <-time.After(r.timeout):
+	case <-time.After(r.Timeout):
 		r.logger.Debug("Closing route because of timeout")
 		r.Close()
 		return errTimeout
