@@ -4,12 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_HttpClientRecreation(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
+	//defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 8000)
@@ -29,7 +28,7 @@ func Test_HttpClientRecreation(t *testing.T) {
 }
 
 func TestNexmoSender_SendWithError(t *testing.T) {
-	defer testutil.EnableDebugForMethod()
+	//defer testutil.EnableDebugForMethod()
 	RequestTimeout = time.Second
 	a := assert.New(t)
 	sender, err := NewNexmoSender(KEY, SECRET)
