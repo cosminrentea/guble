@@ -62,7 +62,27 @@ func Test_NexmoInvalidSenderError(t *testing.T) {
 }
 
 func Test_NexmoMultipleErrorsFollowedBySuccess(t *testing.T) {
+	defer testutil.EnableDebugForMethod()()
+	a := assert.New(t)
 
+	port := createRandomPort(7000, 9000)
+	URL = "http://127.0.0.1" + port
+
+	expectedRequestNo := 3
+	go dummyNexmoEndpointWithHandlerFunc(t, &expectedRequestNo, port, multipleErrorsollowedBySuccessNexmoHandler)
+	kvStore, f := createKVStore(t, "/guble_sms_nexmo_multiple_sender_error")
+	defer os.Remove(f)
+
+	gw := createGateway(t, kvStore)
+
+	msg := encodeProtocolMessage(t, 2)
+	err := gw.route.Deliver(&msg, false)
+	a.NoError(err)
+	time.Sleep(10 * timeInterval)
+	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
+	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
+
+	stopGateway(t, gw)
 }
 
 func Test_NexmoResponseCodeError(t *testing.T) {
@@ -108,6 +128,39 @@ func invalidSenderNexmoHandler(t *testing.T, noOfReq *int) http.HandlerFunc {
 		nexmoResponse := composeNexmoMessageResponse(sentSms, ResponseInvalidSenderAddress, 1)
 		writeNexmoResponse(nexmoResponse, t, w)
 
+	}
+}
+
+func multipleErrorsollowedBySuccessNexmoHandler(t *testing.T, noOfReq *int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		a := assert.New(t)
+		sentSms := decodeSMSMessage(t, r)
+		a.Equal("body", sentSms.Text)
+		*noOfReq--
+
+		//on the first try, hijack the net.connection to forcibly  close the connection as per PN-307.
+		if *noOfReq == 2 {
+			logger.Info("Closing request from server side by hijacking.")
+			hj, ok := w.(http.Hijacker)
+			if !ok {
+				a.FailNow("Failed to obtain hijacker.")
+			}
+			con, _, err := hj.Hijack()
+			if err != nil {
+				a.FailNow("Hijack failed.")
+			}
+			err = con.Close()
+			if err != nil {
+				a.FailNow(" Forced connection closing failed.")
+			}
+		} else if *noOfReq == 1 { //on the second try write an answer that can not be decoded.
+			logger.Info("Serving a wrong response to request")
+			w.Write([]byte("This should not be decoded."))
+		} else { //on  the last retry write a SuccesResponse.
+			logger.Info("Serving correct response")
+			nexmoResponse := composeNexmoMessageResponse(sentSms, ResponseSuccess, 1)
+			writeNexmoResponse(nexmoResponse, t, w)
+		}
 	}
 }
 
