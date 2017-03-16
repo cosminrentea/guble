@@ -86,7 +86,7 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	a := assert.New(t)
 	sms := NexmoSms{
 		To:   "toNumber",
-		From: "FromNUmber",
+		From: fmt.Sprintf("%d", ID),
 		Text: "body",
 	}
 	d, err := json.Marshal(&sms)
