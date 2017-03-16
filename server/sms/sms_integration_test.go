@@ -217,7 +217,7 @@ func Test_GatewaySanity(t *testing.T) {
 	successMsg = encodeProtocolMessage(t, 16)
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
-	time.Sleep(3 * timeInterval)
+	time.Sleep(4 * timeInterval)
 	a.Equal(0, expectedRequestNo, "Only one try should be made by sender.")
 	a.Equal(successMsg.ID, gw.LastIDSent,
 		fmt.Sprintf("Success.No Retry needed.Last id  sent should be %d", successMsg.ID))
@@ -226,7 +226,6 @@ func Test_GatewaySanity(t *testing.T) {
 	err = gw.route.Close()
 	a.Equal(router.ErrInvalidRoute, err)
 	time.Sleep(3 * timeInterval)
-
 	a.Equal(successMsg.ID, gw.LastIDSent, "LastID read should be same after restart.")
 	stopGateway(t, gw)
 }

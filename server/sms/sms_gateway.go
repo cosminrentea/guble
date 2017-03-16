@@ -135,6 +135,7 @@ func (g *gateway) Run() {
 		}
 		// Router module is stopping, exit the process
 		if _, ok := provideErr.(*router.ModuleStoppingError); ok {
+			g.logger.Info("SMS Gateway is exiting.Router is stopping")
 			return
 		}
 	}
