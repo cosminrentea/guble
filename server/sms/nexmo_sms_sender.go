@@ -159,6 +159,11 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 	return err
 }
 
+type retryable struct {
+	maxTries int
+	backoff.Backoff
+}
+
 func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error)) error {
 	tryCounter := 0
 
@@ -236,9 +241,4 @@ func (ns *NexmoSender) createHttpClient() {
 		},
 		Timeout: RequestTimeout,
 	}
-}
-
-type retryable struct {
-	maxTries int
-	backoff.Backoff
 }
