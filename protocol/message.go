@@ -64,8 +64,8 @@ func (m *Message) String() string {
 	return fmt.Sprintf("%d: %s", m.ID, string(m.Body))
 }
 
-// Bytes serializes the message into a byte slice
-func (m *Message) Bytes() []byte {
+// Encode serializes the message into a byte slice
+func (m *Message) Encode() []byte {
 	buff := &bytes.Buffer{}
 
 	m.writeMetadata(buff)

@@ -176,7 +176,7 @@ func (router *router) HandleMessage(message *protocol.Message) error {
 		nodeID = router.cluster.Config.ID
 	}
 
-	mTotalMessagesIncomingBytes.Add(int64(len(message.Bytes())))
+	mTotalMessagesIncomingBytes.Add(int64(len(message.Encode())))
 	size, err := router.messageStore.StoreMessage(message, nodeID)
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Error storing message")

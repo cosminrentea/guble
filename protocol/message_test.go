@@ -61,7 +61,7 @@ func TestSerializeANormalMessage(t *testing.T) {
 	}
 
 	// then: the serialisation is as expected
-	assert.Equal(t, aNormalMessageNoExpires, string(msg.Bytes()))
+	assert.Equal(t, aNormalMessageNoExpires, string(msg.Encode()))
 	assert.Equal(t, "42: Hello World", msg.String())
 
 	// and: the first line is as expected
@@ -87,7 +87,7 @@ func TestSerializeANormalMessageWithExpires(t *testing.T) {
 	msg.Expires = &expire
 
 	// then: the serialisation is as expected
-	assert.Equal(t, aNormalMessage, string(msg.Bytes()))
+	assert.Equal(t, aNormalMessage, string(msg.Encode()))
 	assert.Equal(t, "42: Hello World", msg.String())
 
 	// and: the first line is as expected
@@ -101,7 +101,7 @@ func TestSerializeAMinimalMessage(t *testing.T) {
 		Time: unixTime.Unix(),
 	}
 
-	assert.Equal(t, aMinimalMessage, string(msg.Bytes()))
+	assert.Equal(t, aMinimalMessage, string(msg.Encode()))
 }
 
 func TestSerializeAMinimalMessageWithBody(t *testing.T) {
@@ -112,7 +112,7 @@ func TestSerializeAMinimalMessageWithBody(t *testing.T) {
 		Body: []byte("Hello World"),
 	}
 
-	assert.Equal(t, aMinimalMessage+"\n\nHello World", string(msg.Bytes()))
+	assert.Equal(t, aMinimalMessage+"\n\nHello World", string(msg.Encode()))
 }
 
 func TestParsingAMinimalMessage(t *testing.T) {

@@ -184,7 +184,7 @@ func TestReceiveAMessage(t *testing.T) {
 	// than we receive the expected message
 	select {
 	case m := <-c.Messages():
-		a.Equal(aNormalMessage, string(m.Bytes()))
+		a.Equal(aNormalMessage, string(m.Encode()))
 	case <-time.After(time.Millisecond * 10):
 		a.Fail("timeout while waiting for message")
 	}
