@@ -62,7 +62,7 @@ func TestSerializeANormalMessage(t *testing.T) {
 
 	// then: the serialisation is as expected
 	assert.Equal(t, aNormalMessageNoExpires, string(msg.Bytes()))
-	assert.Equal(t, "Hello World", msg.BodyAsString())
+	assert.Equal(t, "42: Hello World", msg.String())
 
 	// and: the first line is as expected
 	assert.Equal(t, strings.SplitN(aNormalMessageNoExpires, "\n", 2)[0], msg.Metadata())
@@ -88,7 +88,7 @@ func TestSerializeANormalMessageWithExpires(t *testing.T) {
 
 	// then: the serialisation is as expected
 	assert.Equal(t, aNormalMessage, string(msg.Bytes()))
-	assert.Equal(t, "Hello World", msg.BodyAsString())
+	assert.Equal(t, "42: Hello World", msg.String())
 
 	// and: the first line is as expected
 	assert.Equal(t, strings.SplitN(aNormalMessage, "\n", 2)[0], msg.Metadata())

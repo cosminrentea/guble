@@ -52,7 +52,7 @@ func Benchmark_E2E_Fetch_HelloWorld_Messages(b *testing.B) {
 	for i := 1; i <= b.N; i++ {
 		select {
 		case msg := <-c.Messages():
-			a.Equal(fmt.Sprintf("Hello %v", i), msg.BodyAsString())
+			a.Equal(fmt.Sprintf("Hello %v", i), string(msg.Body))
 		case e := <-c.Errors():
 			a.Fail(string(e.Bytes()))
 			return

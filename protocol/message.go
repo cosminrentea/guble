@@ -54,97 +54,93 @@ type Message struct {
 type MessageDeliveryCallback func(*Message)
 
 // Metadata returns the first line of a serialized message, without the newline
-func (msg *Message) Metadata() string {
+func (m *Message) Metadata() string {
 	buff := &bytes.Buffer{}
-	msg.writeMetadata(buff)
+	m.writeMetadata(buff)
 	return string(buff.Bytes())
 }
 
-func (msg *Message) String() string {
-	return fmt.Sprintf("%d", msg.ID)
-}
-
-func (msg *Message) BodyAsString() string {
-	return string(msg.Body)
+func (m *Message) String() string {
+	return fmt.Sprintf("%d: %s", m.ID, string(m.Body))
 }
 
 // Bytes serializes the message into a byte slice
-func (msg *Message) Bytes() []byte {
+func (m *Message) Bytes() []byte {
 	buff := &bytes.Buffer{}
 
-	msg.writeMetadata(buff)
+	m.writeMetadata(buff)
 
-	if len(msg.HeaderJSON) > 0 || len(msg.Body) > 0 {
+	if len(m.HeaderJSON) > 0 || len(m.Body) > 0 {
 		buff.WriteString("\n")
 	}
 
-	if len(msg.HeaderJSON) > 0 {
-		buff.WriteString(msg.HeaderJSON)
+	if len(m.HeaderJSON) > 0 {
+		buff.WriteString(m.HeaderJSON)
 	}
 
-	if len(msg.Body) > 0 {
+	if len(m.Body) > 0 {
 		buff.WriteString("\n")
-		buff.Write(msg.Body)
+		buff.Write(m.Body)
 	}
 
 	return buff.Bytes()
 }
 
-func (msg *Message) writeMetadata(buff *bytes.Buffer) {
-	buff.WriteString(string(msg.Path))
+func (m *Message) writeMetadata(buff *bytes.Buffer) {
+	buff.WriteString(string(m.Path))
 	buff.WriteByte(',')
 
-	buff.WriteString(strconv.FormatUint(msg.ID, 10))
+	buff.WriteString(strconv.FormatUint(m.ID, 10))
 	buff.WriteByte(',')
 
-	buff.WriteString(msg.UserID)
+	buff.WriteString(m.UserID)
 	buff.WriteByte(',')
 
-	buff.WriteString(msg.ApplicationID)
+	buff.WriteString(m.ApplicationID)
 	buff.WriteByte(',')
 
-	buff.Write(msg.encodeFilters())
+	buff.Write(m.encodeFilters())
 	buff.WriteByte(',')
 
-	if msg.Expires != nil {
-		buff.WriteString(msg.Expires.Format(time.RFC3339))
+	if m.Expires != nil {
+		buff.WriteString(m.Expires.Format(time.RFC3339))
 	}
 	buff.WriteByte(',')
 
-	buff.WriteString(strconv.FormatInt(msg.Time, 10))
+	buff.WriteString(strconv.FormatInt(m.Time, 10))
 	buff.WriteByte(',')
 
-	buff.WriteString(strconv.FormatUint(uint64(msg.NodeID), 10))
+	buff.WriteString(strconv.FormatUint(uint64(m.NodeID), 10))
 }
 
-func (msg *Message) encodeFilters() []byte {
-	if msg.Filters == nil {
+func (m *Message) encodeFilters() []byte {
+	if m.Filters == nil {
 		return []byte{}
 	}
-	data, err := json.Marshal(msg.Filters)
+	data, err := json.Marshal(m.Filters)
 	if err != nil {
-		log.WithError(err).WithField("filters", msg.Filters).Error("Error encoding filters")
+		log.WithError(err).WithField("filters", m.Filters).Error("Error encoding filters")
 		return []byte{}
 	}
 	return data
 }
 
-func (msg *Message) decodeFilters(data []byte) {
+func (m *Message) decodeFilters(data []byte) {
 	if len(data) == 0 {
 		return
 	}
-	msg.Filters = make(map[string]string)
-	err := json.Unmarshal(data, &msg.Filters)
+	m.Filters = make(map[string]string)
+	err := json.Unmarshal(data, &m.Filters)
 	if err != nil {
 		log.WithError(err).WithField("data", string(data)).Error("Error decoding filters")
 	}
-}
 
-func (msg *Message) SetFilter(key, value string) {
-	if msg.Filters == nil {
-		msg.Filters = make(map[string]string, 1)
+}
+func (m *Message) SetFilter(key, value string) {
+	if m.Filters == nil {
+		m.Filters = make(map[string]string, 1)
 	}
-	msg.Filters[key] = value
+	m.Filters[key] = value
 }
 
 // Decode decodes a message, sent from the server to the client.
@@ -196,7 +192,7 @@ func ParseMessage(message []byte) (*Message, error) {
 		return nil, fmt.Errorf("message metadata to have an integer (nodeID) as eighth field, but was %v", meta[7])
 	}
 
-	msg := &Message{
+	m := &Message{
 		ID:            id,
 		Path:          Path(meta[0]),
 		UserID:        meta[2],
@@ -205,15 +201,15 @@ func ParseMessage(message []byte) (*Message, error) {
 		Time:          publishingTime,
 		NodeID:        uint8(nodeID),
 	}
-	msg.decodeFilters([]byte(meta[4]))
+	m.decodeFilters([]byte(meta[4]))
 
 	if len(parts) >= 2 {
-		msg.HeaderJSON = parts[1]
+		m.HeaderJSON = parts[1]
 	}
 
 	if len(parts) == 3 {
-		msg.Body = []byte(parts[2])
+		m.Body = []byte(parts[2])
 	}
 
-	return msg, nil
+	return m, nil
 }
