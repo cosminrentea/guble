@@ -92,17 +92,28 @@ func (msg *Message) Bytes() []byte {
 
 func (msg *Message) writeMetadata(buff *bytes.Buffer) {
 	buff.WriteString(string(msg.Path))
-	buff.WriteString(",")
+	buff.WriteByte(',')
+
 	buff.WriteString(strconv.FormatUint(msg.ID, 10))
-	buff.WriteString(",")
+	buff.WriteByte(',')
+
 	buff.WriteString(msg.UserID)
-	buff.WriteString(",")
+	buff.WriteByte(',')
+
 	buff.WriteString(msg.ApplicationID)
-	buff.WriteString(",")
+	buff.WriteByte(',')
+
 	buff.Write(msg.encodeFilters())
-	buff.WriteString(",")
+	buff.WriteByte(',')
+
+	if msg.Expires != nil {
+		buff.WriteString(msg.Expires.Format(time.RFC3339))
+	}
+	buff.WriteByte(',')
+
 	buff.WriteString(strconv.FormatInt(msg.Time, 10))
-	buff.WriteString(",")
+	buff.WriteByte(',')
+
 	buff.WriteString(strconv.FormatUint(uint64(msg.NodeID), 10))
 }
 
@@ -153,7 +164,7 @@ func ParseMessage(message []byte) (*Message, error) {
 
 	meta := strings.Split(parts[0], ",")
 
-	if len(meta) != 7 {
+	if len(meta) != 8 {
 		return nil, fmt.Errorf("message metadata has to have 7 fields, but was %v", parts[0])
 	}
 
@@ -166,14 +177,23 @@ func ParseMessage(message []byte) (*Message, error) {
 		return nil, fmt.Errorf("message metadata to have an integer (message-id) as second field, but was %v", meta[1])
 	}
 
-	publishingTime, err := strconv.ParseInt(meta[5], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("message metadata to have an integer (publishing time) as sixth field, but was %v", meta[5])
+	var expiresTime *time.Time
+	if meta[5] != "" {
+		if t, err := time.Parse(time.RFC3339, meta[5]); err != nil {
+			return nil, fmt.Errorf("message metadata expected to have a  time string (expiration time) as sixth field, but was %v: %s", meta[5], err.Error())
+		} else {
+			expiresTime = &t
+		}
 	}
 
-	nodeID, err := strconv.ParseUint(meta[6], 10, 8)
+	publishingTime, err := strconv.ParseInt(meta[6], 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("message metadata to have an integer (nodeID) as seventh field, but was %v", meta[6])
+		return nil, fmt.Errorf("message metadata to have an integer (publishing time) as seventh field, but was %v:", meta[6])
+	}
+
+	nodeID, err := strconv.ParseUint(meta[7], 10, 8)
+	if err != nil {
+		return nil, fmt.Errorf("message metadata to have an integer (nodeID) as eighth field, but was %v", meta[7])
 	}
 
 	msg := &Message{
@@ -181,6 +201,7 @@ func ParseMessage(message []byte) (*Message, error) {
 		Path:          Path(meta[0]),
 		UserID:        meta[2],
 		ApplicationID: meta[3],
+		Expires:       expiresTime,
 		Time:          publishingTime,
 		NodeID:        uint8(nodeID),
 	}

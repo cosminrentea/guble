@@ -9,17 +9,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var aNormalMessage = `/foo/bar,42,user01,phone01,{"user":"user01"},1420110000,1
+var (
+	aNormalMessage = `/foo/bar,42,user01,phone01,{"user":"user01"},2017-03-17T20:04:26+02:00,1420110000,1
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 
-var aMinimalMessage = "/,42,,,,1420110000,0"
+	aNormalMessageNoExpires = `/foo/bar,42,user01,phone01,{"user":"user01"},,1420110000,1
+{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
+Hello World`
 
-var aConnectedNotification = `#connected You are connected to the server.
+	aMinimalMessage = "/,42,,,,,1420110000,0"
+
+	aConnectedNotification = `#connected You are connected to the server.
 {"ApplicationId": "phone1", "UserId": "user01", "Time": "1420110000"}`
 
-// 2015-01-01T12:00:00+01:00 is equal to  1420110000
-var unixTime, _ = time.Parse(time.RFC3339, "2015-01-01T12:00:00+01:00")
+	// 2015-01-01T12:00:00+01:00 is equal to  1420110000
+	unixTime, _ = time.Parse(time.RFC3339, "2015-01-01T12:00:00+01:00")
+)
 
 func TestParsingANormalMessage(t *testing.T) {
 	assert := assert.New(t)
@@ -53,6 +59,32 @@ func TestSerializeANormalMessage(t *testing.T) {
 		HeaderJSON:    `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
 		Body:          []byte("Hello World"),
 	}
+
+	// then: the serialisation is as expected
+	assert.Equal(t, aNormalMessageNoExpires, string(msg.Bytes()))
+	assert.Equal(t, "Hello World", msg.BodyAsString())
+
+	// and: the first line is as expected
+	assert.Equal(t, strings.SplitN(aNormalMessageNoExpires, "\n", 2)[0], msg.Metadata())
+}
+
+func TestSerializeANormalMessageWithExpires(t *testing.T) {
+	// given: a message
+	msg := &Message{
+		ID:            uint64(42),
+		Path:          Path("/foo/bar"),
+		UserID:        "user01",
+		ApplicationID: "phone01",
+		Filters:       map[string]string{"user": "user01"},
+		Time:          unixTime.Unix(),
+		NodeID:        1,
+		HeaderJSON:    `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
+		Body:          []byte("Hello World"),
+	}
+
+	expire, err := time.Parse(time.RFC3339, "2017-03-17T20:04:26+02:00")
+	assert.NoError(t, err)
+	msg.Expires = &expire
 
 	// then: the serialisation is as expected
 	assert.Equal(t, aNormalMessage, string(msg.Bytes()))
@@ -124,26 +156,6 @@ func TestErrorsOnParsingMessages(t *testing.T) {
 	// Error Message without Name
 	_, err = Decode([]byte("!"))
 	assert.Error(err)
-}
-
-func TestSerializeAnErrorMessage(t *testing.T) {
-	msg := &NotificationMessage{
-		Name:    ERROR_BAD_REQUEST,
-		Arg:     "you are so bad.",
-		IsError: true,
-	}
-
-	assert.Equal(t, "!"+ERROR_BAD_REQUEST+" "+"you are so bad.", string(msg.Bytes()))
-}
-
-func TestSerializeANotificationMessageWithEmptyArg(t *testing.T) {
-	msg := &NotificationMessage{
-		Name:    SUCCESS_SEND,
-		Arg:     "",
-		IsError: false,
-	}
-
-	assert.Equal(t, "#"+SUCCESS_SEND, string(msg.Bytes()))
 }
 
 func Test_Message_getPartitionFromTopic(t *testing.T) {

@@ -46,3 +46,23 @@ func TestParsingErrorNotificationMessage(t *testing.T) {
 	assert.Equal("", msg.Json)
 	assert.Equal(true, msg.IsError)
 }
+
+func TestSerializeAnErrorMessage(t *testing.T) {
+	msg := &NotificationMessage{
+		Name:    ERROR_BAD_REQUEST,
+		Arg:     "you are so bad.",
+		IsError: true,
+	}
+
+	assert.Equal(t, "!"+ERROR_BAD_REQUEST+" "+"you are so bad.", string(msg.Bytes()))
+}
+
+func TestSerializeANotificationMessageWithEmptyArg(t *testing.T) {
+	msg := &NotificationMessage{
+		Name:    SUCCESS_SEND,
+		Arg:     "",
+		IsError: false,
+	}
+
+	assert.Equal(t, "#"+SUCCESS_SEND, string(msg.Bytes()))
+}
