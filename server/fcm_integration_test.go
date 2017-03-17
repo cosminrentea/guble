@@ -62,7 +62,6 @@ func TestFCMRestart(t *testing.T) {
 	receiveC := make(chan bool)
 	s, cleanup := serviceSetUp(t)
 	defer cleanup()
-	defer s.Stop()
 
 	assertMetrics(a, s, expectedValues{true, 0, 0, 0})
 
