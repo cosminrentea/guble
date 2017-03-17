@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var aNormalMessage = `/foo/bar,42,user01,phone01,{},1420110000,0
+var aNormalMessage = `/foo/bar,42,user01,phone01,{},,1420110000,0
 
 Hello World`
 
