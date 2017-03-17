@@ -119,6 +119,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	if r.Sent() {
 		logger.WithField("id", r.ApnsID).Info("APNS notification was successfully sent")
 		mTotalSentMessages.Add(1)
+		pSentMessages.Inc()
 		if *a.IntervalMetrics && metadata != nil {
 			addToLatenciesAndCountsMaps(currentTotalMessagesLatenciesKey, currentTotalMessagesKey, metadata.Latency)
 		}
