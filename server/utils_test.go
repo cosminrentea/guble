@@ -50,7 +50,7 @@ func (tnc *testClusterNodeConfig) parseConfig() error {
 		"--http", tnc.HttpListen,
 		"--storage-path", tnc.StoragePath,
 		"--health-endpoint", "",
-
+		"--ws",
 		"--fcm",
 		"--fcm-api-key", "WILL BE OVERWRITTEN",
 		"--fcm-workers", "4",
@@ -107,7 +107,7 @@ func newTestClusterNode(t *testing.T, nodeConfig testClusterNodeConfig) *testClu
 			break
 		}
 	}
-	if !a.True(ok, "There should be a module of type GCMConnector") {
+	if !a.True(ok, "There should be a module of type ResponsiveConnector (FCM)") {
 		return nil
 	}
 

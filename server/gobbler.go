@@ -109,16 +109,17 @@ var CreateMessageStore = func() store.MessageStore {
 // CreateModules is a func which returns a slice of modules which should be used by the service
 // (currently, based on guble configuration);
 // see package `service` for terminological details.
-var CreateModules = func(router router.Router) []interface{} {
-	var modules []interface{}
-
-	if wsHandler, err := websocket.NewWSHandler(router, "/stream/"); err != nil {
-		logger.WithError(err).Error("Error loading WSHandler module")
-	} else {
-		modules = append(modules, wsHandler)
-	}
+var CreateModules = func(router router.Router) (modules []interface{}) {
 
 	modules = append(modules, rest.NewRestMessageAPI(router, "/api/"))
+
+	if *Config.WS.Enabled {
+		if wsHandler, err := websocket.NewWSHandler(router, *Config.WS.Prefix); err != nil {
+			logger.WithError(err).Error("Error loading WSHandler module")
+		} else {
+			modules = append(modules, wsHandler)
+		}
+	}
 
 	if *Config.FCM.Enabled {
 		logger.Info("Firebase Cloud Messaging: enabled")
@@ -189,7 +190,7 @@ var CreateModules = func(router router.Router) []interface{} {
 		logger.Info("SMS: disabled")
 	}
 
-	return modules
+	return
 }
 
 // Main is the entry-point of the guble server.
