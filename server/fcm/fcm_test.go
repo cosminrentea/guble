@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/Bogh/gcm"
-	"github.com/golang/mock/gomock"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -2,11 +2,11 @@ package apns
 
 import (
 	"errors"
-	"github.com/golang/mock/gomock"
-	"github.com/sideshow/apns2"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/golang/mock/gomock"
+	"github.com/sideshow/apns2"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
