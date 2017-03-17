@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 )
 
 func Test_NexmoHTTPError(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)
@@ -70,7 +68,6 @@ func Test_NexmoInvalidSenderError(t *testing.T) {
 }
 
 func Test_NexmoMultipleErrorsFollowedBySuccess(t *testing.T) {
-	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	port := createRandomPort(7000, 9000)

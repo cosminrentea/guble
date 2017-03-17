@@ -82,8 +82,8 @@ type Subscriber struct {
 }
 
 func TestSubscribersIntegration(t *testing.T) {
-	defer testutil.SkipIfShort(t)
-	defer testutil.SkipIfDisabled(t)
+	testutil.SkipIfShort(t)
+	testutil.SkipIfDisabled(t)
 
 	defer testutil.ResetDefaultRegistryHealthCheck()
 	defer testutil.EnableDebugForMethod()()
