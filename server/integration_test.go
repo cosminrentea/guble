@@ -24,6 +24,7 @@ func initServerAndClients(t *testing.T) (*service.Service, client.Client, client
 	*Config.HttpListen = "localhost:0"
 	*Config.KVS = "memory"
 	*Config.WS.Enabled = true
+	*Config.WS.Prefix = "/stream/"
 	s := StartService()
 
 	time.Sleep(time.Millisecond * 100)

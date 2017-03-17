@@ -26,6 +26,7 @@ func Benchmark_E2E_Fetch_HelloWorld_Messages(b *testing.B) {
 	*Config.MS = "file"
 	*Config.StoragePath = dir
 	*Config.WS.Enabled = true
+	*Config.WS.Prefix = "/stream/"
 	service := StartService()
 	defer service.Stop()
 

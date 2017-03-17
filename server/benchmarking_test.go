@@ -49,6 +49,7 @@ func TestThroughput(t *testing.T) {
 	*Config.MS = "file"
 	*Config.StoragePath = dir
 	*Config.WS.Enabled = true
+	*Config.WS.Prefix = "/stream/"
 
 	service := StartService()
 
