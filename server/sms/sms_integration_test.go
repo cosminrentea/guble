@@ -20,7 +20,7 @@ func Test_NexmoHTTPError(t *testing.T) {
 
 	port := createRandomPort(7000, 9000)
 	URL = "http://127.0.0.1" + port
-	expectedRequestNo := 3
+
 	countCh := make(chan bool, 0)
 	go dummyNexmoEndpointWithHandlerFunc(t, countCh, port, noResponseFromNexmoHandler)
 	kvStore, f := createKVStore(t, "/guble_sms_nexmo_error")
@@ -33,7 +33,7 @@ func Test_NexmoHTTPError(t *testing.T) {
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 
-	readServedResponses(t, expectedRequestNo, countCh)
+	readServedResponses(t, 3, countCh)
 	//await for gateway to write lastIDSent in kvstore.
 	time.Sleep(timeInterval)
 	a.Equal(msg.ID, gw.LastIDSent, "Retry failed.Last id  sent should be msgId")
@@ -314,8 +314,8 @@ func invalidSenderNexmoHandler(t *testing.T, countCh chan bool) http.HandlerFunc
 }
 
 func multipleErrorsFollowedBySuccessNexmoHandler(t *testing.T, countCh chan bool) http.HandlerFunc {
+	//expect 3 request to be made .
 	noOfReq := 3
-	fmt.Println("--------------", noOfReq)
 	return func(w http.ResponseWriter, r *http.Request) {
 		a := assert.New(t)
 		sentSms := decodeSMSMessage(t, r)
