@@ -116,7 +116,7 @@ func TestRouteDeliver_WithTimeout(t *testing.T) {
 	// create a route with timeout and infinite queue size
 	r := testRoute()
 	r.QueueSize = -1 // infinite queue size
-	r.timeout = 10 * time.Millisecond
+	r.Timeout = 10 * time.Millisecond
 
 	// fill the channel buffer
 	for i := 0; i < chanSize; i++ {

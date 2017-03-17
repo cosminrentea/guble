@@ -24,9 +24,9 @@ type RouteConfig struct {
 	// are directly sent, without buffering.
 	QueueSize int
 
-	// timeout defines how long to wait for the message to be read on the channel.
-	// If timeout is reached the route is closed.
-	timeout time.Duration
+	// Timeout defines how long to wait for the message to be read on the channel.
+	// If Timeout is reached the route is closed.
+	Timeout time.Duration
 
 	// Matcher if set will be used to check equality of the routes
 	Matcher Matcher `json:"-"`
