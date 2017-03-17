@@ -104,7 +104,6 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	return msg
 }
 
-
 func encodeUnmarshableProtocolMessage(ID int) protocol.Message {
 	msg := protocol.Message{
 		Path:          protocol.Path(SMSDefaultTopic),
@@ -150,4 +149,17 @@ func createNexmoSender(t *testing.T) Sender {
 		a.FailNow("Nexmo sender could not be created.")
 	}
 	return nexmoSender
+}
+
+func readServedResponses(t *testing.T, expectedRequestNo int, countCh chan bool) {
+	a := assert.New(t)
+	for i := 0; i < expectedRequestNo; i++ {
+		select {
+		case <-countCh:
+			logger.WithField("request_number", i).Info("Read From chanel")
+		case <-time.After(1 * time.Minute):
+			a.FailNow("Timeout expired.")
+			return
+		}
+	}
 }
