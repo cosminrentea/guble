@@ -134,7 +134,7 @@ func serviceSetUp(t *testing.T) (*service.Service, func()) {
 	*Config.MS = "file"
 	*Config.Cluster.NodeID = 0
 	*Config.StoragePath = dir
-	*Config.MetricsEndpoint = "/admin/metrics"
+	*Config.MetricsEndpoint = "/admin/metrics-old"
 	*Config.WS.Enabled = true
 	*Config.WS.Prefix = "/stream/"
 	*Config.FCM.Enabled = true
