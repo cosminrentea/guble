@@ -120,10 +120,7 @@ func TestCluster_NewShouldReturnErrorWhenPortIsInvalid(t *testing.T) {
 
 	config := Config{ID: 1, Host: "localhost", Port: -1, Remotes: remotes}
 	_, err := New(&config)
-	if a.Error(err, "An error was expected when Creating the Cluster") {
-		a.Equal(err, errors.New("Failed to start TCP listener. Err: listen tcp :-1: bind: invalid argument"),
-			"Error should be precisely defined")
-	}
+	a.Error(err, "An error was expected when Creating the Cluster")
 }
 
 func TestCluster_StartShouldReturnErrorWhenNoRemotes(t *testing.T) {
