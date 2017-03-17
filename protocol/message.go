@@ -136,11 +136,23 @@ func (m *Message) decodeFilters(data []byte) {
 	}
 
 }
+
 func (m *Message) SetFilter(key, value string) {
 	if m.Filters == nil {
 		m.Filters = make(map[string]string, 1)
 	}
 	m.Filters[key] = value
+}
+
+// IsExpired returns true if the message `Expires` field is set and the current time
+// has pasted the `Expires` time
+//
+// Checks are made using `Expires` field timezone
+func (m *Message) IsExpired() bool {
+	if m.Expires == nil {
+		return true
+	}
+	return m.Expires != nil && m.Expires.Before(time.Now().In(m.Expires.Location()))
 }
 
 // Decode decodes a message, sent from the server to the client.

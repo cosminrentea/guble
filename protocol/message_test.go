@@ -195,3 +195,35 @@ func TestMessage_decodeFilters(t *testing.T) {
 	a.Equal(msg.Filters["user"], "user01")
 	a.Equal(msg.Filters["device_id"], "ID_DEVICE")
 }
+
+func TestMessage_IsExpired(t *testing.T) {
+	a := assert.New(t)
+
+	n := time.Now().UTC()
+	loc1, err := time.LoadLocation("Europe/Berlin")
+	a.NoError(err)
+
+	loc2, err := time.LoadLocation("Europe/Bucharest")
+	a.NoError(err)
+
+	cases := []struct {
+		expires time.Time
+		result  bool
+	}{
+		{n.AddDate(0, 0, 1), false},
+		{n.AddDate(0, 0, -1), true},
+		{n.AddDate(0, 0, 1).In(loc1), false},
+		{n.AddDate(0, 0, 1).In(loc2), false},
+		{n.AddDate(0, 0, -1).In(loc1), true},
+		{n.AddDate(0, 0, -1).In(loc2), true},
+		{n.Add(1 * time.Minute).In(loc1), false},
+		{n.Add(1 * time.Minute).In(loc2), false},
+		{n.Add(-1 * time.Minute).In(loc1), true},
+		{n.Add(-1 * time.Minute).In(loc2), true},
+	}
+
+	for i, c := range cases {
+		a.Equal(c.result, (&Message{Expires: &c.expires}).IsExpired(), "Failed IsExpired case: %d", i)
+	}
+
+}
