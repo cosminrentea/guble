@@ -86,6 +86,7 @@ func (g *gateway) initRoute() {
 		Path:         protocol.Path(*g.config.SMSTopic),
 		ChannelSize:  5000,
 		QueueSize:    -1,
+		Timeout:      -1,
 		FetchRequest: g.fetchRequest(),
 	})
 }
