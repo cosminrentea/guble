@@ -142,8 +142,6 @@ func (g *gateway) Run() {
 	}
 }
 
-// proxyLoop returns the current processed message alongside the error that
-// occured during sending of the message
 func (g *gateway) proxyLoop() error {
 	var (
 		opened      bool = true
@@ -164,23 +162,15 @@ func (g *gateway) proxyLoop() error {
 				// THIS MAY BE BLOCKING.Maybe not a good idea.
 				for err2 := g.SetLastSentID(receivedMsg.ID); err2 != nil; {
 					g.logger.WithField("error", err2.Error()).Error("Error setting last ID.Retrying")
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(time.Second)
 				}
 				g.logger.WithField("id", receivedMsg.ID).Info("Set last id to ")
 				continue
 			} else if err != nil {
 				g.logger.WithField("err", err.Error()).Error("Exiting from proxyLoop.")
 				return err
-			} else {
-				continue
 			}
-
 		case <-g.ctx.Done():
-			// If the parent context is still running then only this subscriber context
-			// has been cancelled
-			if g.ctx.Err() == nil {
-				return g.ctx.Err()
-			}
 			return nil
 		}
 	}
