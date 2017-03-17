@@ -278,6 +278,7 @@ func TestConnector_Substitute(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPost, "/connector"+SubstitutePath, strings.NewReader(postBody))
 	conn.ServeHTTP(recorder, req)
 
+	a.NoError(err)
 	a.Equal(http.StatusOK, recorder.Code)
 	a.Equal(`{"modified":"1"}`, recorder.Body.String())
 }
@@ -322,6 +323,7 @@ func TestConnector_SubstituteWrongPostBody(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPost, "/connector"+SubstitutePath, strings.NewReader(postBody))
 	conn.ServeHTTP(recorder, req)
 
+	a.NoError(err)
 	a.Equal(http.StatusBadRequest, recorder.Code)
 }
 
