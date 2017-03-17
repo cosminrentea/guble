@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-const basePort = 11000
+const basePort = 10000
 
 var (
 	index = 1
@@ -37,7 +37,7 @@ func testConfigAnother() (config Config) {
 	var remotes []*net.TCPAddr
 	remotes = append(remotes, &remoteAddr)
 	config = Config{ID: uint8(index), Host: "127.0.0.1", Port: basePort + index, Remotes: remotes}
-	index+=2
+	index++
 	return
 }
 
