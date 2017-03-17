@@ -43,13 +43,13 @@ var (
 	MaxIdleConnections = 100
 	RequestTimeout     = 500 * time.Millisecond
 
-	ErrHttpClientError           = errors.New("Http client sending to Nexmo Failed.No sms was sent.")
-	ErrNexmoResponseStatusNotOk  = errors.New("Nexmo response status not ResponseSuccess.")
-	ErrSMSResponseDecodingFailed = errors.New("Nexmo response decoding failed.")
-	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid.")
-	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long.")
-	ErrRetryFailed               = errors.New("Failed retrying to send message.")
-	ErrEncodeFailed              = errors.New("Encoding of message to be sent to Nexmo  failed.")
+	ErrHTTPClientError           = errors.New("Http client sending to Nexmo Failed.No sms was sent")
+	ErrNexmoResponseStatusNotOk  = errors.New("Nexmo response status not ResponseSuccess")
+	ErrSMSResponseDecodingFailed = errors.New("Nexmo response decoding failed")
+	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid")
+	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long")
+	ErrRetryFailed               = errors.New("Failed retrying to send message")
+	ErrEncodeFailed              = errors.New("Encoding of message to be sent to Nexmo  failed")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -210,7 +210,7 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 		logger.WithField("error", err.Error()).Error("Error doing the request to nexmo endpoint")
 		ns.createHttpClient()
 		mTotalSendErrors.Add(1)
-		return nil, ErrHttpClientError
+		return nil, ErrHTTPClientError
 	}
 	defer resp.Body.Close()
 
