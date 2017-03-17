@@ -104,7 +104,7 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	return msg
 }
 
-func encodeUnmarshableProtocolMessage(ID int) protocol.Message {
+func encodeUnmarshallableProtocolMessage(ID int) protocol.Message {
 	msg := protocol.Message{
 		Path:          protocol.Path(SMSDefaultTopic),
 		UserID:        "samsa",
@@ -156,7 +156,7 @@ func readServedResponses(t *testing.T, expectedRequestNo int, countCh chan bool)
 	for i := 0; i < expectedRequestNo; i++ {
 		select {
 		case <-countCh:
-			logger.WithField("request_number", i).Info("Read From chanel")
+			logger.WithField("request_number", i).Info("Read from channel")
 		case <-time.After(1 * time.Minute):
 			a.FailNow("Timeout expired.")
 			return

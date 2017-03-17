@@ -126,7 +126,7 @@ func Test_WrongEncodedSmsInRouterMessage(t *testing.T) {
 
 	gw := createGateway(t, kvStore)
 
-	msg := encodeUnmarshableProtocolMessage(2)
+	msg := encodeUnmarshallableProtocolMessage(2)
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 

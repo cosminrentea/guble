@@ -52,6 +52,7 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 	if *config.Workers <= 0 {
 		*config.Workers = connector.DefaultWorkers
 	}
+	logger.WithField("number", *config.Workers).Debug("sms workers")
 	config.Schema = SMSSchema
 	config.Name = SMSDefaultTopic
 	return &gateway{
@@ -67,6 +68,7 @@ func (g *gateway) Start() error {
 
 	err := g.ReadLastID()
 	if err != nil {
+		g.logger.Error("Could not ReadLastID in Start")
 		return err
 	}
 
@@ -112,6 +114,8 @@ func (g *gateway) Run() {
 			logger.WithField("error", err.Error()).Error("Provide returned error")
 			provideErr = err
 			g.Cancel()
+		} else {
+			g.logger.Debug("Provide ok")
 		}
 	}()
 
@@ -119,6 +123,7 @@ func (g *gateway) Run() {
 	if err != nil && provideErr == nil {
 		// If Route channel closed, try restarting
 		if err == connector.ErrRouteChannelClosed {
+			g.logger.Info("Restarting because ErrRouteChannelClosed")
 			g.Restart()
 			return
 		}
@@ -131,6 +136,7 @@ func (g *gateway) Run() {
 
 		// Router closed the route, try restart
 		if provideErr == router.ErrInvalidRoute {
+			g.logger.Info("Restarting because ErrInvalidRoute")
 			g.Restart()
 			return
 		}
@@ -198,6 +204,7 @@ func (g *gateway) Restart() error {
 
 	err := g.ReadLastID()
 	if err != nil {
+		g.logger.WithError(err).Error("Could not ReadLastID in Restart")
 		return err
 	}
 
@@ -212,6 +219,7 @@ func (g *gateway) Restart() error {
 func (g *gateway) Stop() error {
 	g.logger.Debug("Stopping gateway")
 	if g.cancelFunc != nil {
+		g.logger.Debug("Canceling in Stop")
 		g.cancelFunc()
 	}
 	g.logger.Debug("Stopped gateway")
@@ -253,6 +261,7 @@ func (g *gateway) ReadLastID() error {
 		return err
 	}
 	if !exist {
+		g.logger.Error("Setting LastIDSent to 0")
 		g.LastIDSent = 0
 		return nil
 	}
