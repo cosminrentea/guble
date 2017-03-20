@@ -207,7 +207,7 @@ func (router *router) Subscribe(r *Route) (*Route, error) {
 
 // Subscribe adds a route to the subscribers. If there is already a route with same Application Id and Path, it will be replaced.
 func (router *router) Unsubscribe(r *Route) {
-	logger.WithFields("route", r).Debug("Unsubscribe")
+	logger.WithField("route", r).Debug("Unsubscribe")
 
 	req := subRequest{
 		route: r,
