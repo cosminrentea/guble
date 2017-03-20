@@ -110,6 +110,7 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 	}
 	if response.Ok() {
 		mTotalSentMessages.Add(1)
+		pSentMessages.Inc()
 		if *f.IntervalMetrics && metadata != nil {
 			addToLatenciesAndCountsMaps(currentTotalMessagesLatenciesKey, currentTotalMessagesKey, metadata.Latency)
 		}
