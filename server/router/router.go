@@ -189,7 +189,7 @@ func (router *router) HandleMessage(message *protocol.Message) error {
 }
 
 func (router *router) Subscribe(r *Route) (*Route, error) {
-	logger.WithFields(log.Fields{"route": r}).Debug("Subscribe")
+	logger.WithField("route", r).Debug("Subscribe")
 
 	if err := router.isStopping(); err != nil {
 		return nil, err
@@ -207,7 +207,7 @@ func (router *router) Subscribe(r *Route) (*Route, error) {
 
 // Subscribe adds a route to the subscribers. If there is already a route with same Application Id and Path, it will be replaced.
 func (router *router) Unsubscribe(r *Route) {
-	logger.WithFields(log.Fields{"route": r}).Debug("Unsubscribe")
+	logger.WithFields("route", r).Debug("Unsubscribe")
 
 	req := subRequest{
 		route: r,
