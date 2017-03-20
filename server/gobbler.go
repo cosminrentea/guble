@@ -6,7 +6,6 @@ import (
 	"github.com/cosminrentea/gobbler/logformatter"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/apns"
-	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/cluster"
 	"github.com/cosminrentea/gobbler/server/fcm"
 	"github.com/cosminrentea/gobbler/server/kvstore"
@@ -57,12 +56,6 @@ var ValidateStoragePath = func() error {
 		os.Remove(testfile)
 	}
 	return nil
-}
-
-// CreateAccessManager is a func which returns a auth.AccessManager implementation
-// (currently: AllowAllAccessManager).
-var CreateAccessManager = func() auth.AccessManager {
-	return auth.NewAllowAllAccessManager(true)
 }
 
 // CreateKVStore is a func which returns a kvstore.KVStore implementation
@@ -255,7 +248,6 @@ func Main() {
 func StartService() *service.Service {
 	//TODO StartService could return an error in case it fails to start
 
-	accessManager := CreateAccessManager()
 	messageStore := CreateMessageStore()
 	kvStore := CreateKVStore()
 
@@ -277,7 +269,7 @@ func StartService() *service.Service {
 		logger.Info("Starting in standalone-mode")
 	}
 
-	r := router.New(accessManager, messageStore, kvStore, cl)
+	r := router.New(messageStore, kvStore, cl)
 	websrv := webserver.New(*Config.HttpListen)
 
 	srv := service.New(r, websrv).
