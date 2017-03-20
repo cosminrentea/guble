@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/store"
 	"github.com/cosminrentea/gobbler/testutil"
@@ -407,7 +406,7 @@ func TestRoute_Provide_MultipleFetch(t *testing.T) {
 	memoryKV := kvstore.NewMemoryKVStore()
 
 	msMock := NewMockMessageStore(ctrl)
-	router := New(auth.AllowAllAccessManager(true), msMock, memoryKV, nil)
+	router := New(msMock, memoryKV, nil)
 
 	if startable, ok := router.(startable); ok {
 		startable.Start()
