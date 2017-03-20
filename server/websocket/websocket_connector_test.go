@@ -5,7 +5,6 @@ import (
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store"
 	"github.com/cosminrentea/gobbler/testutil"
-	"github.com/smancke/guble/server/auth"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +53,7 @@ func Test_WebSocket_SubscribeAndUnsubscribe(t *testing.T) {
 		Send([]byte("#" + protocol.SUCCESS_CANCELED + " /foo")).
 		Do(doneGroup)
 
-	websocket := runNewWebSocket(wsconn, routerMock, messageStore, nil)
+	websocket := runNewWebSocket(wsconn, routerMock, messageStore)
 	wg.Wait()
 
 	a.Equal(1, len(websocket.receivers))
@@ -71,7 +70,7 @@ func Test_SendMessage(t *testing.T) {
 	routerMock.EXPECT().HandleMessage(messageMatcher{path: "/path", message: "Hello, this is a test", header: `{"key": "value"}`})
 	wsconn.EXPECT().Send([]byte("#send"))
 
-	runNewWebSocket(wsconn, routerMock, messageStore, nil)
+	runNewWebSocket(wsconn, routerMock, messageStore)
 }
 
 func Test_AnIncomingMessageIsDelivered(t *testing.T) {
@@ -82,7 +81,7 @@ func Test_AnIncomingMessageIsDelivered(t *testing.T) {
 
 	wsconn.EXPECT().Send(aTestMessage.Bytes())
 
-	handler := runNewWebSocket(wsconn, routerMock, messageStore, nil)
+	handler := runNewWebSocket(wsconn, routerMock, messageStore)
 
 	handler.sendChannel <- aTestMessage.Bytes()
 	time.Sleep(time.Millisecond * 2)
@@ -114,7 +113,7 @@ func Test_BadCommands(t *testing.T) {
 		return nil
 	}).AnyTimes()
 
-	runNewWebSocket(wsconn, routerMock, messageStore, nil)
+	runNewWebSocket(wsconn, routerMock, messageStore)
 
 	wg.Wait()
 	assert.Equal(t, len(badRequests), counter, "expected number of bad requests does not match")
@@ -138,12 +137,8 @@ func testWSHandler(
 func runNewWebSocket(
 	wsconn *MockWSConnection,
 	routerMock *MockRouter,
-	messageStore store.MessageStore,
-	accessManager auth.AccessManager) *WebSocket {
+	messageStore store.MessageStore) *WebSocket {
 
-	if accessManager == nil {
-		accessManager = auth.NewAllowAllAccessManager(true)
-	}
 	websocket := NewWebSocket(
 		testWSHandler(routerMock),
 		wsconn,
