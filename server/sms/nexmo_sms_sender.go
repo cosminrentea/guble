@@ -193,7 +193,7 @@ func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error)) er
 }
 
 func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
-	logger.WithField("sms_details", sms).Info("sendSms")
+	logger.WithField("sms_details", sms).WithField("order_id", sms.ClientRef).Info("sendSms")
 
 	smsEncoded, err := sms.EncodeNexmoSms(ns.ApiKey, ns.ApiSecret)
 	if err != nil {
@@ -228,7 +228,7 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 		mTotalResponseInternalErrors.Add(1)
 		return nil, ErrSMSResponseDecodingFailed
 	}
-	logger.WithField("messageResponse", messageResponse).Info("Actual nexmo response")
+	logger.WithField("messageResponse", messageResponse).WithField("order_id", sms.ClientRef).Info("Actual nexmo response")
 
 	return messageResponse, nil
 }
