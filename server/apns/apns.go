@@ -98,6 +98,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	if errSend != nil {
 		logger.WithField("error", errSend.Error()).WithField("error_type", errSend).Error("error when trying to send APNS notification")
 		mTotalSendErrors.Add(1)
+		pSendErrors.Inc()
 		if *a.IntervalMetrics && metadata != nil {
 			addToLatenciesAndCountsMaps(currentTotalErrorsLatenciesKey, currentTotalErrorsKey, metadata.Latency)
 		}

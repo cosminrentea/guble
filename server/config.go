@@ -18,20 +18,21 @@ import (
 )
 
 const (
-	defaultHttpListen      = ":8080"
-	defaultHealthEndpoint  = "/admin/healthcheck"
-	defaultMetricsEndpoint = "/admin/metrics"
-	defaultKVSBackend      = "file"
-	defaultMSBackend       = "file"
-	defaultStoragePath     = "/var/lib/guble"
-	defaultNodePort        = "10000"
-	development            = "dev"
-	integration            = "int"
-	preproduction          = "pre"
-	production             = "prod"
-	memProfile             = "mem"
-	cpuProfile             = "cpu"
-	blockProfile           = "block"
+	defaultHttpListen         = ":8080"
+	defaultHealthEndpoint     = "/admin/healthcheck"
+	defaultMetricsEndpoint    = "/admin/metrics-old"
+	defaultPrometheusEndpoint = "/admin/metrics"
+	defaultKVSBackend         = "file"
+	defaultMSBackend          = "file"
+	defaultStoragePath        = "/var/lib/guble"
+	defaultNodePort           = "10000"
+	development               = "dev"
+	integration               = "int"
+	preproduction             = "pre"
+	production                = "prod"
+	memProfile                = "mem"
+	cpuProfile                = "cpu"
+	blockProfile              = "block"
 )
 
 var (
@@ -59,21 +60,22 @@ type (
 	}
 	// GubleConfig is used for configuring Guble server (including its modules / connectors).
 	GubleConfig struct {
-		Log             *string
-		EnvName         *string
-		HttpListen      *string
-		KVS             *string
-		MS              *string
-		StoragePath     *string
-		HealthEndpoint  *string
-		MetricsEndpoint *string
-		Profile         *string
-		Postgres        PostgresConfig
-		FCM             fcm.Config
-		APNS            apns.Config
-		SMS             sms.Config
-		WS		websocket.Config
-		Cluster         ClusterConfig
+		Log                *string
+		EnvName            *string
+		HttpListen         *string
+		KVS                *string
+		MS                 *string
+		StoragePath        *string
+		HealthEndpoint     *string
+		MetricsEndpoint    *string
+		PrometheusEndpoint *string
+		Profile            *string
+		Postgres           PostgresConfig
+		FCM                fcm.Config
+		APNS               apns.Config
+		SMS                sms.Config
+		WS                 websocket.Config
+		Cluster            ClusterConfig
 	}
 )
 
@@ -114,6 +116,10 @@ var (
 		MetricsEndpoint: kingpin.Flag("metrics-endpoint", `The metrics endpoint to be used by the HTTP server (value for disabling it: "")`).
 			Default(defaultMetricsEndpoint).
 			Envar("GUBLE_METRICS_ENDPOINT").
+			String(),
+		PrometheusEndpoint: kingpin.Flag("prometheus-endpoint", `The metrics Prometheus endpoint to be used by the HTTP server (value for disabling it: "")`).
+			Default(defaultPrometheusEndpoint).
+			Envar("GUBLE_PROMETHEUS_ENDPOINT").
 			String(),
 		Profile: kingpin.Flag("profile", `The profiler to be used (default: none): mem | cpu | block`).
 			Default("").

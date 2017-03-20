@@ -3,16 +3,16 @@ package sms
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/server/auth"
-	"github.com/cosminrentea/gobbler/server/kvstore"
-	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/cosminrentea/gobbler/server/store/dummystore"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/cosminrentea/gobbler/server/kvstore"
+	"github.com/cosminrentea/gobbler/server/router"
+	"github.com/cosminrentea/gobbler/server/store/dummystore"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -121,9 +121,8 @@ func createGateway(t *testing.T, kvStore kvstore.KVStore) *gateway {
 	sender := createNexmoSender(t)
 	config := createConfig()
 	msgStore := dummystore.New(kvStore)
-	accessManager := auth.NewAllowAllAccessManager(true)
 
-	unstartedRouter := router.New(accessManager, msgStore, kvStore, nil)
+	unstartedRouter := router.New(msgStore, kvStore, nil)
 
 	gw, err := New(unstartedRouter, sender, config)
 	a.NoError(err)
