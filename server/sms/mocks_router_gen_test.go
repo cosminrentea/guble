@@ -5,7 +5,6 @@ package sms
 
 import (
 	protocol "github.com/cosminrentea/gobbler/protocol"
-	auth "github.com/cosminrentea/gobbler/server/auth"
 	cluster "github.com/cosminrentea/gobbler/server/cluster"
 	kvstore "github.com/cosminrentea/gobbler/server/kvstore"
 	router "github.com/cosminrentea/gobbler/server/router"
@@ -32,17 +31,6 @@ func NewMockRouter(ctrl *gomock.Controller) *MockRouter {
 
 func (_m *MockRouter) EXPECT() *_MockRouterRecorder {
 	return _m.recorder
-}
-
-func (_m *MockRouter) AccessManager() (auth.AccessManager, error) {
-	ret := _m.ctrl.Call(_m, "AccessManager")
-	ret0, _ := ret[0].(auth.AccessManager)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-func (_mr *_MockRouterRecorder) AccessManager() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "AccessManager")
 }
 
 func (_m *MockRouter) Cluster() *cluster.Cluster {
