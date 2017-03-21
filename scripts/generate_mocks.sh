@@ -49,11 +49,6 @@ $MOCKGEN -self_package router -package router \
       KVStore &
 
 $MOCKGEN -self_package router -package router \
-      -destination server/router/mocks_auth_gen_test.go \
-      github.com/cosminrentea/gobbler/server/auth \
-      AccessManager &
-
-$MOCKGEN -self_package router -package router \
       -destination server/router/mocks_checker_gen_test.go \
       github.com/docker/distribution/health \
       Checker &
@@ -114,11 +109,6 @@ $MOCKGEN -package server \
       Router &
 
 $MOCKGEN -self_package server -package server \
-      -destination server/mocks_auth_gen_test.go \
-      github.com/cosminrentea/gobbler/server/auth \
-      AccessManager &
-
-$MOCKGEN -self_package server -package server \
       -destination server/mocks_store_gen_test.go \
       github.com/cosminrentea/gobbler/server/store \
       MessageStore &
@@ -128,14 +118,6 @@ $MOCKGEN -package server \
       github.com/cosminrentea/gobbler/server/apns \
       Pusher &
 
-# server/auth mocks
-$MOCKGEN -self_package auth -package auth \
-      -destination server/auth/mocks_auth_gen_test.go \
-      github.com/cosminrentea/gobbler/server/auth \
-      AccessManager
-replace "server/auth/mocks_auth_gen_test.go" \
-      "auth \"github.com\/cosminrentea\/gobbler\/server\/auth\"" \
-      "auth\."
 
 # server/connector mocks
 $MOCKGEN -self_package connector -package connector \
@@ -174,11 +156,6 @@ $MOCKGEN -self_package websocket -package websocket \
       -destination server/websocket/mocks_store_gen_test.go \
       github.com/cosminrentea/gobbler/server/store \
       MessageStore &
-
-$MOCKGEN -self_package websocket -package websocket \
-      -destination server/websocket/mocks_auth_gen_test.go \
-      github.com/cosminrentea/gobbler/server/auth \
-      AccessManager &
 
 # server/rest Mocks
 $MOCKGEN -package rest \

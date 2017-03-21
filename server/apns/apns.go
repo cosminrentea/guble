@@ -107,6 +107,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	r, ok := responseIface.(*apns2.Response)
 	if !ok {
 		mTotalResponseErrors.Add(1)
+		pResponseErrors.Inc()
 		return fmt.Errorf("Response could not be converted to an APNS Response")
 	}
 	messageID := request.Message().ID
@@ -115,6 +116,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	if err := a.Manager().Update(subscriber); err != nil {
 		logger.WithField("error", err.Error()).Error("Manager could not update subscription")
 		mTotalResponseInternalErrors.Add(1)
+		pResponseInternalErrors.Inc()
 		return err
 	}
 	if r.Sent() {
@@ -137,6 +139,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 
 		logger.WithField("id", r.ApnsID).Info("trying to remove subscriber because a relevant error was received from APNS")
 		mTotalResponseRegistrationErrors.Add(1)
+		pResponseRegistrationErrors.Inc()
 		err := a.Manager().Remove(subscriber)
 		if err != nil {
 			logger.WithField("id", r.ApnsID).Error("could not remove subscriber")
@@ -144,6 +147,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	default:
 		logger.Error("handling other APNS errors")
 		mTotalResponseOtherErrors.Add(1)
+		pResponseOtherErrors.Inc()
 	}
 	return nil
 }
