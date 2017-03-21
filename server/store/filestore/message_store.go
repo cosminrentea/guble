@@ -95,9 +95,9 @@ func (fms *FileMessageStore) StoreMessage(message *protocol.Message, nodeID uint
 		}).Debug("Locally generated ID for message")
 	}
 
-	data := message.Bytes()
+	data := message.Encode()
 
-	if err := fms.Store(partitionName, message.ID, message.Bytes()); err != nil {
+	if err := fms.Store(partitionName, message.ID, message.Encode()); err != nil {
 		logger.
 			WithError(err).WithField("partition", partitionName).
 			Error("Error storing locally generated  messagein partition")

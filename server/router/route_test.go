@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/server/auth"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/store"
 	"github.com/cosminrentea/gobbler/testutil"
@@ -19,7 +18,7 @@ import (
 var (
 	dummyPath          = protocol.Path("/dummy")
 	dummyMessageWithID = &protocol.Message{ID: 1, Path: dummyPath, Body: []byte("dummy body")}
-	dummyMessageBytes  = `/dummy,MESSAGE_ID,user01,phone01,{},1420110000,1
+	dummyMessageBytes  = `/dummy,MESSAGE_ID,user01,phone01,{},,1420110000,1
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 	chanSize  = 10
@@ -407,7 +406,7 @@ func TestRoute_Provide_MultipleFetch(t *testing.T) {
 	memoryKV := kvstore.NewMemoryKVStore()
 
 	msMock := NewMockMessageStore(ctrl)
-	router := New(auth.AllowAllAccessManager(true), msMock, memoryKV, nil)
+	router := New(msMock, memoryKV, nil)
 
 	if startable, ok := router.(startable); ok {
 		startable.Start()

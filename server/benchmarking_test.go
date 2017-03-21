@@ -159,7 +159,7 @@ func (tg *testgroup) Start() {
 		select {
 		case msg := <-tg.consumer.Messages():
 			assert.Equal(tg.t, tg.topic, string(msg.Path))
-			if !assert.Equal(tg.t, body, msg.BodyAsString()) {
+			if !assert.Equal(tg.t, body, string(msg.Body)) {
 				tg.t.FailNow()
 				tg.done <- false
 			}
