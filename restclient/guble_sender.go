@@ -92,6 +92,7 @@ func (gs gubleSender) Send(topic string, body []byte, userID string, params map[
 	if err != nil {
 		return err
 	}
+	request.Header.Add("x-guble-correlation-id", params["correlationID"])
 	response, err := gs.httpClient.Do(request)
 	if err != nil {
 		return err

@@ -9,6 +9,8 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/cosminrentea/go-uuid"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -31,19 +33,22 @@ func TestServerHTTP(t *testing.T) {
 
 	u, _ := url.Parse("http://localhost/api/message/my/topic?userId=marvin&messageId=42")
 
+	header := http.Header{}
+	genUUID, _ := go_uuid.New()
+	header.Add(xHeaderPrefix+"correlation-id", genUUID)
 	// and a http context
 	req := &http.Request{
 		Method: http.MethodPost,
 		URL:    u,
 		Body:   ioutil.NopCloser(bytes.NewReader(testBytes)),
-		Header: http.Header{},
+		Header: header,
 	}
 	w := &httptest.ResponseRecorder{}
 
 	// then i expect
 	routerMock.EXPECT().HandleMessage(gomock.Any()).Do(func(msg *protocol.Message) {
 		a.Equal(testBytes, msg.Body)
-		a.Equal("{}", msg.HeaderJSON)
+		a.JSONEq(fmt.Sprintf(`{"Correlation-Id": "%s"}`, genUUID), msg.HeaderJSON)
 		a.Equal("/my/topic", string(msg.Path))
 		a.True(len(msg.ApplicationID) > 0)
 		a.Nil(msg.Filters)
