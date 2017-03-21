@@ -80,12 +80,14 @@ func (r *Route) Deliver(msg *protocol.Message, isFromStore bool) error {
 	if r.isInvalid() {
 		loggerMessage.Error("Cannot deliver because route is invalid")
 		mTotalDeliverMessageErrors.Add(1)
+		pDeliverMessageErrors.Inc()
 		return ErrInvalidRoute
 	}
 
 	if !r.messageFilter(msg) {
 		loggerMessage.Debug("Message filter didn't match route")
 		mTotalNotMatchedByFilters.Add(1)
+		pNotMatchedByFilters.Inc()
 		return nil
 	}
 	// not an infinite queue
@@ -97,6 +99,7 @@ func (r *Route) Deliver(msg *protocol.Message, isFromStore bool) error {
 			loggerMessage.Error("Closing route because queue is full")
 			r.Close()
 			mTotalDeliverMessageErrors.Add(1)
+			pDeliverMessageErrors.Inc()
 			return ErrQueueFull
 		}
 	}
@@ -276,6 +279,7 @@ func (r *Route) consume() {
 			if r.isInvalid() {
 				r.logger.Debug("Stopping to consume because route is invalid.")
 				mTotalDeliverMessageErrors.Add(1)
+				pDeliverMessageErrors.Inc()
 				return
 			}
 
