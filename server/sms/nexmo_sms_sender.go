@@ -146,6 +146,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 			"Created": time.Unix(msg.Time, 0).Format(time.RFC3339),
 		}).Info("Expired message received")
 		mTotalExpiredMessages.Add(1)
+		pTotalExpiredMessages.Inc()
 		return nil
 	}
 

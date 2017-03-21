@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"testing"
 	"time"
+	"expvar"
 )
 
 func Test_NexmoHTTPError(t *testing.T) {
@@ -134,6 +135,33 @@ func Test_WrongEncodedSmsInRouterMessage(t *testing.T) {
 	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
 
 	stopGateway(t, gw)
+}
+
+func TestNexmoSender_SendExpiredMessage(t *testing.T) {
+	a := assert.New(t)
+
+	port := createRandomPort(7000, 8000)
+	URL = "http://127.0.0.1" + port
+
+	sender := createNexmoSender(t)
+	// no request should be made in case the sms is expired
+	go dummyNexmoEndpointWithHandlerFunc(t, nil, port, func(t *testing.T, countCh chan bool) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			a.FailNow("Nexmo call not expected.")
+		}
+	})
+
+	msg := encodeProtocolMessage(t, 0)
+	expires := time.Now().Add(-1 * time.Minute)
+	msg.Expires = &expires
+
+	err := sender.Send(&msg)
+	time.Sleep(3 * timeInterval)
+	a.NoError(err)
+
+	expectedExpired := expvar.NewInt("total_expired_messages")
+	expectedExpired.Add(1)
+	a.Equal(expectedExpired, mTotalExpiredMessages)
 }
 
 func Test_GatewaySanity(t *testing.T) {
