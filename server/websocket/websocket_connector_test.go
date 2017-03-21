@@ -79,11 +79,11 @@ func Test_AnIncomingMessageIsDelivered(t *testing.T) {
 
 	wsconn, routerMock, messageStore := createDefaultMocks([]string{})
 
-	wsconn.EXPECT().Send(aTestMessage.Bytes())
+	wsconn.EXPECT().Send(aTestMessage.Encode())
 
 	handler := runNewWebSocket(wsconn, routerMock, messageStore)
 
-	handler.sendChannel <- aTestMessage.Bytes()
+	handler.sendChannel <- aTestMessage.Encode()
 	time.Sleep(time.Millisecond * 2)
 }
 

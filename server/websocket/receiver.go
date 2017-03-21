@@ -180,7 +180,7 @@ func (rec *Receiver) receiveFromSubscription() {
 
 			if m.ID > rec.lastSentID {
 				rec.lastSentID = m.ID
-				rec.sendC <- m.Bytes()
+				rec.sendC <- m.Encode()
 			} else {
 				logger.WithFields(log.Fields{
 					"msgId": m.ID,

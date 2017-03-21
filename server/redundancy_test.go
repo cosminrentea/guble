@@ -10,6 +10,7 @@ import (
 )
 
 func Test_Subscribe_on_random_node(t *testing.T) {
+	testutil.SkipIfDisabled(t)
 	testutil.SkipIfShort(t)
 	a := assert.New(t)
 

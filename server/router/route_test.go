@@ -18,7 +18,7 @@ import (
 var (
 	dummyPath          = protocol.Path("/dummy")
 	dummyMessageWithID = &protocol.Message{ID: 1, Path: dummyPath, Body: []byte("dummy body")}
-	dummyMessageBytes  = `/dummy,MESSAGE_ID,user01,phone01,{},1420110000,1
+	dummyMessageBytes  = `/dummy,MESSAGE_ID,user01,phone01,{},,1420110000,1
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 	chanSize  = 10
