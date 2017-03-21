@@ -10,15 +10,15 @@ import (
 )
 
 var (
-	aNormalMessage = `/foo/bar,42,user01,phone01,{"user":"user01"},2017-03-17T20:04:26+02:00,1420110000,1
+	aNormalMessage = `/foo/bar,42,user01,phone01,{"user":"user01"},1420110000,1420110000,1
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 
-	aNormalMessageNoExpires = `/foo/bar,42,user01,phone01,{"user":"user01"},,1420110000,1
+	aNormalMessageNoExpires = `/foo/bar,42,user01,phone01,{"user":"user01"},0,1420110000,1
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 
-	aMinimalMessage = "/,42,,,,,1420110000,0"
+	aMinimalMessage = "/,42,,,,0,1420110000,0"
 
 	aConnectedNotification = `#connected You are connected to the server.
 {"ApplicationId": "phone1", "UserId": "user01", "Time": "1420110000"}`
@@ -76,15 +76,12 @@ func TestSerializeANormalMessageWithExpires(t *testing.T) {
 		UserID:        "user01",
 		ApplicationID: "phone01",
 		Filters:       map[string]string{"user": "user01"},
+		Expires:       1420110000,
 		Time:          unixTime.Unix(),
 		NodeID:        1,
 		HeaderJSON:    `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
 		Body:          []byte("Hello World"),
 	}
-
-	expire, err := time.Parse(time.RFC3339, "2017-03-17T20:04:26+02:00")
-	assert.NoError(t, err)
-	msg.Expires = &expire
 
 	// then: the serialisation is as expected
 	assert.Equal(t, aNormalMessage, string(msg.Encode()))
@@ -223,7 +220,7 @@ func TestMessage_IsExpired(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		a.Equal(c.result, (&Message{Expires: &c.expires}).IsExpired(), "Failed IsExpired case: %d", i)
+		a.Equal(c.result, (&Message{Expires: c.expires.Unix()}).IsExpired(), "Failed IsExpired case: %d", i)
 	}
 
 }

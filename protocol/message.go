@@ -35,8 +35,8 @@ type Message struct {
 	// If this field is set and the message is expired the connectors should
 	// consider the message as processed and log the action
 	//
-	// RFC3339 format
-	Expires *time.Time
+	// The field value is a Unix Timestamp in Seconds
+	Expires int64
 
 	// The time of publishing, as Unix Timestamp date
 	Time int64
@@ -102,9 +102,7 @@ func (m *Message) writeMetadata(buff *bytes.Buffer) {
 	buff.Write(m.encodeFilters())
 	buff.WriteByte(',')
 
-	if m.Expires != nil {
-		buff.WriteString(m.Expires.Format(time.RFC3339))
-	}
+	buff.WriteString(strconv.FormatInt(m.Expires, 10))
 	buff.WriteByte(',')
 
 	buff.WriteString(strconv.FormatInt(m.Time, 10))
@@ -146,13 +144,11 @@ func (m *Message) SetFilter(key, value string) {
 
 // IsExpired returns true if the message `Expires` field is set and the current time
 // has pasted the `Expires` time
-//
-// Checks are made using `Expires` field timezone
 func (m *Message) IsExpired() bool {
-	if m.Expires == nil {
+	if m.Expires == 0 {
 		return false
 	}
-	return m.Expires != nil && m.Expires.Before(time.Now().In(m.Expires.Location()))
+	return m.Expires != 0 && m.Expires < time.Now().Unix()
 }
 
 // Decode decodes a message, sent from the server to the client.
@@ -185,12 +181,12 @@ func ParseMessage(message []byte) (*Message, error) {
 		return nil, fmt.Errorf("message metadata to have an integer (message-id) as second field, but was %v", meta[1])
 	}
 
-	var expiresTime *time.Time
+	var expiresTime int64
 	if meta[5] != "" {
-		if t, err := time.Parse(time.RFC3339, meta[5]); err != nil {
+		var err error
+		expiresTime, err = strconv.ParseInt(meta[5], 10, 64)
+		if err != nil {
 			return nil, fmt.Errorf("message metadata expected to have a  time string (expiration time) as sixth field, but was %v: %s", meta[5], err.Error())
-		} else {
-			expiresTime = &t
 		}
 	}
 
