@@ -150,7 +150,7 @@ func (m *Message) SetFilter(key, value string) {
 // Checks are made using `Expires` field timezone
 func (m *Message) IsExpired() bool {
 	if m.Expires == nil {
-		return true
+		return false
 	}
 	return m.Expires != nil && m.Expires.Before(time.Now().In(m.Expires.Location()))
 }

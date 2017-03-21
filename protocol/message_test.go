@@ -227,3 +227,10 @@ func TestMessage_IsExpired(t *testing.T) {
 	}
 
 }
+
+func TestMessage_IsExpired_WithNilExpires(t *testing.T) {
+	a := assert.New(t)
+
+	a.Equal(false, (&Message{}).IsExpired())
+
+}
