@@ -158,6 +158,8 @@ func (router *router) HandleMessage(message *protocol.Message) error {
 		"path":   message.Path}).Debug("HandleMessage")
 
 	mTotalMessagesIncoming.Add(1)
+	pMessagesIncoming.Inc()
+
 	if err := router.isStopping(); err != nil {
 		logger.WithField("error", err.Error()).Error("Router is stopping")
 		return err
@@ -169,13 +171,16 @@ func (router *router) HandleMessage(message *protocol.Message) error {
 	}
 
 	mTotalMessagesIncomingBytes.Add(int64(len(message.Encode())))
+	pMessagesIncomingBytes.Add(float64(len(message.Encode())))
 	size, err := router.messageStore.StoreMessage(message, nodeID)
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Error storing message")
 		mTotalMessageStoreErrors.Add(1)
+		pMessageStoreErrors.Inc()
 		return err
 	}
 	mTotalMessagesStoredBytes.Add(int64(size))
+	pMessagesStoredBytes.Add(float64(size))
 
 	router.handleOverloadedChannel()
 
@@ -235,6 +240,7 @@ func (router *router) GetSubscribers(topicPath string) ([]byte, error) {
 func (router *router) subscribe(r *Route) {
 	logger.WithField("route", r).Debug("Internal subscribe")
 	mTotalSubscriptionAttempts.Add(1)
+	pSubscriptionAttempts.Inc()
 
 	routePath := r.Path
 	slice, present := router.routes[routePath]
@@ -247,37 +253,47 @@ func (router *router) subscribe(r *Route) {
 		slice = make([]*Route, 0, 1)
 		router.routes[routePath] = slice
 		mCurrentRoutes.Add(1)
+		pRoutes.Inc()
 	}
 	router.routes[routePath] = append(slice, r)
 	if removed {
 		mTotalDuplicateSubscriptionsAttempts.Add(1)
+		pDuplicateSubscriptionAttempts.Inc()
 	} else {
 		mTotalSubscriptions.Add(1)
+		pTotalSubscriptions.Inc()
 		mCurrentSubscriptions.Add(1)
+		pSubscriptions.Inc()
 	}
 }
 
 func (router *router) unsubscribe(r *Route) {
 	logger.WithField("route", r).Debug("Internal unsubscribe")
 	mTotalUnsubscriptionAttempts.Add(1)
+	pUnsubscriptionAttempts.Inc()
 
 	routePath := r.Path
 	slice, present := router.routes[routePath]
 	if !present {
 		mTotalInvalidTopicOnUnsubscriptionAttempts.Add(1)
+		pInvalidTopicOnUnsubscriptionAttempts.Inc()
 		return
 	}
 	var removed bool
 	router.routes[routePath], removed = removeIfMatching(slice, r)
 	if removed {
 		mTotalUnsubscriptions.Add(1)
+		pTotalUnsubscriptions.Inc()
 		mCurrentSubscriptions.Add(-1)
+		pSubscriptions.Dec()
 	} else {
 		mTotalInvalidUnsubscriptionAttempts.Add(1)
+		pInvalidUnsubscriptionAttempts.Inc()
 	}
 	if len(router.routes[routePath]) == 0 {
 		delete(router.routes, routePath)
 		mCurrentRoutes.Add(-1)
+		pRoutes.Dec()
 	}
 }
 
@@ -322,6 +338,7 @@ func (router *router) handleMessage(message *protocol.Message) {
 	})
 	flog.Debug("Called routeMessage for data")
 	mTotalMessagesRouted.Add(1)
+	pMessagesRouted.Inc()
 
 	matched := false
 	for path, pathRoutes := range router.routes {
@@ -339,6 +356,7 @@ func (router *router) handleMessage(message *protocol.Message) {
 	if !matched {
 		flog.Debug("No route matched.")
 		mTotalMessagesNotMatchingTopic.Add(1)
+		pMessagesNotMatchingTopic.Inc()
 	}
 }
 
@@ -361,6 +379,7 @@ func (router *router) handleOverloadedChannel() {
 			"maxCapacity":   cap(router.handleC),
 		}).Warn("handleC channel is almost full")
 		mTotalOverloadedHandleChannel.Add(1)
+		pOverloadedHandleChannel.Inc()
 	}
 }
 

@@ -192,9 +192,9 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 		pNexmoResponseErrors.Inc()
 		return err
 	}
-	g.SetLastSentID(receivedMsg.ID)
 	mTotalSentMessages.Add(1)
 	pSent.Inc()
+	g.SetLastSentID(receivedMsg.ID)
 	return nil
 }
 
