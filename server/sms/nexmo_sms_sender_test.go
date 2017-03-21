@@ -1,6 +1,7 @@
 package sms
 
 import (
+	"expvar"
 	"net/http"
 	"testing"
 	"time"
@@ -58,4 +59,8 @@ func TestNexmoSender_SendExpiredMessage(t *testing.T) {
 	err := sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
 	a.NoError(err)
+
+	expectedExpired := expvar.NewInt("total_expired_messages")
+	expectedExpired.Add(1)
+	a.Equal(expectedExpired, mTotalExpiredMessages)
 }
