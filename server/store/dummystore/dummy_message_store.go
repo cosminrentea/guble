@@ -68,7 +68,7 @@ func (dms *DummyMessageStore) StoreMessage(message *protocol.Message, nodeID uin
 	message.ID = nextID
 	message.Time = ts
 	message.NodeID = nodeID
-	data := message.Bytes()
+	data := message.Encode()
 	if err := dms.Store(partitionName, nextID, data); err != nil {
 		return 0, err
 	}

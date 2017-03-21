@@ -169,7 +169,7 @@ func (cluster *Cluster) BroadcastMessage(pMessage *protocol.Message) error {
 	cMessage := &message{
 		NodeID: cluster.Config.ID,
 		Type:   mtGubleMessage,
-		Body:   pMessage.Bytes(),
+		Body:   pMessage.Encode(),
 	}
 	return cluster.broadcastClusterMessage(cMessage)
 }

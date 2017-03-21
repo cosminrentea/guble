@@ -142,7 +142,7 @@ func TestRouter_SimpleMessageSending(t *testing.T) {
 			m.ID = id
 			m.Time = ts
 			m.NodeID = nodeID
-			return len(m.Bytes()), nil
+			return len(m.Encode()), nil
 		})
 
 	// when i send a message to the route
