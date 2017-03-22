@@ -231,7 +231,7 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 		pNexmoResponseInternalErrors.Inc()
 		return nil, ErrSMSResponseDecodingFailed
 	}
-	logger.WithField("messageResponse", messageResponse).WithField("order_id", sms.ClientRef).Info("Actual nexmo response")
+	logger.WithField("messageResponse", messageResponse).WithField("csOrderId", sms.ClientRef).Info("Actual nexmo response")
 
 	return messageResponse, nil
 }
