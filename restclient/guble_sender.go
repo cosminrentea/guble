@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	xHeaderPrefix = "x-guble-"
+	xHeaderPrefix        = "x-guble-"
+	correlationIDLiteral = "correlationID"
 )
 
 type gubleSender struct {
@@ -96,7 +97,7 @@ func (gs gubleSender) Send(topic string, body []byte, userID string, params map[
 	if err != nil {
 		return err
 	}
-	request.Header.Add(xHeaderPrefix+"correlation-id", params["correlationID"])
+	request.Header.Add(xHeaderPrefix+"correlation-id", params[correlationIDLiteral])
 	response, err := gs.httpClient.Do(request)
 	if err != nil {
 		return err
