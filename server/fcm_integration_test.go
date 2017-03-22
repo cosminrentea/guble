@@ -54,7 +54,6 @@ type expectedValues struct {
 
 // Test that restarting the service continues to fetch messages from store for a subscription from lastID
 func TestFCMRestart(t *testing.T) {
-	//defer testutil.EnableDebugForMethod()()
 	//TODO BOGDAN COSMIN MARIAN modify the test to not use websocket client.
 	defer testutil.SkipIfDisabled(t)
 	defer testutil.SkipIfShort(t)
@@ -92,7 +91,7 @@ func TestFCMRestart(t *testing.T) {
 
 	// send 3 messages in the router but read only one and close the service
 	for i := 0; i < 3; i++ {
-		c.Send(testTopic, "dummy body", "{dummy: value}")
+		c.Send(testTopic, "dummy body", `{"Correlation-Id": "id"}`)
 	}
 
 	// receive one message only from FCM
