@@ -84,6 +84,34 @@ func TestCorrelationID(t *testing.T) {
 	a.Equal("7sdks723ksgqn", msg.CorrelationID())
 }
 
+func TestCorrelationIDError(t *testing.T) {
+	a := assert.New(t)
+	msg := &Message{
+		ID:            uint64(42),
+		Path:          Path("/foo/bar"),
+		UserID:        "user01",
+		ApplicationID: "phone01",
+		Filters:       map[string]string{"user": "user01"},
+		Time:          unixTime.Unix(),
+		NodeID:        1,
+		Body:          []byte("Hello World"),
+	}
+	a.Equal("", msg.CorrelationID())
+
+	msg = &Message{
+		ID:            uint64(42),
+		Path:          Path("/foo/bar"),
+		UserID:        "user01",
+		ApplicationID: "phone01",
+		Filters:       map[string]string{"user": "user01"},
+		Time:          unixTime.Unix(),
+		NodeID:        1,
+		HeaderJSON:    `{"Content-Type": "text/plain"}`,
+		Body:          []byte("Hello World"),
+	}
+	a.Equal("", msg.CorrelationID())
+}
+
 func TestSerializeANormalMessageWithExpires(t *testing.T) {
 	// given: a message
 	msg := &Message{
