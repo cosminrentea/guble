@@ -354,7 +354,7 @@ func multipleErrorsFollowedBySuccessNexmoHandler(t *testing.T, countCh chan bool
 		} else if noOfReq == 1 { //on the second try write an answer that can not be decoded.
 			logger.Info("Serving a wrong response to request")
 			w.Write([]byte("This should not be decoded."))
-		} else { //on  the last retry write a SuccesResponse.
+		} else { //on  the last retry write a SuccessResponse.
 			logger.Info("Serving correct response")
 			nexmoResponse := composeNexmoMessageResponse(sentSms, ResponseSuccess, 1)
 			writeNexmoResponse(nexmoResponse, t, w)

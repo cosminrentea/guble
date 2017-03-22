@@ -146,7 +146,7 @@ func TestRouter_SimpleMessageSending(t *testing.T) {
 		})
 
 	// when i send a message to the route
-	router.HandleMessage(&protocol.Message{Path: r.Path, Body: aTestByteMessage})
+	router.HandleMessage(&protocol.Message{Path: r.Path, Body: aTestByteMessage, HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`})
 
 	// then I can receive it a short time later
 	assertChannelContainsMessage(a, r.MessagesChannel(), aTestByteMessage)
@@ -186,13 +186,13 @@ func TestRouter_RoutingWithSubTopics(t *testing.T) {
 	))
 
 	// when i send a message to a subroute
-	router.HandleMessage(&protocol.Message{Path: "/blah/blub", Body: aTestByteMessage})
+	router.HandleMessage(&protocol.Message{Path: "/blah/blub", Body: aTestByteMessage, HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`})
 
 	// then I can receive the message
 	assertChannelContainsMessage(a, r.MessagesChannel(), aTestByteMessage)
 
 	// but, when i send a message to a resource, which is just a substring
-	router.HandleMessage(&protocol.Message{Path: "/blahblub", Body: aTestByteMessage})
+	router.HandleMessage(&protocol.Message{Path: "/blahblub", Body: aTestByteMessage, HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`})
 
 	// then the message gets not delivered
 	a.Equal(0, len(r.MessagesChannel()))
@@ -238,13 +238,13 @@ func TestRoute_IsRemovedIfChannelIsFull(t *testing.T) {
 
 	// where the channel is full of messages
 	for i := 0; i < chanSize; i++ {
-		router.HandleMessage(&protocol.Message{Path: r.Path, Body: aTestByteMessage})
+		router.HandleMessage(&protocol.Message{Path: r.Path, Body: aTestByteMessage, HeaderJSON: `{"Correlation-Id": "id"}`})
 	}
 
 	// when I send one more message
 	done := make(chan bool)
 	go func() {
-		router.HandleMessage(&protocol.Message{Path: r.Path, Body: aTestByteMessage})
+		router.HandleMessage(&protocol.Message{Path: r.Path, Body: aTestByteMessage, HeaderJSON: `{"Correlation-Id": "id"}`})
 		done <- true
 	}()
 
@@ -420,7 +420,7 @@ func aStartedRouter() (*router, store.MessageStore, kvstore.KVStore) {
 	return router, ms, kvs
 }
 
-func aRouterRoute(unused int) (*router, *Route) {
+func aRouterRoute(_ int) (*router, *Route) {
 	router, _, _ := aStartedRouter()
 	route, _ := router.Subscribe(NewRoute(
 		RouteConfig{

@@ -43,10 +43,11 @@ func fcmMessage(message *protocol.Message) *gcm.Message {
 	err := json.Unmarshal(message.Body, m)
 	if err != nil {
 		logger.WithFields(log.Fields{
-			"error":     err.Error(),
-			"body":      string(message.Body),
-			"messageID": message.ID,
-		}).Debug("Could not decode gcm.Message from guble message body")
+			"error":          err.Error(),
+			"body":           string(message.Body),
+			"messageID":      message.ID,
+			"correlation_id": message.CorrelationID(),
+		}).Error("Could not decode fcm.Message from guble message body")
 	} else if m.Notification != nil && m.Data != nil {
 		return m
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/sideshow/apns2"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 var ErrSendRandomError = errors.New("A Sender error")
@@ -46,7 +47,13 @@ func TestConn_HandleResponseOnSendError(t *testing.T) {
 	//given
 	c, _ := newAPNSConnector(t)
 	mRequest := NewMockRequest(testutil.MockCtrl)
+	message := &protocol.Message{
+		HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`,
+		ID:         42,
+	}
+	mRequest.EXPECT().Message().Return(message)
 
+	time.Sleep(100 * time.Millisecond)
 	//when
 	err := c.HandleResponse(mRequest, nil, nil, ErrSendRandomError)
 
@@ -71,7 +78,8 @@ func TestConn_HandleResponse(t *testing.T) {
 	c.Manager().Add(mSubscriber)
 
 	message := &protocol.Message{
-		ID: 42,
+		ID:         42,
+		HeaderJSON: `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
 	}
 	mRequest := NewMockRequest(testutil.MockCtrl)
 	mRequest.EXPECT().Message().Return(message).AnyTimes()
@@ -105,7 +113,8 @@ func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 	}
 	for _, reason := range removeForReasons {
 		message := &protocol.Message{
-			ID: 42,
+			ID:         42,
+			HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`,
 		}
 		mSubscriber := NewMockSubscriber(testutil.MockCtrl)
 		mSubscriber.EXPECT().SetLastID(gomock.Any())
