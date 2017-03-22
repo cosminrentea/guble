@@ -55,6 +55,9 @@ type expectedValues struct {
 // Test that restarting the service continues to fetch messages from store for a subscription from lastID
 func TestFCMRestart(t *testing.T) {
 	//defer testutil.EnableDebugForMethod()()
+	//TODO BOGDAN COSMIN MARIAN modify the test to not use websocket client.
+	defer testutil.SkipIfDisabled(t)
+	defer testutil.SkipIfShort(t)
 	defer testutil.ResetDefaultRegistryHealthCheck()
 
 	a := assert.New(t)
