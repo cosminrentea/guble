@@ -1,7 +1,6 @@
 package apns
 
 import (
-	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/gobbler/server/connector"
