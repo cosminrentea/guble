@@ -43,7 +43,7 @@ func composeNexmoMessageResponse(sms NexmoSms, code ResponseCode, messageCount i
 		Status:           code,
 		MessageID:        "msgID",
 		To:               sms.To,
-		ClientReference:  "",
+		ClientReference:  "ref",
 		RemainingBalance: "2",
 		MessagePrice:     "0.005",
 		Network:          "TELEKOM",
@@ -85,9 +85,10 @@ func createKVStore(t *testing.T, filename string) (kvstore.KVStore, string) {
 func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	a := assert.New(t)
 	sms := NexmoSms{
-		To:   "toNumber",
-		From: fmt.Sprintf("%d", ID),
-		Text: "body",
+		To:        "toNumber",
+		From:      fmt.Sprintf("%d", ID),
+		Text:      "body",
+		ClientRef: "ref",
 	}
 	d, err := json.Marshal(&sms)
 	if err != nil {
