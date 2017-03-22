@@ -56,7 +56,7 @@ func TestServerHTTP(t *testing.T) {
 
 	header := http.Header{}
 	genUUID, _ := go_uuid.New()
-	header.Add(xHeaderPrefix+"correlation-id", genUUID)
+	header.Add(XHeaderPrefix+"correlation-id", genUUID)
 	// and a http context
 	req := &http.Request{
 		Method: http.MethodPost,
@@ -136,9 +136,9 @@ func TestHeadersToJSON(t *testing.T) {
 
 	// simple head
 	jsonString := headersToJSON(http.Header{
-		xHeaderPrefix + "a": []string{"b"},
+		XHeaderPrefix + "a": []string{"b"},
 		"foo":               []string{"b"},
-		xHeaderPrefix + "x": []string{"y"},
+		XHeaderPrefix + "x": []string{"y"},
 		"bar":               []string{"b"},
 	})
 
