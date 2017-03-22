@@ -21,10 +21,33 @@ import (
 
 var testBytes = []byte("test")
 
+func TestServerHTTP_MethodNotAllowed(t *testing.T) {
+	a := assert.New(t)
+	defer testutil.EnableDebugForMethod()()
+	api := NewRestMessageAPI(nil, "/api")
+
+	u, _ := url.Parse("http://localhost/api/message/my/topic?userId=marvin&messageId=42")
+	// and a http context
+	req := &http.Request{
+		Method: http.MethodDelete,
+		URL:    u,
+		Body:   ioutil.NopCloser(bytes.NewReader(testBytes)),
+		Header: http.Header{},
+	}
+	w := &httptest.ResponseRecorder{}
+
+	// when: I POST a message
+	api.ServeHTTP(w, req)
+
+	//then
+	a.Equal(http.StatusMethodNotAllowed, w.Code)
+
+}
+
 func TestServerHTTP(t *testing.T) {
 	ctrl, finish := testutil.NewMockCtrl(t)
 	defer finish()
-
+	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	// given:  a rest api with a message sink
@@ -49,6 +72,7 @@ func TestServerHTTP(t *testing.T) {
 	routerMock.EXPECT().HandleMessage(gomock.Any()).Do(func(msg *protocol.Message) {
 		a.Equal(testBytes, msg.Body)
 		a.JSONEq(fmt.Sprintf(`{"Correlation-Id": "%s"}`, genUUID), msg.HeaderJSON)
+		a.Equal(genUUID, msg.CorrelationID())
 		a.Equal("/my/topic", string(msg.Path))
 		a.True(len(msg.ApplicationID) > 0)
 		a.Nil(msg.Filters)

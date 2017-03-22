@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Bogh/gcm"
+	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
@@ -84,8 +85,10 @@ func (f *fcm) startIntervalMetric(m metrics.Map, td time.Duration) {
 }
 
 func (f *fcm) HandleResponse(request connector.Request, responseIface interface{}, metadata *connector.Metadata, err error) error {
+	l := logger.WithField("correlation_id", request.Message().CorrelationID())
+
 	if err != nil && !isValidResponseError(err) {
-		logger.WithField("error", err.Error()).Error("Error sending message to FCM")
+		l.WithField("error", err.Error()).Error("Error sending message to FCM")
 		mTotalSendErrors.Add(1)
 		pSendErrors.Inc()
 		if *f.IntervalMetrics && metadata != nil {
@@ -103,10 +106,11 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 		return fmt.Errorf("Invalid FCM Response")
 	}
 
-	logger.WithField("messageID", message.ID).Debug("Delivered message to FCM")
+	l.WithField("messageID", message.ID).Debug("Delivered message to FCM")
+
 	subscriber.SetLastID(message.ID)
 	if err := f.Manager().Update(request.Subscriber()); err != nil {
-		logger.WithField("error", err.Error()).Error("Manager could not update subscription")
+		l.WithField("error", err.Error()).Error("Manager could not update subscription")
 		mTotalResponseInternalErrors.Add(1)
 		return err
 	}
@@ -119,19 +123,19 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 		return nil
 	}
 
-	logger.WithField("success", response.Success).Debug("Handling FCM Error")
+	l.WithField("success", response.Success).Debug("Handling FCM Error")
 
 	switch errText := response.Error.Error(); errText {
 	case "NotRegistered":
-		logger.Debug("Removing not registered FCM subscription")
+		l.Debug("Removing not registered FCM subscription")
 		f.Manager().Remove(subscriber)
 		mTotalResponseNotRegisteredErrors.Add(1)
 		pResponseNotRegisteredErrors.Inc()
 		return response.Error
 	case "InvalidRegistration":
-		logger.WithField("jsonError", errText).Error("InvalidRegistration of FCM subscription")
+		l.WithField("jsonError", errText).Error("InvalidRegistration of FCM subscription")
 	default:
-		logger.WithField("jsonError", errText).Error("Unexpected error while sending to FCM")
+		l.WithField("jsonError", errText).Error("Unexpected error while sending to FCM")
 	}
 
 	if response.CanonicalIDs != 0 {

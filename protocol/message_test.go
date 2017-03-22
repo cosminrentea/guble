@@ -28,22 +28,22 @@ Hello World`
 )
 
 func TestParsingANormalMessage(t *testing.T) {
-	assert := assert.New(t)
+	a := assert.New(t)
 
 	msgI, err := Decode([]byte(aNormalMessage))
-	assert.NoError(err)
-	assert.IsType(&Message{}, msgI)
+	a.NoError(err)
+	a.IsType(&Message{}, msgI)
 	msg := msgI.(*Message)
 
-	assert.Equal(uint64(42), msg.ID)
-	assert.Equal(Path("/foo/bar"), msg.Path)
-	assert.Equal("user01", msg.UserID)
-	assert.Equal("phone01", msg.ApplicationID)
-	assert.Equal(map[string]string{"user": "user01"}, msg.Filters)
-	assert.Equal(unixTime.Unix(), msg.Time)
-	assert.Equal(uint8(1), msg.NodeID)
-	assert.Equal(`{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`, msg.HeaderJSON)
-	assert.Equal("Hello World", string(msg.Body))
+	a.Equal(uint64(42), msg.ID)
+	a.Equal(Path("/foo/bar"), msg.Path)
+	a.Equal("user01", msg.UserID)
+	a.Equal("phone01", msg.ApplicationID)
+	a.Equal(map[string]string{"user": "user01"}, msg.Filters)
+	a.Equal(unixTime.Unix(), msg.Time)
+	a.Equal(uint8(1), msg.NodeID)
+	a.Equal(`{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`, msg.HeaderJSON)
+	a.Equal("Hello World", string(msg.Body))
 }
 
 func TestSerializeANormalMessage(t *testing.T) {
@@ -66,6 +66,22 @@ func TestSerializeANormalMessage(t *testing.T) {
 
 	// and: the first line is as expected
 	assert.Equal(t, strings.SplitN(aNormalMessageNoExpires, "\n", 2)[0], msg.Metadata())
+}
+
+func TestCorrelationID(t *testing.T) {
+	a := assert.New(t)
+	msg := &Message{
+		ID:            uint64(42),
+		Path:          Path("/foo/bar"),
+		UserID:        "user01",
+		ApplicationID: "phone01",
+		Filters:       map[string]string{"user": "user01"},
+		Time:          unixTime.Unix(),
+		NodeID:        1,
+		HeaderJSON:    `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
+		Body:          []byte("Hello World"),
+	}
+	a.Equal("7sdks723ksgqn", msg.CorrelationID())
 }
 
 func TestSerializeANormalMessageWithExpires(t *testing.T) {
@@ -116,46 +132,46 @@ func TestSerializeAMinimalMessageWithBody(t *testing.T) {
 }
 
 func TestParsingAMinimalMessage(t *testing.T) {
-	assert := assert.New(t)
+	a := assert.New(t)
 
 	msgI, err := Decode([]byte(aMinimalMessage))
-	assert.NoError(err)
-	assert.IsType(&Message{}, msgI)
+	a.NoError(err)
+	a.IsType(&Message{}, msgI)
 	msg := msgI.(*Message)
 
-	assert.Equal(uint64(42), msg.ID)
-	assert.Equal(Path("/"), msg.Path)
-	assert.Equal("", msg.UserID)
-	assert.Equal("", msg.ApplicationID)
-	assert.Nil(msg.Filters)
-	assert.Equal(unixTime.Unix(), msg.Time)
-	assert.Equal("", msg.HeaderJSON)
+	a.Equal(uint64(42), msg.ID)
+	a.Equal(Path("/"), msg.Path)
+	a.Equal("", msg.UserID)
+	a.Equal("", msg.ApplicationID)
+	a.Nil(msg.Filters)
+	a.Equal(unixTime.Unix(), msg.Time)
+	a.Equal("", msg.HeaderJSON)
 
-	assert.Equal("", string(msg.Body))
+	a.Equal("", string(msg.Body))
 }
 
 func TestErrorsOnParsingMessages(t *testing.T) {
-	assert := assert.New(t)
+	a := assert.New(t)
 
 	var err error
 	_, err = Decode([]byte(""))
-	assert.Error(err)
+	a.Error(err)
 
 	// missing meta field
 	_, err = Decode([]byte("42,/foo/bar,user01,phone1,id123\n{}\nBla"))
-	assert.Error(err)
+	a.Error(err)
 
 	// id not an integer
 	_, err = Decode([]byte("xy42,/foo/bar,user01,phone1,id123,1420110000\n"))
-	assert.Error(err)
+	a.Error(err)
 
 	// path is empty
 	_, err = Decode([]byte("42,,user01,phone1,id123,1420110000\n"))
-	assert.Error(err)
+	a.Error(err)
 
 	// Error Message without Name
 	_, err = Decode([]byte("!"))
-	assert.Error(err)
+	a.Error(err)
 }
 
 func Test_Message_getPartitionFromTopic(t *testing.T) {

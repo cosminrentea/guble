@@ -75,7 +75,7 @@ func (r *Route) String() string {
 // isFromStore boolean specifies if the messages are being fetched or are from the router
 // In case they are fetched from the store the route won't close if it's full
 func (r *Route) Deliver(msg *protocol.Message, isFromStore bool) error {
-	loggerMessage := r.logger.WithField("message", msg)
+	loggerMessage := r.logger.WithField("correlation_id", msg.CorrelationID()).WithField("message", msg)
 
 	if r.isInvalid() {
 		loggerMessage.Error("Cannot deliver because route is invalid")
