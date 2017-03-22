@@ -85,6 +85,7 @@ func TestConnector_GetErrorMessageFromFCM(t *testing.T) {
 		ID:   uint64(4),
 		Path: "/topic",
 		Body: []byte("{id:id}"),
+		HeaderJSON:`{"Correlation-Id": "7sdks723ksgqn"}`,
 	}, true)
 
 	// wait before closing the FCM connector
@@ -120,6 +121,7 @@ func TestFCMFormatMessage(t *testing.T) {
 		Path: "/topic",
 		ID:   1,
 		Body: []byte(fullFCMMessage),
+		HeaderJSON:`{"Correlation-Id": "7sdks723ksgqn"}`,
 	}
 
 	if !a.NotNil(subRoute) {
@@ -158,6 +160,7 @@ func TestFCMFormatMessage(t *testing.T) {
 		Path: "/topic",
 		ID:   1,
 		Body: []byte(`plain body`),
+		HeaderJSON:`{"Correlation-Id": "7sdks723ksgqn"}`,
 	}
 
 	mocks.gcmSender.EXPECT().Send(gomock.Any()).Do(func(m *gcm.Message) (*gcm.Response, error) {
