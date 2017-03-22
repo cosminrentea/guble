@@ -22,7 +22,7 @@ import (
 
 var (
 	testHttpPort         = 11000
-	timeoutForOneMessage = 50 * time.Millisecond
+	timeoutForOneMessage = 150 * time.Millisecond
 )
 
 type fcmMetricsMap struct {
@@ -56,7 +56,6 @@ type expectedValues struct {
 func TestFCMRestart(t *testing.T) {
 	//defer testutil.EnableDebugForMethod()()
 	defer testutil.ResetDefaultRegistryHealthCheck()
-
 	a := assert.New(t)
 
 	receiveC := make(chan bool)
@@ -86,10 +85,11 @@ func TestFCMRestart(t *testing.T) {
 	assertMetrics(a, s, expectedValues{true, 0, 1, 1})
 
 	c := clientSetUp(t, s)
+	defer c.Close()
 
 	// send 3 messages in the router but read only one and close the service
 	for i := 0; i < 3; i++ {
-		c.Send(testTopic, "dummy body", "{dummy: value}")
+		c.Send(testTopic, "dummy body", `{"Correlation-Id": "id"}`)
 	}
 
 	// receive one message only from FCM
@@ -184,6 +184,8 @@ func subscriptionSetUp(t *testing.T, service *service.Service) {
 }
 
 func assertMetrics(a *assert.Assertions, s *service.Service, expected expectedValues) {
+	time.Sleep(50 * time.Millisecond)
+
 	httpClient := &http.Client{}
 	u := fmt.Sprintf("http://%s%s", s.WebServer().GetAddr(), defaultMetricsEndpoint)
 	request, err := http.NewRequest(http.MethodGet, u, nil)

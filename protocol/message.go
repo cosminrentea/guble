@@ -221,3 +221,18 @@ func ParseMessage(message []byte) (*Message, error) {
 
 	return m, nil
 }
+
+func (m *Message) CorrelationID() string {
+	values := make(map[string]string)
+	err := json.Unmarshal([]byte(m.HeaderJSON), &values)
+	if err != nil {
+		log.WithField("error", err.Error()).Error("Correlation id decoding failed.")
+		return ""
+	}
+	correlationID, ok := values["Correlation-Id"]
+	if !ok {
+		log.Error("Correlation id not set")
+		return ""
+	}
+	return correlationID
+}
