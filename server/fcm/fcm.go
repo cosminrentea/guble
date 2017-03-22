@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Bogh/gcm"
-	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
