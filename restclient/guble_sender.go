@@ -12,6 +12,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+const (
+	xHeaderPrefix = "x-guble-"
+)
+
 type gubleSender struct {
 	Endpoint   string
 	httpClient *http.Client
@@ -92,7 +96,7 @@ func (gs gubleSender) Send(topic string, body []byte, userID string, params map[
 	if err != nil {
 		return err
 	}
-	request.Header.Add("x-guble-correlation-id", params["correlationID"])
+	request.Header.Add(xHeaderPrefix+"correlation-id", params["correlationID"])
 	response, err := gs.httpClient.Do(request)
 	if err != nil {
 		return err

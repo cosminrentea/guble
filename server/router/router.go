@@ -155,7 +155,7 @@ func (router *router) Check() error {
 func (router *router) HandleMessage(message *protocol.Message) error {
 	logger.WithFields(log.Fields{
 		"userID":        message.UserID,
-		"correlationID": message.HeaderJSON,
+		"correlationID": message.CorrelationID(),
 		"path":          message.Path}).Debug("HandleMessage")
 
 	mTotalMessagesIncoming.Add(1)

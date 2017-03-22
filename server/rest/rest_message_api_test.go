@@ -23,7 +23,6 @@ var testBytes = []byte("test")
 
 func TestServerHTTP_MethodNotAllowed(t *testing.T) {
 	a := assert.New(t)
-	defer testutil.EnableDebugForMethod()()
 	api := NewRestMessageAPI(nil, "/api")
 
 	u, _ := url.Parse("http://localhost/api/message/my/topic?userId=marvin&messageId=42")
@@ -47,7 +46,6 @@ func TestServerHTTP_MethodNotAllowed(t *testing.T) {
 func TestServerHTTP(t *testing.T) {
 	ctrl, finish := testutil.NewMockCtrl(t)
 	defer finish()
-	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	// given:  a rest api with a message sink
@@ -86,7 +84,6 @@ func TestServerHTTP(t *testing.T) {
 // Server should return an 405 Method Not Allowed in case method request is not POST
 func TestServeHTTP_GetError(t *testing.T) {
 	a := assert.New(t)
-	defer testutil.EnableDebugForMethod()()
 	api := NewRestMessageAPI(nil, "/api")
 
 	u, _ := url.Parse("http://localhost/api/message/my/topic?userId=marvin&messageId=42")
@@ -110,7 +107,6 @@ func TestServeHTTP_GetError(t *testing.T) {
 func TestServeHTTP_GetSubscribers(t *testing.T) {
 	_, finish := testutil.NewMockCtrl(t)
 	defer finish()
-	//defer testutil.EnableDebugForMethod()()
 
 	a := assert.New(t)
 
