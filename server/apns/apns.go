@@ -1,8 +1,8 @@
 package apns
 
 import (
-	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
@@ -13,10 +13,6 @@ import (
 const (
 	// schema is the default database schema for APNS
 	schema = "apns_registration"
-)
-
-var (
-	errSenderNotRecreated = errors.New("APNS Sender could not be recreated.")
 )
 
 // Config is used for configuring the APNS module.
@@ -94,9 +90,13 @@ func (a *apns) startIntervalMetric(m metrics.Map, td time.Duration) {
 }
 
 func (a *apns) HandleResponse(request connector.Request, responseIface interface{}, metadata *connector.Metadata, errSend error) error {
-	logger.Info("Handle APNS response")
+	l := logger.WithField("correlation_id", request.Message().CorrelationID())
+	l.Info("Handle APNS response")
 	if errSend != nil {
-		logger.WithField("error", errSend.Error()).WithField("error_type", errSend).Error("error when trying to send APNS notification")
+		l.WithFields(log.Fields{
+			"error":      errSend.Error(),
+			"error_type": errSend,
+		}).Error("error when trying to send APNS notification")
 		mTotalSendErrors.Add(1)
 		pSendErrors.Inc()
 		if *a.IntervalMetrics && metadata != nil {
@@ -114,13 +114,13 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	subscriber := request.Subscriber()
 	subscriber.SetLastID(messageID)
 	if err := a.Manager().Update(subscriber); err != nil {
-		logger.WithField("error", err.Error()).Error("Manager could not update subscription")
+		l.WithField("error", err.Error()).Error("Manager could not update subscription")
 		mTotalResponseInternalErrors.Add(1)
 		pResponseInternalErrors.Inc()
 		return err
 	}
 	if r.Sent() {
-		logger.WithField("id", r.ApnsID).Info("APNS notification was successfully sent")
+		l.WithField("id", r.ApnsID).Info("APNS notification was successfully sent")
 		mTotalSentMessages.Add(1)
 		pSentMessages.Inc()
 		if *a.IntervalMetrics && metadata != nil {
@@ -128,8 +128,8 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 		}
 		return nil
 	}
-	logger.Error("APNS notification was not sent")
-	logger.WithField("id", r.ApnsID).WithField("reason", r.Reason).Info("APNS notification was not sent - details")
+	l.Error("APNS notification was not sent")
+	l.WithField("id", r.ApnsID).WithField("reason", r.Reason).Info("APNS notification was not sent - details")
 	switch r.Reason {
 	case
 		apns2.ReasonMissingDeviceToken,
@@ -142,10 +142,10 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 		pResponseRegistrationErrors.Inc()
 		err := a.Manager().Remove(subscriber)
 		if err != nil {
-			logger.WithField("id", r.ApnsID).Error("could not remove subscriber")
+			l.WithField("id", r.ApnsID).Error("could not remove subscriber")
 		}
 	default:
-		logger.Error("handling other APNS errors")
+		l.Error("handling other APNS errors")
 		mTotalResponseOtherErrors.Add(1)
 		pResponseOtherErrors.Inc()
 	}

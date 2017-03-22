@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	xHeaderPrefix     = "x-guble-"
+	XHeaderPrefix     = "x-guble-"
 	filterPrefix      = "filter"
 	subscribersPrefix = "/subscribers"
 )
@@ -155,12 +155,12 @@ func headersToJSON(header http.Header) string {
 	buff.WriteString("{")
 	count := 0
 	for key, valueList := range header {
-		if strings.HasPrefix(strings.ToLower(key), xHeaderPrefix) && len(valueList) > 0 {
+		if strings.HasPrefix(strings.ToLower(key), XHeaderPrefix) && len(valueList) > 0 {
 			if count > 0 {
 				buff.WriteString(",")
 			}
 			buff.WriteString(`"`)
-			buff.WriteString(key[len(xHeaderPrefix):])
+			buff.WriteString(key[len(XHeaderPrefix):])
 			buff.WriteString(`":`)
 			buff.WriteString(`"`)
 			buff.WriteString(valueList[0])

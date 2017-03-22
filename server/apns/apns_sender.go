@@ -45,8 +45,9 @@ func NewSenderUsingPusher(pusher Pusher, appTopic string) (connector.Sender, err
 }
 
 func (s sender) Send(request connector.Request) (interface{}, error) {
+	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 	deviceToken := request.Subscriber().Route().Get(deviceIDKey)
-	logger.WithField("deviceToken", deviceToken).Info("Trying to push a message to APNS")
+	l.WithField("deviceToken", deviceToken).Info("Trying to push a message to APNS")
 	push := func() (interface{}, error) {
 		return s.client.Push(&apns2.Notification{
 			Priority:    apns2.PriorityHigh,
@@ -67,7 +68,7 @@ func (s sender) Send(request connector.Request) (interface{}, error) {
 	result, err := withRetry.execute(push)
 	if err != nil && err == ErrRetryFailed {
 		if closable, ok := s.client.(closable); ok {
-			logger.Warn("Close TLS and retry again")
+			l.Warn("Close TLS and retry again")
 			mTotalSendRetryCloseTLS.Add(1)
 			pSendRetryCloseTLS.Inc()
 			closable.CloseTLS()
@@ -75,7 +76,7 @@ func (s sender) Send(request connector.Request) (interface{}, error) {
 		} else {
 			mTotalSendRetryUnrecoverable.Add(1)
 			pSendRetryUnrecoverable.Inc()
-			logger.Error("Cannot Close TLS. Unrecoverable state")
+			l.Error("Cannot Close TLS. Unrecoverable state")
 		}
 	}
 	return result, err
