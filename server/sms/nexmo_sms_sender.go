@@ -152,7 +152,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 	}
 
 	err = withRetry.executeAndCheck(sendSms)
-	if err != nil && err == ErrRetryFailed {
+	if err == ErrRetryFailed {
 		logger.WithField("msg", msg).Info("Retry failed or not necessary.Moving on")
 	}
 
