@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 )
 
 var (
@@ -122,6 +123,7 @@ func (cluster *Cluster) Stop() error {
 	if cluster.synchronizer != nil {
 		close(cluster.synchronizer.stopC)
 	}
+	cluster.memberlist.Leave(time.Second)
 	return cluster.memberlist.Shutdown()
 }
 
