@@ -272,6 +272,6 @@ func TestMessage_IsExpired(t *testing.T) {
 func TestMessage_IsExpired_WithoutExplicitExpires(t *testing.T) {
 	a := assert.New(t)
 
-	a.Equal(false, (&Message{}).IsExpired())
+	a.False((&Message{}).IsExpired())
 
 }

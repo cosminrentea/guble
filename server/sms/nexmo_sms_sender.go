@@ -142,7 +142,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		log.WithFields(log.Fields{
 			"ID":      msg.ID,
 			"To":      nexmoSMS.To,
-			"Expires": msg.Expires,
+			"Expires": time.Unix(msg.Expires, 0).Format(time.RFC3339),
 			"Created": time.Unix(msg.Time, 0).Format(time.RFC3339),
 		}).Info("Expired message received")
 		mTotalExpiredMessages.Add(1)
