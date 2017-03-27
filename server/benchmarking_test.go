@@ -19,7 +19,7 @@ type testgroup struct {
 	t                   *testing.T
 	groupID             int
 	addr                string
-	done                chan bool
+	doneC               chan bool
 	messagesToSend      int
 	consumer, publisher client.Client
 	topic               string
@@ -30,7 +30,7 @@ func newTestgroup(t *testing.T, groupID int, addr string, messagesToSend int) *t
 		t:              t,
 		groupID:        groupID,
 		addr:           addr,
-		done:           make(chan bool),
+		doneC:          make(chan bool),
 		messagesToSend: messagesToSend,
 	}
 }
@@ -89,13 +89,13 @@ func TestThroughput(t *testing.T) {
 	log.Print("wait for finishing")
 	for i, test := range testgroups {
 		select {
-		case successFlag := <-test.done:
+		case successFlag := <-test.doneC:
 			if !successFlag {
 				t.Logf("testgroup %v returned with error", i)
 				t.FailNow()
 				return
 			}
-		case <-time.After(time.Second * 20):
+		case <-time.After(time.Second * 10):
 			t.Log("timeout. testgroups not ready before timeout")
 			t.Fail()
 			return
@@ -139,7 +139,7 @@ func (tg *testgroup) expectStatusMessage(name string, arg string) {
 		assert.Equal(tg.t, arg, notify.Arg)
 	case <-time.After(time.Second * 1):
 		tg.t.Logf("[%v] no notification of type %s until timeout", tg.groupID, name)
-		tg.done <- false
+		tg.doneC <- false
 		tg.t.Fail()
 		return
 	}
@@ -161,21 +161,21 @@ func (tg *testgroup) Start() {
 			assert.Equal(tg.t, tg.topic, string(msg.Path))
 			if !assert.Equal(tg.t, body, string(msg.Body)) {
 				tg.t.FailNow()
-				tg.done <- false
+				tg.doneC <- false
 			}
 		case msg := <-tg.consumer.Errors():
 			tg.t.Logf("[%v] received error: %v", tg.groupID, msg)
-			tg.done <- false
+			tg.doneC <- false
 			tg.t.Fail()
 			return
 		case <-time.After(time.Second * 5):
 			tg.t.Logf("[%v] no message received until timeout, expected message %v", tg.groupID, i)
-			tg.done <- false
+			tg.doneC <- false
 			tg.t.Fail()
 			return
 		}
 	}
-	tg.done <- true
+	tg.doneC <- true
 }
 
 func (tg *testgroup) Clean() {
