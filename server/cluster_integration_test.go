@@ -1,3 +1,5 @@
+// +build cluster
+
 package server
 
 import (

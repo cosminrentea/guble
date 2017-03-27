@@ -6,7 +6,6 @@ import (
 	"github.com/cosminrentea/gobbler/logformatter"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/apns"
-	"github.com/cosminrentea/gobbler/server/cluster"
 	"github.com/cosminrentea/gobbler/server/fcm"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/metrics"
@@ -251,25 +250,7 @@ func StartService() *service.Service {
 	messageStore := CreateMessageStore()
 	kvStore := CreateKVStore()
 
-	var cl *cluster.Cluster
-	var err error
-
-	if *Config.Cluster.NodeID > 0 {
-		exitIfInvalidClusterParams(*Config.Cluster.NodeID, *Config.Cluster.NodePort, *Config.Cluster.Remotes)
-		logger.Info("Starting in cluster-mode")
-		cl, err = cluster.New(&cluster.Config{
-			ID:      *Config.Cluster.NodeID,
-			Port:    *Config.Cluster.NodePort,
-			Remotes: *Config.Cluster.Remotes,
-		})
-		if err != nil {
-			logger.WithField("err", err).Fatal("Module could not be started (cluster)")
-		}
-	} else {
-		logger.Info("Starting in standalone-mode")
-	}
-
-	r := router.New(messageStore, kvStore, cl)
+	r := router.New(messageStore, kvStore, createCluster())
 	websrv := webserver.New(*Config.HttpListen)
 
 	srv := service.New(r, websrv).
@@ -280,7 +261,7 @@ func StartService() *service.Service {
 	srv.RegisterModules(0, 6, kvStore, messageStore)
 	srv.RegisterModules(4, 3, CreateModules(r)...)
 
-	if err = srv.Start(); err != nil {
+	if err := srv.Start(); err != nil {
 		logger.WithField("error", err.Error()).Error("errors occurred while starting service")
 		if err = srv.Stop(); err != nil {
 			logger.WithField("error", err.Error()).Error("errors occurred when stopping service after it failed to start")
