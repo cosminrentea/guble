@@ -102,7 +102,9 @@ func (m *Message) writeMetadata(buff *bytes.Buffer) {
 	buff.Write(m.encodeFilters())
 	buff.WriteByte(',')
 
-	buff.WriteString(strconv.FormatInt(m.Expires, 10))
+	if m.Expires > 0 {
+		buff.WriteString(strconv.FormatInt(m.Expires, 10))
+	}
 	buff.WriteByte(',')
 
 	buff.WriteString(strconv.FormatInt(m.Time, 10))
@@ -148,7 +150,7 @@ func (m *Message) IsExpired() bool {
 	if m.Expires == 0 {
 		return false
 	}
-	return m.Expires != 0 && m.Expires < time.Now().Unix()
+	return m.Expires < time.Now().Unix()
 }
 
 // Decode decodes a message, sent from the server to the client.

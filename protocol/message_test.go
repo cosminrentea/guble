@@ -14,11 +14,11 @@ var (
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 
-	aNormalMessageNoExpires = `/foo/bar,42,user01,phone01,{"user":"user01"},0,1420110000,1
+	aNormalMessageNoExpires = `/foo/bar,42,user01,phone01,{"user":"user01"},,1420110000,1
 {"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}
 Hello World`
 
-	aMinimalMessage = "/,42,,,,0,1420110000,0"
+	aMinimalMessage = "/,42,,,,,1420110000,0"
 
 	aConnectedNotification = `#connected You are connected to the server.
 {"ApplicationId": "phone1", "UserId": "user01", "Time": "1420110000"}`
@@ -269,7 +269,7 @@ func TestMessage_IsExpired(t *testing.T) {
 
 }
 
-func TestMessage_IsExpired_WithNilExpires(t *testing.T) {
+func TestMessage_IsExpired_WithoutExplicitExpires(t *testing.T) {
 	a := assert.New(t)
 
 	a.Equal(false, (&Message{}).IsExpired())
