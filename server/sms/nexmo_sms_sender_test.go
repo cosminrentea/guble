@@ -52,8 +52,7 @@ func TestNexmoSender_SendExpiredMessage(t *testing.T) {
 	})
 
 	msg := encodeProtocolMessage(t, 0)
-	expires := time.Now().Add(-1 * time.Hour)
-	msg.Expires = &expires
+	msg.Expires = time.Now().Add(-1 * time.Hour).Unix()
 
 	err := sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
