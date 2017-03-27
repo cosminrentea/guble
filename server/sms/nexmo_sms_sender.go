@@ -138,6 +138,17 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		return ErrRetryFailed
 	}
 
+	if msg.IsExpired() {
+		log.WithFields(log.Fields{
+			"ID":      msg.ID,
+			"To":      nexmoSMS.To,
+			"Expires": time.Unix(msg.Expires, 0).Format(time.RFC3339),
+			"Created": time.Unix(msg.Time, 0).Format(time.RFC3339),
+		}).Info("Expired message received")
+		mTotalExpiredMessages.Add(1)
+		return nil
+	}
+
 	sendSms := func() (*NexmoMessageResponse, error) {
 		return ns.sendSms(nexmoSMS)
 	}
