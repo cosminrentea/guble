@@ -2,15 +2,18 @@ package sms
 
 import (
 	"encoding/json"
+	"expvar"
 	"fmt"
-	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/cosminrentea/gobbler/server/router"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NexmoHTTPError(t *testing.T) {
@@ -134,6 +137,32 @@ func Test_WrongEncodedSmsInRouterMessage(t *testing.T) {
 	a.Equal(msg.ID, gw.LastIDSent, "No Retry needed.Last id  sent should be msgId")
 
 	stopGateway(t, gw)
+}
+
+func TestNexmoSender_SendExpiredMessage(t *testing.T) {
+	a := assert.New(t)
+
+	port := createRandomPort(7000, 8000)
+	URL = "http://127.0.0.1" + port
+
+	sender := createNexmoSender(t)
+	// no request should be made in case the sms is expired
+	go dummyNexmoEndpointWithHandlerFunc(t, nil, port, func(t *testing.T, countCh chan bool) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			a.FailNow("Nexmo call not expected.")
+		}
+	})
+
+	msg := encodeProtocolMessage(t, 0)
+	msg.Expires = time.Now().Add(-1 * time.Minute).Unix()
+
+	err := sender.Send(&msg)
+	time.Sleep(3 * timeInterval)
+	a.Equal(protocol.ErrMessageExpired, err)
+
+	expectedExpired := expvar.NewInt("total_expired_messages")
+	expectedExpired.Add(1)
+	a.Equal(expectedExpired, mTotalExpiredMessages)
 }
 
 func Test_GatewaySanity(t *testing.T) {

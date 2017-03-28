@@ -22,6 +22,11 @@ var (
 		Name: "sms_nexmo_response_internal_errors",
 		Help: "Number of internal errors related to Nexmo responses",
 	})
+
+	pTotalExpiredMessages = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "sms_nexmo_expired_messages",
+		Help: "Number of expired messages when trying to send to Nexmo",
+	})
 )
 
 func init() {
@@ -30,5 +35,6 @@ func init() {
 		pNexmoSendErrors,
 		pNexmoResponseErrors,
 		pNexmoResponseInternalErrors,
+		pTotalExpiredMessages,
 	)
 }

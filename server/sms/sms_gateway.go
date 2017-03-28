@@ -3,13 +3,14 @@ package sms
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store"
-	"time"
 )
 
 const (
@@ -187,6 +188,10 @@ func (g *gateway) proxyLoop() error {
 func (g *gateway) send(receivedMsg *protocol.Message) error {
 	err := g.sender.Send(receivedMsg)
 	if err != nil {
+		if err == protocol.ErrMessageExpired {
+			return nil
+		}
+
 		log.WithField("error", err.Error()).Error("Sending of message failed")
 		mTotalResponseErrors.Add(1)
 		pNexmoResponseErrors.Inc()
