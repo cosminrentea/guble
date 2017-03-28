@@ -10,6 +10,11 @@ var (
 		Help: "Number of messages sent to FCM",
 	})
 
+	pExpiredMessages = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "fcm_expired_messages",
+		Help: "Number of expired messages when trying to send to FCM",
+	})
+
 	pSendErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "fcm_send_errors",
 		Help: "Number of FCM errors when trying to send",
@@ -44,6 +49,7 @@ var (
 func init() {
 	prometheus.MustRegister(
 		pSent,
+		pExpiredMessages,
 		pSendErrors,
 		pResponseErrors,
 		pResponseInternalErrors,

@@ -31,6 +31,17 @@ func NewSender(apiKey string) *sender {
 
 func (s *sender) Send(request connector.Request) (interface{}, error) {
 	deviceToken := request.Subscriber().Route().Get(deviceTokenKey)
+	if m := request.Message(); m.IsExpired() {
+		logger.WithFields(log.Fields{
+			"ID":      m.ID,
+			"Expires": time.Unix(m.Expires, 0).Format(time.RFC3339),
+			"Created": time.Unix(m.Time, 0).Format(time.RFC3339),
+		}).Info("Expired message received")
+		mTotalExpiredMessages.Add(1)
+		pExpiredMessages.Inc()
+		return nil, protocol.ErrMessageExpired
+	}
+
 	fcmMessage := fcmMessage(request.Message())
 	fcmMessage.To = deviceToken
 	logger.WithFields(log.Fields{"deviceToken": fcmMessage.To}).Debug("sending message")

@@ -3,12 +3,13 @@ package fcm
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/Bogh/gcm"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
-	"time"
 )
 
 const (
@@ -87,6 +88,10 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 
 	if err != nil && !isValidResponseError(err) {
+		if err == protocol.ErrMessageExpired {
+			return nil
+		}
+
 		l.WithField("error", err.Error()).Error("Error sending message to FCM")
 		mTotalSendErrors.Add(1)
 		pSendErrors.Inc()

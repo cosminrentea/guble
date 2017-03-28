@@ -1,13 +1,15 @@
 package fcm
 
 import (
-	"github.com/cosminrentea/gobbler/server/metrics"
 	"time"
+
+	"github.com/cosminrentea/gobbler/server/metrics"
 )
 
 var (
 	ns                                = metrics.NS("fcm")
 	mTotalSentMessages                = ns.NewInt("total_sent_messages")
+	mTotalExpiredMessages             = ns.NewInt("total_expired_messages")
 	mTotalSendErrors                  = ns.NewInt("total_sent_message_errors")
 	mTotalResponseErrors              = ns.NewInt("total_response_errors")
 	mTotalResponseInternalErrors      = ns.NewInt("total_response_internal_errors")
