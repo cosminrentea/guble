@@ -93,11 +93,20 @@ func (gs gubleSender) Send(topic string, body []byte, userID string, params map[
 		"userID": userID,
 		"params": params,
 	}).Debug("Sending guble message")
+
 	request, err := http.NewRequest(http.MethodPost, getURL(gs.Endpoint, topic, userID, params), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
+
+	// Correlation ID header
 	request.Header.Add(rest.XHeaderPrefix+"correlation-id", params[correlationIDLiteral])
+
+	// Expires header
+	if expires, ok := params["Expires"]; ok {
+		request.Header.Set("Expires", expires)
+	}
+
 	response, err := gs.httpClient.Do(request)
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package rest
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/azer/snakecase"
 
@@ -102,6 +103,7 @@ func (api *RestMessageAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Path:          protocol.Path(topic),
 		Body:          body,
 		UserID:        q(r, "userId"),
+		Expires:       extractExpiresHeader(r),
 		ApplicationID: xid.New().String(),
 		HeaderJSON:    headersToJSON(r.Header),
 	}
@@ -111,6 +113,19 @@ func (api *RestMessageAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	api.router.HandleMessage(msg)
 	fmt.Fprintf(w, "OK")
+}
+
+// extractExpiresHeader will return the value of the `Expires` Header if is set or 0
+func extractExpiresHeader(r *http.Request) int64 {
+	expiresHeader := r.Header.Get("Expires")
+	if expiresHeader == "" {
+		return 0
+	}
+	v, err := strconv.ParseInt(expiresHeader, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return v
 }
 
 func (api *RestMessageAPI) extractTopic(path string, requestTypeTopicPrefix string) (string, error) {
