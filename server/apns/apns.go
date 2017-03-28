@@ -2,12 +2,14 @@ package apns
 
 import (
 	"fmt"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/sideshow/apns2"
-	"time"
 )
 
 const (
@@ -93,6 +95,10 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 	l.Info("Handle APNS response")
 	if errSend != nil {
+		if errSend == protocol.ErrMessageExpired {
+			return nil
+		}
+
 		l.WithFields(log.Fields{
 			"error":      errSend.Error(),
 			"error_type": errSend,

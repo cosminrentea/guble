@@ -2,12 +2,14 @@ package apns
 
 import (
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestNewSender_ErrorBytes(t *testing.T) {
@@ -85,6 +87,47 @@ func TestSender_Send(t *testing.T) {
 
 	// then
 	a.NoError(err)
+	a.Nil(rsp)
+}
+
+func TestSender_SendExpiredMessage(t *testing.T) {
+	_, finish := testutil.NewMockCtrl(t)
+	defer finish()
+	a := assert.New(t)
+
+	// given
+	routeParams := make(map[string]string)
+	routeParams["device_id"] = "1234"
+	routeConfig := router.RouteConfig{
+		Path:        protocol.Path("path"),
+		RouteParams: routeParams,
+	}
+	route := router.NewRoute(routeConfig)
+
+	msg := &protocol.Message{
+		Body:    []byte("{}"),
+		Expires: time.Now().Add(-1 * time.Hour).Unix(),
+	}
+
+	mSubscriber := NewMockSubscriber(testutil.MockCtrl)
+	mSubscriber.EXPECT().Route().Return(route).AnyTimes()
+
+	mRequest := NewMockRequest(testutil.MockCtrl)
+	mRequest.EXPECT().Subscriber().Return(mSubscriber).AnyTimes()
+	mRequest.EXPECT().Message().Return(msg).AnyTimes()
+
+	mPusher := NewMockPusher(testutil.MockCtrl)
+
+	// and
+	s, err := NewSenderUsingPusher(mPusher, "com.myapp")
+	a.NoError(err)
+
+	// when
+	rsp, err := s.Send(mRequest)
+
+	// then
+	a.Error(err)
+	a.Equal(protocol.ErrMessageExpired, err)
 	a.Nil(rsp)
 }
 

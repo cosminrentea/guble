@@ -10,6 +10,11 @@ var (
 		Help: "Number of messages sent to APNS",
 	})
 
+	pTotalExpiredMessages = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "apns_expired_messages",
+		Help: "Number of expired messages when trying to send to APNS",
+	})
+
 	pSendErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "apns_send_errors",
 		Help: "Number of errors when trying to send messages to APNS",
@@ -54,6 +59,7 @@ var (
 func init() {
 	prometheus.MustRegister(
 		pSentMessages,
+		pTotalExpiredMessages,
 		pSendErrors,
 		pResponseErrors,
 		pResponseInternalErrors,

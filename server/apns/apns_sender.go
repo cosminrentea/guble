@@ -2,11 +2,15 @@ package apns
 
 import (
 	"errors"
+	"net"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/jpillora/backoff"
 	"github.com/sideshow/apns2"
-	"net"
-	"time"
 )
 
 const (
@@ -48,6 +52,18 @@ func (s sender) Send(request connector.Request) (interface{}, error) {
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 	deviceToken := request.Subscriber().Route().Get(deviceIDKey)
 	l.WithField("deviceToken", deviceToken).Info("Trying to push a message to APNS")
+
+	if m := request.Message(); m.IsExpired() {
+		l.WithFields(log.Fields{
+			"ID":      m.ID,
+			"Expires": time.Unix(m.Expires, 0).Format(time.RFC3339),
+			"Created": time.Unix(m.Time, 0).Format(time.RFC3339),
+		}).Info("Expired message received")
+		mTotalExpiredMessages.Add(1)
+		pTotalExpiredMessages.Inc()
+		return nil, protocol.ErrMessageExpired
+	}
+
 	push := func() (interface{}, error) {
 		return s.client.Push(&apns2.Notification{
 			Priority:    apns2.PriorityHigh,
