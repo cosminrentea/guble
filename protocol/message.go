@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,6 +11,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 )
+
+var ErrMessageExpired = errors.New("Message has expired.")
 
 // Message is a struct that represents a message in the guble protocol, as the server sends it to the client.
 type Message struct {

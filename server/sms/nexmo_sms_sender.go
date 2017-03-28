@@ -147,7 +147,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		}).Info("Expired message received")
 		mTotalExpiredMessages.Add(1)
 		pTotalExpiredMessages.Inc()
-		return nil
+		return protocol.ErrMessageExpired
 	}
 
 	sendSms := func() (*NexmoMessageResponse, error) {

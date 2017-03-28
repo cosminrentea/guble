@@ -2,16 +2,18 @@ package sms
 
 import (
 	"encoding/json"
+	"expvar"
 	"fmt"
-	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 	"time"
-	"expvar"
+
+	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/cosminrentea/gobbler/server/router"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NexmoHTTPError(t *testing.T) {
@@ -152,12 +154,11 @@ func TestNexmoSender_SendExpiredMessage(t *testing.T) {
 	})
 
 	msg := encodeProtocolMessage(t, 0)
-	expires := time.Now().Add(-1 * time.Minute)
-	msg.Expires = &expires
+	msg.Expires = time.Now().Add(-1 * time.Minute).Unix()
 
 	err := sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
-	a.NoError(err)
+	a.Equal(protocol.ErrMessageExpired, err)
 
 	expectedExpired := expvar.NewInt("total_expired_messages")
 	expectedExpired.Add(1)
