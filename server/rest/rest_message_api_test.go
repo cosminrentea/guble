@@ -10,13 +10,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cosminrentea/go-uuid"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cosminrentea/go-uuid"
 )
 
 var testBytes = []byte("test")
@@ -149,6 +150,30 @@ func TestHeadersToJSON(t *testing.T) {
 	a.Equal(2, len(header))
 	a.Equal("b", header["a"])
 	a.Equal("y", header["x"])
+}
+
+func TestExtractExpires(t *testing.T) {
+	a := assert.New(t)
+	cases := []struct {
+		header   string
+		expected int64
+	}{
+		{"1420110000", 1420110000},
+		{"", 0},
+	}
+
+	for i, c := range cases {
+		r, err := http.NewRequest(http.MethodPost, "http://dummyurl/", nil)
+		a.NoError(err)
+		r.Header.Set("Expires", c.header)
+
+		a.Equal(c.expected, extractExpiresHeader(r), "Failed extractExpiresHeader for case: %d", i)
+	}
+
+	// no header case
+	r, err := http.NewRequest(http.MethodPost, "http://dummyurl/", nil)
+	a.NoError(err)
+	a.Equal(int64(0), extractExpiresHeader(r))
 }
 
 func TestRemoveTrailingSlash(t *testing.T) {
