@@ -28,6 +28,10 @@ func (sl *List) Set(value string) error {
 	return nil
 }
 
+func (sl *List) IsEmpty() bool {
+	return len(*sl) == 0
+}
+
 func (sl List) String() string {
 	res := "["
 	for _, s := range sl {

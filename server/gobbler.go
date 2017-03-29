@@ -170,6 +170,10 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		logger.Info("APNS: disabled")
 	}
 
+	if (*Config.KafkaProducer.Brokers).IsEmpty() {
+		//TODO Cosmin
+	}
+
 	if *Config.SMS.Enabled {
 		logger.Info("Nexmo SMS: enabled")
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {

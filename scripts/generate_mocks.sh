@@ -179,4 +179,10 @@ $MOCKGEN -self_package router -package sms \
       github.com/cosminrentea/gobbler/server/store \
       MessageStore &
 
+# server/configstring mocks
+$MOCKGEN -package configstring \
+      -destination server/configstring/mocks_kingpin_gen_test.go \
+      gopkg.in/alecthomas/kingpin.v2 \
+      Settings &
+
 wait
