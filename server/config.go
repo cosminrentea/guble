@@ -12,7 +12,9 @@ import (
 	"strings"
 
 	"github.com/cosminrentea/gobbler/server/apns"
+	"github.com/cosminrentea/gobbler/server/configstring"
 	"github.com/cosminrentea/gobbler/server/fcm"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/sms"
 	"github.com/cosminrentea/gobbler/server/websocket"
 )
@@ -75,6 +77,7 @@ type (
 		APNS               apns.Config
 		SMS                sms.Config
 		WS                 websocket.Config
+		KafkaProducer      kafka.Config
 		Cluster            ClusterConfig
 	}
 )
@@ -233,6 +236,11 @@ var (
 				Envar("GUBLE_WS_PREFIX").
 				Default("/stream/").
 				String(),
+		},
+		KafkaProducer: kafka.Config{
+			Brokers: configstring.NewFromKingpin(
+				kingpin.Flag("kafka-brokers", `The list Kafka brokers to which Guble should connect (formatted as host:port, separated by spaces or commas)`).
+					Envar("GUBLE_KAFKA_BROKERS")),
 		},
 	}
 )

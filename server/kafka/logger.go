@@ -1,4 +1,4 @@
-package kafkareporter
+package kafka
 
 import (
 	log "github.com/Sirupsen/logrus"
