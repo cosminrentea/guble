@@ -31,6 +31,7 @@ import (
 	"github.com/Bogh/gcm"
 	"github.com/pkg/profile"
 	"golang.org/x/crypto/ssh/terminal"
+	"github.com/cosminrentea/gobbler/server/kafka"
 )
 
 const (
@@ -170,9 +171,15 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		logger.Info("APNS: disabled")
 	}
 
+	var kafkaProducer kafka.Producer
 	if (*Config.KafkaProducer.Brokers).IsEmpty() {
 		logger.Info("KafkaProducer: enabled")
 		//TODO Cosmin
+		var errKafka error
+		kafkaProducer, errKafka = kafka.NewProducer(Config.KafkaProducer)
+		if errKafka != nil {
+			logger.WithError(errKafka).Error("Could not create KafkaProducer")
+		}
 	} else {
 		logger.Info("KafkaProducer: disabled")
 	}
