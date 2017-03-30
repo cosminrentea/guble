@@ -171,7 +171,10 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 	}
 
 	if (*Config.KafkaProducer.Brokers).IsEmpty() {
+		logger.Info("KafkaProducer: enabled")
 		//TODO Cosmin
+	} else {
+		logger.Info("KafkaProducer: disabled")
 	}
 
 	if *Config.SMS.Enabled {
