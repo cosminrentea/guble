@@ -29,9 +29,9 @@ import (
 	"syscall"
 
 	"github.com/Bogh/gcm"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/pkg/profile"
 	"golang.org/x/crypto/ssh/terminal"
-	"github.com/cosminrentea/gobbler/server/kafka"
 )
 
 const (
@@ -115,6 +115,8 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 
 	var kafkaProducer kafka.Producer
 	if (*Config.KafkaProducer.Brokers).IsEmpty() {
+		logger.Info("KafkaProducer: disabled")
+	} else {
 		logger.Info("KafkaProducer: enabled")
 		var errKafka error
 		kafkaProducer, errKafka = kafka.NewProducer(Config.KafkaProducer)
@@ -123,8 +125,6 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		} else {
 			modules = append(modules, kafkaProducer)
 		}
-	} else {
-		logger.Info("KafkaProducer: disabled")
 	}
 
 	if *Config.WS.Enabled {
