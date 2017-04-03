@@ -190,8 +190,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {
 			logger.Panic("The API Key has to be provided when NEXMO SMS connector is enabled")
 		}
-		//TODO Cosmin have some config for "sms_reporting" topic name
-		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, "sms_reporting")
+		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, *Config.SMS.KafkaReportingTopic)
 		if err != nil {
 			logger.WithError(err).Error("Error creating Nexmo Sender")
 		}

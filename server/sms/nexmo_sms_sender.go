@@ -231,7 +231,6 @@ func report(nexmoMessageReport NexmoMessageReport, kafkaProducer kafka.Producer,
 	bytesReportEvent, err := json.Marshal(ReportEvent{
 		Id:   uuid,
 		Time: time.Now().UTC().Format(time.RFC3339),
-		//TODO Cosmin use a config for this
 		Type: "tour_arrival_estimate_nexmo",
 		Payload: ReportPayload{
 			SmsResponse: nexmoMessageReport,
