@@ -164,7 +164,7 @@ func (g *gateway) proxyLoop() error {
 			}
 
 			err := g.send(receivedMsg)
-			if err != nil && err == ErrRetryFailed {
+			if err != nil && (err == ErrRetryFailed || err == ErrLastIdCouldNotBeSet) {
 				// THIS MAY BE BLOCKING.Maybe not a good idea.
 				for err2 := g.SetLastSentID(receivedMsg.ID); err2 != nil; {
 					g.logger.WithField("error", err2.Error()).Error("Error setting last ID.Retrying")
@@ -194,7 +194,12 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 	}
 	mTotalSentMessages.Add(1)
 	pSent.Inc()
-	g.SetLastSentID(receivedMsg.ID)
+	err = g.SetLastSentID(receivedMsg.ID)
+	if err != nil {
+		logger.WithField("error", err.Error()).Error("Setting last id for sms connector failed.")
+		return ErrLastIdCouldNotBeSet
+	}
+
 	return nil
 }
 
