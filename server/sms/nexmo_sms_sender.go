@@ -109,6 +109,30 @@ type ReportEvent struct {
 	Payload ReportPayload `json:"payload"`
 }
 
+func (event *ReportEvent) report(nexmoMessageReport NexmoMessageReport, kafkaProducer kafka.Producer, kafkaReportingTopic string) error {
+	if kafkaProducer == nil || kafkaReportingTopic == "" {
+		return errKafkaReportingConfiguration
+	}
+	uuid, err := go_uuid.New()
+	if err != nil {
+		logger.WithError(err).Error("Could not get new UUID")
+		return err
+	}
+	responseTime := time.Now().UTC().Format(time.RFC3339)
+	event.Id = uuid
+	event.Time = responseTime
+	event.Payload.SmsResponseTime = responseTime
+	event.Payload.SmsResponse = nexmoMessageReport
+	bytesReportEvent, err := json.Marshal(event)
+	if err != nil {
+		logger.WithError(err).Error("Error while marshaling Kafka reporting event to JSON format")
+		return err
+	}
+	logger.WithField("event", *event).Debug("Reporting sent nexmo sms to Kafka topic")
+	kafkaProducer.Report(kafkaReportingTopic, bytesReportEvent, uuid)
+	return nil
+}
+
 type NexmoMessageResponse struct {
 	MessageCount int                  `json:"message-count,string"`
 	Messages     []NexmoMessageReport `json:"messages"`
@@ -231,29 +255,6 @@ func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error), ka
 		logger.WithField("error", err.Error()).WithField("duration", d).Info("Retry in")
 		time.Sleep(d)
 	}
-}
-
-func (event *ReportEvent) report(nexmoMessageReport NexmoMessageReport, kafkaProducer kafka.Producer, kafkaReportingTopic string) error {
-	if kafkaProducer == nil || kafkaReportingTopic == "" {
-		return errKafkaReportingConfiguration
-	}
-	uuid, err := go_uuid.New()
-	if err != nil {
-		logger.WithError(err).Error("Could not get new UUID")
-		return err
-	}
-	responseTime := time.Now().UTC().Format(time.RFC3339)
-	event.Id = uuid
-	event.Time = responseTime
-	event.Payload.SmsResponse = nexmoMessageReport
-	bytesReportEvent, err := json.Marshal(event)
-	if err != nil {
-		logger.WithError(err).Error("Error while marshaling Kafka reporting event to JSON format")
-		return err
-	}
-	logger.WithField("event", *event).Debug("Reporting sent nexmo sms to Kafka topic")
-	kafkaProducer.Report(kafkaReportingTopic, bytesReportEvent, uuid)
-	return nil
 }
 
 func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
