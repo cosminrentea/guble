@@ -29,6 +29,7 @@ import (
 	"syscall"
 
 	"github.com/Bogh/gcm"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/pkg/profile"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -112,6 +113,20 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 
 	modules = append(modules, rest.NewRestMessageAPI(router, "/api/"))
 
+	var kafkaProducer kafka.Producer
+	if (*Config.KafkaProducer.Brokers).IsEmpty() {
+		logger.Info("KafkaProducer: disabled")
+	} else {
+		logger.Info("KafkaProducer: enabled")
+		var errKafka error
+		kafkaProducer, errKafka = kafka.NewProducer(Config.KafkaProducer)
+		if errKafka != nil {
+			logger.WithError(errKafka).Error("Could not create KafkaProducer")
+		} else {
+			modules = append(modules, kafkaProducer)
+		}
+	}
+
 	if *Config.WS.Enabled {
 		if wsHandler, err := websocket.NewWSHandler(router, *Config.WS.Prefix); err != nil {
 			logger.WithError(err).Error("Error loading WSHandler module")
@@ -175,7 +190,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {
 			logger.Panic("The API Key has to be provided when NEXMO SMS connector is enabled")
 		}
-		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret)
+		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, *Config.SMS.KafkaReportingTopic)
 		if err != nil {
 			logger.WithError(err).Error("Error creating Nexmo Sender")
 		}

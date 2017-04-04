@@ -10,7 +10,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/cosminrentea/go-uuid"
 	"github.com/cosminrentea/gobbler/protocol"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/jpillora/backoff"
 )
 
@@ -50,6 +52,8 @@ var (
 	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long")
 	ErrRetryFailed               = errors.New("Failed retrying to send message")
 	ErrEncodeFailed              = errors.New("Encoding of message to be sent to Nexmo  failed")
+
+	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Nexmo is not correctly configured")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -89,6 +93,46 @@ type NexmoMessageReport struct {
 	ErrorText        string       `json:"error-text"`
 }
 
+type ReportPayload struct {
+	OrderId         int                `json:"order_id"`
+	MessageId       string             `json:"message_id"`
+	SmsText         string             `json:"sms_text"`
+	SmsRequestTime  string             `json:"sms_request_time"`
+	SmsResponseTime string             `json:"sms_response_time"`
+	SmsResponse     NexmoMessageReport `json:"sms_response"`
+}
+
+type ReportEvent struct {
+	Id      string        `json:"id"`
+	Time    string        `json:"time"`
+	Type    string        `json:"type"`
+	Payload ReportPayload `json:"payload"`
+}
+
+func (event *ReportEvent) report(nexmoMessageReport NexmoMessageReport, kafkaProducer kafka.Producer, kafkaReportingTopic string) error {
+	if kafkaProducer == nil || kafkaReportingTopic == "" {
+		return errKafkaReportingConfiguration
+	}
+	uuid, err := go_uuid.New()
+	if err != nil {
+		logger.WithError(err).Error("Could not get new UUID")
+		return err
+	}
+	responseTime := time.Now().UTC().Format(time.RFC3339)
+	event.Id = uuid
+	event.Time = responseTime
+	event.Payload.SmsResponseTime = responseTime
+	event.Payload.SmsResponse = nexmoMessageReport
+	bytesReportEvent, err := json.Marshal(event)
+	if err != nil {
+		logger.WithError(err).Error("Error while marshaling Kafka reporting event to JSON format")
+		return err
+	}
+	logger.WithField("event", *event).Debug("Reporting sent nexmo sms to Kafka topic")
+	kafkaProducer.Report(kafkaReportingTopic, bytesReportEvent, uuid)
+	return nil
+}
+
 type NexmoMessageResponse struct {
 	MessageCount int                  `json:"message-count,string"`
 	Messages     []NexmoMessageReport `json:"messages"`
@@ -113,18 +157,24 @@ func (nm NexmoMessageResponse) Check() error {
 }
 
 type NexmoSender struct {
-	logger    *log.Entry
+	logger *log.Entry
+
 	ApiKey    string
 	ApiSecret string
+
+	kafkaProducer       kafka.Producer
+	kafkaReportingTopic string
 
 	httpClient *http.Client
 }
 
-func NewNexmoSender(apiKey, apiSecret string) (*NexmoSender, error) {
+func NewNexmoSender(apiKey, apiSecret string, kafkaProducer kafka.Producer, kafkaReportingTopic string) (*NexmoSender, error) {
 	ns := &NexmoSender{
-		logger:    logger.WithField("name", "nexmoSender"),
-		ApiKey:    apiKey,
-		ApiSecret: apiSecret,
+		logger:              logger.WithField("name", "nexmoSender"),
+		ApiKey:              apiKey,
+		ApiSecret:           apiSecret,
+		kafkaProducer:       kafkaProducer,
+		kafkaReportingTopic: kafkaReportingTopic,
 	}
 	ns.createHttpClient()
 	return ns, nil
@@ -138,9 +188,11 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		return ErrRetryFailed
 	}
 
-	sendSms := func() (*NexmoMessageResponse, error) {
-		return ns.sendSms(nexmoSMS)
+	orderId, err := strconv.Atoi(nexmoSMS.ClientRef)
+	if err != nil {
+		orderId = 0
 	}
+
 	withRetry := &retryable{
 		maxTries: 3,
 		Backoff: backoff.Backoff{
@@ -150,9 +202,21 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 			Jitter: true,
 		},
 	}
-
-	err = withRetry.executeAndCheck(sendSms)
-	if err != nil && err == ErrRetryFailed {
+	err = withRetry.executeAndCheck(
+		func() (*NexmoMessageResponse, error) {
+			return ns.sendSms(nexmoSMS)
+		},
+		ns.kafkaProducer,
+		ns.kafkaReportingTopic,
+		&ReportEvent{
+			Type: "tour_arrival_estimate_nexmo",
+			Payload: ReportPayload{
+				MessageId: msg.CorrelationID(),
+				OrderId:   orderId,
+				SmsText:   nexmoSMS.Text,
+			},
+		})
+	if err == ErrRetryFailed {
 		logger.WithField("msg", msg).Info("Retry failed or not necessary.Moving on")
 	}
 
@@ -160,29 +224,30 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 }
 
 type retryable struct {
-	maxTries int
 	backoff.Backoff
+	maxTries int
 }
 
-func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error)) error {
+func (r *retryable) executeAndCheck(op func() (*NexmoMessageResponse, error), kafkaProducer kafka.Producer, kafkaReportingTopic string, event *ReportEvent) error {
 	tryCounter := 0
-
 	for {
 		tryCounter++
+		event.Payload.SmsRequestTime = time.Now().UTC().Format(time.RFC3339)
 		nexmoSMSResponse, err := op()
 		if err == nil {
 			logger.WithField("response", nexmoSMSResponse).WithField("try", tryCounter).Info("Decoded nexmo response")
 			err = nexmoSMSResponse.Check()
 			if err == nil {
+				err = event.report(nexmoSMSResponse.Messages[0], kafkaProducer, kafkaReportingTopic)
+				if err != nil {
+					logger.WithError(err).Error("Could not report sent nexmo sms to Kafka topic")
+				}
 				return nil
 			}
-
 			if err == ErrInvalidSender {
 				return ErrRetryFailed
 			}
-
 		}
-
 		if tryCounter >= r.maxTries {
 			return ErrRetryFailed
 		}

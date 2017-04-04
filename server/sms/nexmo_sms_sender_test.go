@@ -25,7 +25,7 @@ func Test_HttpClientRecreation(t *testing.T) {
 func TestNexmoSender_SendWithError(t *testing.T) {
 	RequestTimeout = time.Second
 	a := assert.New(t)
-	sender, err := NewNexmoSender(KEY, SECRET)
+	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	a.NoError(err)
 
 	msg := encodeProtocolMessage(t, 0)
