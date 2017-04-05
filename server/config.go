@@ -226,7 +226,7 @@ var (
 				Default(strconv.Itoa(runtime.NumCPU())).
 				Envar("GUBLE_SMS_WORKERS").
 				Int(),
-			KafkaReportingTopic:kingpin.Flag("sms-kafka-topic", "The name of the SMS-Reporting Kafka topic").
+			KafkaReportingTopic: kingpin.Flag("sms-kafka-topic", "The name of the SMS-Reporting Kafka topic").
 				Envar("GUBLE_SMS_KAFKA_TOPIC").
 				String(),
 			IntervalMetrics: &defaultSMSMetrics,

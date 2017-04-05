@@ -45,15 +45,14 @@ var (
 	MaxIdleConnections = 100
 	RequestTimeout     = 500 * time.Millisecond
 
-	ErrHTTPClientError           = errors.New("Http client sending to Nexmo Failed.No sms was sent")
-	ErrNexmoResponseStatusNotOk  = errors.New("Nexmo response status not ResponseSuccess")
-	ErrSMSResponseDecodingFailed = errors.New("Nexmo response decoding failed")
-	ErrInvalidSender             = errors.New("Sms destination phoneNumber is invalid")
-	ErrMultipleSmsSent           = errors.New("Multiple  or no sms we're sent.SMS message may be too long")
-	ErrRetryFailed               = errors.New("Failed retrying to send message")
-	ErrEncodeFailed              = errors.New("Encoding of message to be sent to Nexmo  failed")
-	ErrLastIdCouldNotBeSet       = errors.New("Setting last id failed")
-
+	ErrHTTPClientError             = errors.New("Http client sending to Nexmo Failed.No sms was sent")
+	ErrNexmoResponseStatusNotOk    = errors.New("Nexmo response status not ResponseSuccess")
+	ErrSMSResponseDecodingFailed   = errors.New("Nexmo response decoding failed")
+	ErrInvalidSender               = errors.New("Sms destination phoneNumber is invalid")
+	ErrMultipleSmsSent             = errors.New("Multiple  or no sms we're sent.SMS message may be too long")
+	ErrRetryFailed                 = errors.New("Failed retrying to send message")
+	ErrEncodeFailed                = errors.New("Encoding of message to be sent to Nexmo  failed")
+	ErrLastIDCouldNotBeSet         = errors.New("Setting last id failed")
 	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Nexmo is not correctly configured")
 )
 

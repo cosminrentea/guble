@@ -1,10 +1,10 @@
 package configstring
 
 import (
-	"testing"
 	"github.com/cosminrentea/gobbler/testutil"
-	"github.com/stretchr/testify/assert"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestList_IsEmpty(t *testing.T) {
