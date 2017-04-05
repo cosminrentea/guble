@@ -14,7 +14,11 @@ func TestList_IsEmpty(t *testing.T) {
 	m := NewMockSettings(ctrl)
 	m.EXPECT().SetValue(gomock.Any())
 
-	cs := NewFromKingpin(m)
+	listFromKingpin := NewFromKingpin(m)
 
-	assert.True(t, cs.IsEmpty())
+	assert.True(t, listFromKingpin.IsEmpty())
+
+	list := &List{}
+
+	assert.True(t, list.IsEmpty())
 }
