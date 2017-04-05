@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 func TestValidateStoragePath(t *testing.T) {
@@ -115,6 +116,7 @@ func TestStartServiceModules(t *testing.T) {
 	*Config.FCM.Enabled = false
 	*Config.APNS.Enabled = false
 	*Config.WS.Enabled = false
+	*Config.KafkaProducer.Brokers = configstring.List{}
 
 	// using an available port for http
 	testHttpPort++

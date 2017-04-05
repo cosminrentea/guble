@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosminrentea/gobbler/restclient"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 func initServerAndClients(t *testing.T) (*service.Service, client.Client, client.Client, func()) {
@@ -25,6 +26,8 @@ func initServerAndClients(t *testing.T) (*service.Service, client.Client, client
 	*Config.KVS = "memory"
 	*Config.WS.Enabled = true
 	*Config.WS.Prefix = "/stream/"
+	*Config.KafkaProducer.Brokers = configstring.List{}
+
 	s := StartService()
 
 	time.Sleep(time.Millisecond * 100)
