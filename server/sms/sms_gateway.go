@@ -29,6 +29,8 @@ type Config struct {
 	SMSTopic        *string
 	IntervalMetrics *bool
 
+	KafkaReportingTopic *string
+
 	Name   string
 	Schema string
 }

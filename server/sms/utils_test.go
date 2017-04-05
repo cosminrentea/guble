@@ -144,7 +144,7 @@ func stopGateway(t *testing.T, gw *gateway) {
 
 func createNexmoSender(t *testing.T) Sender {
 	a := assert.New(t)
-	nexmoSender, err := NewNexmoSender(KEY, SECRET)
+	nexmoSender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	if err != nil {
 		a.FailNow("Nexmo sender could not be created.")
 	}

@@ -99,6 +99,12 @@ func TestParsingOfEnvironmentVariables(t *testing.T) {
 	os.Setenv("GUBLE_NODE_REMOTES", "127.0.0.1:8080 127.0.0.1:20002")
 	defer os.Unsetenv("GUBLE_NODE_REMOTES")
 
+	os.Setenv("GUBLE_KAFKA_BROKERS", "127.0.0.1:9092 127.0.0.1:9091")
+	defer os.Unsetenv("GUBLE_KAFKA_BROKERS")
+
+	os.Setenv("GUBLE_SMS_KAFKA_TOPIC", "sms_reporting_topic")
+	defer os.Unsetenv("GUBLE_SMS_KAFKA_TOPIC")
+
 	// when we parse the arguments from environment variables
 	parseConfig()
 
@@ -143,6 +149,8 @@ func TestParsingArgs(t *testing.T) {
 		"--pg-password", "pg-password",
 		"--pg-dbname", "pg-dbname",
 		"--remotes", "127.0.0.1:8080 127.0.0.1:20002",
+		"--kafka-brokers", "127.0.0.1:9092 127.0.0.1:9091",
+		"--sms-kafka-topic", "sms_reporting_topic",
 	}
 
 	// when we parse the arguments from command-line flags
@@ -187,6 +195,9 @@ func assertArguments(a *assert.Assertions) {
 	a.Equal("debug", *Config.Log)
 	a.Equal("dev", *Config.EnvName)
 	a.Equal("mem", *Config.Profile)
+
+	a.Equal("[ 127.0.0.1:9092 127.0.0.1:9091]", (*Config.KafkaProducer.Brokers).String())
+	a.Equal("sms_reporting_topic", *Config.SMS.KafkaReportingTopic)
 
 	assertClusterRemotes(a)
 }
