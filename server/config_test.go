@@ -196,7 +196,7 @@ func assertArguments(a *assert.Assertions) {
 	a.Equal("dev", *Config.EnvName)
 	a.Equal("mem", *Config.Profile)
 
-	a.Equal("[ 127.0.0.1:9092 127.0.0.1:9091]", (*Config.KafkaProducer.Brokers).String())
+	a.Equal("[127.0.0.1:9092 127.0.0.1:9091]", (*Config.KafkaProducer.Brokers).String())
 	a.Equal("sms_reporting_topic", *Config.SMS.KafkaReportingTopic)
 
 	assertClusterRemotes(a)
