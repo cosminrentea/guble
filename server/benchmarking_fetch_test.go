@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"testing"
 	"time"
+	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 func Benchmark_E2E_Fetch_HelloWorld_Messages(b *testing.B) {
@@ -27,6 +28,8 @@ func Benchmark_E2E_Fetch_HelloWorld_Messages(b *testing.B) {
 	*Config.StoragePath = dir
 	*Config.WS.Enabled = true
 	*Config.WS.Prefix = "/stream/"
+	*Config.KafkaProducer.Brokers = configstring.List{}
+
 	service := StartService()
 	defer service.Stop()
 

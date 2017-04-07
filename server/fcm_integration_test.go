@@ -18,6 +18,7 @@ import (
 	"github.com/cosminrentea/gobbler/server/service"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 var (
@@ -142,6 +143,7 @@ func serviceSetUp(t *testing.T) (*service.Service, func()) {
 	*Config.FCM.Prefix = "/fcm/"
 	*Config.FCM.Workers = 1 // use only one worker so we can control the number of messages that go to FCM
 	*Config.APNS.Enabled = false
+	*Config.KafkaProducer.Brokers = configstring.List{}
 
 	var s *service.Service
 	for s == nil {

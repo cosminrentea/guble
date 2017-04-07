@@ -34,8 +34,12 @@ func (sl *List) IsEmpty() bool {
 
 func (sl List) String() string {
 	res := "["
-	for _, s := range sl {
-		res = res + " " + s
+	for i, s := range sl {
+		if i == 0 {
+			res = res + s
+		} else {
+			res = res + " " + s
+		}
 	}
 	res = res + "]"
 	return res
