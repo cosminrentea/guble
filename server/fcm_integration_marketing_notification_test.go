@@ -35,6 +35,7 @@ func Test_SendMarketingNotification(t *testing.T) {
 	*Config.FCM.APIKey = "WILL BE OVERWRITTEN"
 	*Config.FCM.Workers = 1
 	*Config.FCM.Prefix = "/fcm/"
+	*Config.APNS.Enabled=false
 
 	receiveC := make(chan bool)
 
