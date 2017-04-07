@@ -154,9 +154,9 @@ func (router *router) Check() error {
 // and then passes it to the internal channel, and asynchronously to the cluster (if available).
 func (router *router) HandleMessage(message *protocol.Message) error {
 	logger.WithFields(log.Fields{
-		"userID":        message.UserID,
+		"userID":         message.UserID,
 		"correlation_id": message.CorrelationID(),
-		"path":          message.Path}).Debug("HandleMessage")
+		"path":           message.Path}).Debug("HandleMessage")
 
 	mTotalMessagesIncoming.Add(1)
 	pMessagesIncoming.Inc()
