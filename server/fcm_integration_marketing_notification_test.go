@@ -29,6 +29,7 @@ func Test_SendMarketingNotification(t *testing.T) {
 
 	*Config.HttpListen = "localhost:8080"
 	*Config.KVS = "memory"
+	*Config.MS = "memory"
 
 	*Config.FCM.Enabled = true
 	*Config.FCM.APIKey = "WILL BE OVERWRITTEN"
@@ -66,7 +67,6 @@ func Test_SendMarketingNotification(t *testing.T) {
 		"filterConnector": "fcm",
 		"correlationID":   "correlation-id",
 	}
-	fmt.Println(params)
 	err = restClient.Send(topic, body, userID, params)
 	a.NoError(err)
 
