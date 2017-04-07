@@ -13,6 +13,7 @@ import (
 	"github.com/cosminrentea/gobbler/client"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 type testgroup struct {
@@ -50,6 +51,7 @@ func TestThroughput(t *testing.T) {
 	*Config.StoragePath = dir
 	*Config.WS.Enabled = true
 	*Config.WS.Prefix = "/stream/"
+	*Config.KafkaProducer.Brokers = configstring.List{}
 
 	service := StartService()
 
