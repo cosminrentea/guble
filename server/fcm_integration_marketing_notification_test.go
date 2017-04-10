@@ -35,13 +35,13 @@ func Test_SendMarketingNotification(t *testing.T) {
 	*Config.FCM.APIKey = "WILL BE OVERWRITTEN"
 	*Config.FCM.Workers = 1
 	*Config.FCM.Prefix = "/fcm/"
-	*Config.APNS.Enabled=false
+	*Config.APNS.Enabled = false
 
 	receiveC := make(chan bool)
 
 	s := StartService()
 	a.NotNil(s)
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 400)
 
 	var fcmConn connector.ResponsiveConnector
 	var ok bool
