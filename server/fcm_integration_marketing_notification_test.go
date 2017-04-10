@@ -19,7 +19,7 @@ import (
 )
 
 func Test_SendMarketingNotification(t *testing.T) {
-	//defer gobblertestutil.SkipIfDisabled(t)
+	gobblertestutil.SkipIfDisabled(t)
 	//defer gobblertestutil.SkipIfShort(t)
 	defer gobblertestutil.EnableDebugForMethod()()
 	defer gobblertestutil.ResetDefaultRegistryHealthCheck()
