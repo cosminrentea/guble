@@ -19,8 +19,8 @@ import (
 )
 
 func Test_SendMarketingNotification(t *testing.T) {
-	defer gobblertestutil.SkipIfDisabled(t)
-	defer gobblertestutil.SkipIfShort(t)
+	//defer gobblertestutil.SkipIfDisabled(t)
+	//defer gobblertestutil.SkipIfShort(t)
 	defer gobblertestutil.EnableDebugForMethod()()
 	defer gobblertestutil.ResetDefaultRegistryHealthCheck()
 	a := assert.New(t)
@@ -35,7 +35,7 @@ func Test_SendMarketingNotification(t *testing.T) {
 	*Config.FCM.APIKey = "WILL BE OVERWRITTEN"
 	*Config.FCM.Workers = 1
 	*Config.FCM.Prefix = "/fcm/"
-	*Config.APNS.Enabled = false
+	*Config.APNS.Enabled=false
 
 	receiveC := make(chan bool)
 
