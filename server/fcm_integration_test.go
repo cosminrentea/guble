@@ -56,8 +56,8 @@ type expectedValues struct {
 // Test that restarting the service continues to fetch messages from store for a subscription from lastID
 func TestFCMRestart(t *testing.T) {
 
-	defer testutil.SkipIfDisabled(t)
-	defer testutil.SkipIfShort(t)
+	testutil.SkipIfDisabled(t)
+	testutil.SkipIfShort(t)
 
 	//defer testutil.EnableDebugForMethod()()
 	defer testutil.ResetDefaultRegistryHealthCheck()
