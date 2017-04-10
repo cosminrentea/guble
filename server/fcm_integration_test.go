@@ -57,7 +57,7 @@ type expectedValues struct {
 func TestFCMRestart(t *testing.T) {
 
 	defer testutil.SkipIfDisabled(t)
-	defer testutil.SkipIfShort(t)
+	//defer testutil.SkipIfShort(t)
 
 	//defer testutil.EnableDebugForMethod()()
 	defer testutil.ResetDefaultRegistryHealthCheck()
