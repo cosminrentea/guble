@@ -13,12 +13,12 @@ import (
 	"encoding/json"
 
 	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/server/configstring"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/fcm"
 	"github.com/cosminrentea/gobbler/server/service"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 var (
@@ -82,7 +82,7 @@ func TestFCMRestart(t *testing.T) {
 
 	// create subscription on topic
 	subscriptionSetUp(t, s)
-
+	time.Sleep(time.Second)
 	assertMetrics(a, s, expectedValues{true, 0, 1, 1})
 
 	c := clientSetUp(t, s)
@@ -99,6 +99,8 @@ func TestFCMRestart(t *testing.T) {
 	case <-time.After(timeoutForOneMessage):
 		a.Fail("Initial FCM message not received")
 	}
+
+	time.Sleep(time.Second)
 
 	assertMetrics(a, s, expectedValues{false, 1, 1, 1})
 	close(receiveC)
