@@ -126,7 +126,7 @@ func TestStartServiceModules(t *testing.T) {
 
 	s := StartService()
 	defer s.Stop()
-	time.sleep(100 *time.Millisecond)
+	time.Sleep(100 *time.Millisecond)
 	// then the number and ordering of modules should be correct
 	a.Equal(5, len(s.ModulesSortedByStartOrder()))
 	var moduleNames []string
