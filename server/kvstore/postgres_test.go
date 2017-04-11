@@ -62,7 +62,7 @@ func TestPostgresKVStore_Open(t *testing.T) {
 func aPostgresConfig() PostgresConfig {
 	return PostgresConfig{
 		ConnParams: map[string]string{
-			"host":     "localhost",
+			"host":     "0.0.0.0",
 			"user":     "postgres",
 			"password": "",
 			"dbname":   "guble",
