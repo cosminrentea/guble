@@ -2,6 +2,7 @@ package kvstore
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cosminrentea/gobbler/testutil"
 
@@ -37,6 +38,8 @@ func TestPostgresKVStore_IterateKeys(t *testing.T) {
 
 func TestPostgresKVStore_Check(t *testing.T) {
 	testutil.SkipIfShort(t)
+	// make sure to postgres container initialization is done
+	time.Sleep(5 * time.Second)
 	a := assert.New(t)
 
 	kvs := NewPostgresKVStore(aPostgresConfig())
@@ -62,7 +65,7 @@ func TestPostgresKVStore_Open(t *testing.T) {
 func aPostgresConfig() PostgresConfig {
 	return PostgresConfig{
 		ConnParams: map[string]string{
-			"host":     "0.0.0.0",
+			"host":     "localhost",
 			"user":     "postgres",
 			"password": "",
 			"dbname":   "guble",
