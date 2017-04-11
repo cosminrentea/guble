@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/cosminrentea/gobbler/server/configstring"
-	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 func TestValidateStoragePath(t *testing.T) {
@@ -110,7 +109,7 @@ func TestCreateStoreBackendPanicInvalidBackend(t *testing.T) {
 
 func TestStartServiceModules(t *testing.T) {
 	defer testutil.ResetDefaultRegistryHealthCheck()
-	defer testutil.EnableDebugForMethod() ()
+	defer testutil.EnableDebugForMethod()()
 
 	a := assert.New(t)
 
@@ -123,12 +122,13 @@ func TestStartServiceModules(t *testing.T) {
 	*Config.KafkaProducer.Brokers = configstring.List{}
 
 	// using an available port for http
-	testHttpPort++
+	testHttpPort += 4
 	logger.WithField("port", testHttpPort).Debug("trying to use HTTP Port")
 	*Config.HttpListen = fmt.Sprintf(":%d", testHttpPort)
 
 	s := StartService()
 	defer s.Stop()
+	a.NotNil(s)
 	time.Sleep(500 * time.Millisecond)
 	// then the number and ordering of modules should be correct
 	a.Equal(5, len(s.ModulesSortedByStartOrder()))
