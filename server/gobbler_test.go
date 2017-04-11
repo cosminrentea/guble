@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 	"github.com/cosminrentea/gobbler/server/configstring"
+	"time"
 )
 
 func TestValidateStoragePath(t *testing.T) {
@@ -125,7 +126,7 @@ func TestStartServiceModules(t *testing.T) {
 
 	s := StartService()
 	defer s.Stop()
-
+	time.sleep(100 *time.Millisecond)
 	// then the number and ordering of modules should be correct
 	a.Equal(5, len(s.ModulesSortedByStartOrder()))
 	var moduleNames []string
