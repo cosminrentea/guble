@@ -12,8 +12,10 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"github.com/cosminrentea/gobbler/server/configstring"
 	"time"
+
+	"github.com/cosminrentea/gobbler/server/configstring"
+	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 func TestValidateStoragePath(t *testing.T) {
@@ -108,6 +110,7 @@ func TestCreateStoreBackendPanicInvalidBackend(t *testing.T) {
 
 func TestStartServiceModules(t *testing.T) {
 	defer testutil.ResetDefaultRegistryHealthCheck()
+	defer testutil.EnableDebugForMethod() ()
 
 	a := assert.New(t)
 
@@ -126,7 +129,7 @@ func TestStartServiceModules(t *testing.T) {
 
 	s := StartService()
 	defer s.Stop()
-	time.Sleep(100 *time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	// then the number and ordering of modules should be correct
 	a.Equal(5, len(s.ModulesSortedByStartOrder()))
 	var moduleNames []string
