@@ -120,16 +120,15 @@ func TestStartServiceModules(t *testing.T) {
 	*Config.APNS.Enabled = false
 	*Config.WS.Enabled = false
 	*Config.KafkaProducer.Brokers = configstring.List{}
+	*Config.Cluster.NodeID = 0
 
 	// using an available port for http
-	testHttpPort += 4
+	testHttpPort++
 	logger.WithField("port", testHttpPort).Debug("trying to use HTTP Port")
 	*Config.HttpListen = fmt.Sprintf(":%d", testHttpPort)
 
 	s := StartService()
 	defer s.Stop()
-	a.NotNil(s)
-	time.Sleep(500 * time.Millisecond)
 	// then the number and ordering of modules should be correct
 	a.Equal(5, len(s.ModulesSortedByStartOrder()))
 	var moduleNames []string
