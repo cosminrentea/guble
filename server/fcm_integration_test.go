@@ -56,8 +56,8 @@ type expectedValues struct {
 // Test that restarting the service continues to fetch messages from store for a subscription from lastID
 func TestFCMRestart(t *testing.T) {
 
-	testutil.SkipIfDisabled(t)
-	testutil.SkipIfShort(t)
+	//testutil.SkipIfDisabled(t)
+	//testutil.SkipIfShort(t)
 
 	//defer testutil.EnableDebugForMethod()()
 	defer testutil.ResetDefaultRegistryHealthCheck()
@@ -86,7 +86,7 @@ func TestFCMRestart(t *testing.T) {
 
 	// create subscription on topic
 	subscriptionSetUp(t, s)
-	time.Sleep(time.Second)
+	time.Sleep(200 * time.Millisecond)
 	assertMetrics(a, s, expectedValues{true, 0, 1, 1})
 
 	c := clientSetUp(t, s)

@@ -12,8 +12,8 @@ import (
 
 	"github.com/cosminrentea/gobbler/client"
 	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/cosminrentea/gobbler/server/configstring"
+	"github.com/cosminrentea/gobbler/testutil"
 )
 
 type testgroup struct {

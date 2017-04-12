@@ -19,7 +19,7 @@ import (
 )
 
 func Test_SendMarketingNotification(t *testing.T) {
-	gobblertestutil.SkipIfDisabled(t)
+	//gobblertestutil.SkipIfDisabled(t)
 	//defer gobblertestutil.SkipIfShort(t)
 	defer gobblertestutil.EnableDebugForMethod()()
 	defer gobblertestutil.ResetDefaultRegistryHealthCheck()
@@ -36,6 +36,7 @@ func Test_SendMarketingNotification(t *testing.T) {
 	*Config.FCM.Workers = 1
 	*Config.FCM.Prefix = "/fcm/"
 	*Config.APNS.Enabled = false
+	*Config.Cluster.NodeID = 0
 
 	receiveC := make(chan bool)
 
