@@ -33,7 +33,7 @@ func (s *sender) Send(request connector.Request) (interface{}, error) {
 	deviceToken := request.Subscriber().Route().Get(deviceTokenKey)
 	fcmMessage := fcmMessage(request.Message())
 	fcmMessage.To = deviceToken
-	logger.WithFields(log.Fields{"deviceToken": fcmMessage.To}).Debug("sending message")
+	logger.WithFields(log.Fields{"deviceToken": fcmMessage.To}).WithField("message", fcmMessage).Debug("Composed FCM  message")
 	return s.gcmSender.Send(fcmMessage)
 }
 
@@ -48,7 +48,7 @@ func fcmMessage(message *protocol.Message) *gcm.Message {
 			"messageID":      message.ID,
 			"correlation_id": message.CorrelationID(),
 		}).Error("Could not decode fcm.Message from guble message body")
-	} else if m.Notification != nil && m.Data != nil {
+	} else if m.Data != nil {
 		return m
 	}
 

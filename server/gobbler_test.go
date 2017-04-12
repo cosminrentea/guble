@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
 	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
@@ -107,6 +108,7 @@ func TestCreateStoreBackendPanicInvalidBackend(t *testing.T) {
 
 func TestStartServiceModules(t *testing.T) {
 	defer testutil.ResetDefaultRegistryHealthCheck()
+	defer testutil.EnableDebugForMethod()()
 
 	a := assert.New(t)
 
@@ -117,6 +119,7 @@ func TestStartServiceModules(t *testing.T) {
 	*Config.APNS.Enabled = false
 	*Config.WS.Enabled = false
 	*Config.KafkaProducer.Brokers = configstring.List{}
+	*Config.Cluster.NodeID = 0
 
 	// using an available port for http
 	testHttpPort++
@@ -125,7 +128,6 @@ func TestStartServiceModules(t *testing.T) {
 
 	s := StartService()
 	defer s.Stop()
-
 	// then the number and ordering of modules should be correct
 	a.Equal(5, len(s.ModulesSortedByStartOrder()))
 	var moduleNames []string

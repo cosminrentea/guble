@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/cosminrentea/gobbler/restclient"
-	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/cosminrentea/gobbler/server/configstring"
+	"github.com/cosminrentea/gobbler/testutil"
 )
 
 func initServerAndClients(t *testing.T) (*service.Service, client.Client, client.Client, func()) {

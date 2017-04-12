@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"fmt"
+	"github.com/cosminrentea/gobbler/server/configstring"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
 	"time"
-	"github.com/cosminrentea/gobbler/server/configstring"
 )
 
 func Benchmark_E2E_Fetch_HelloWorld_Messages(b *testing.B) {
