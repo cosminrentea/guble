@@ -23,7 +23,7 @@ import (
 
 var (
 	testHttpPort         = 11000
-	timeoutForOneMessage = 150 * time.Millisecond
+	timeoutForOneMessage = 250 * time.Millisecond
 )
 
 type fcmMetricsMap struct {
