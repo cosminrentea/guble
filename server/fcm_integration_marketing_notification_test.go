@@ -83,6 +83,8 @@ func Test_SendMarketingNotification(t *testing.T) {
 	a.Equal(1, counter, "One fcm message should have been received")
 
 	err = s.Stop()
+	//for ensuring the stop is done correctly.
+	time.Sleep(250 * time.Millisecond)
 	a.NoError(err)
 
 }
