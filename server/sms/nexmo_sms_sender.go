@@ -204,7 +204,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		ns.kafkaProducer,
 		ns.kafkaReportingTopic,
 		&ReportEvent{
-			Type: "tour_arrival_estimate_nexmo",
+			Type: "tour_arrival_estimate_nexmo_v2",
 			Payload: ReportPayload{
 				MessageId: msg.CorrelationID(),
 				OrderId:   nexmoSMS.ClientRef,
