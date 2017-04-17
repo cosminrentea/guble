@@ -94,7 +94,7 @@ type NexmoMessageReport struct {
 }
 
 type ReportPayload struct {
-	OrderId         string             `json:"order_id,,omitempty"`
+	OrderId         string             `json:"order_id,omitempty"`
 	MessageId       string             `json:"message_id"`
 	SmsText         string             `json:"sms_text"`
 	SmsRequestTime  string             `json:"sms_request_time"`
