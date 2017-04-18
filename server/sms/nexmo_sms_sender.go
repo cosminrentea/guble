@@ -94,8 +94,8 @@ type NexmoMessageReport struct {
 }
 
 type ReportPayload struct {
-	OrderId         int                `json:"order_id"`
-	MessageId       string             `json:"message_id"`
+	OrderID         string             `json:"order_id,omitempty"`
+	MessageID       string             `json:"message_id"`
 	SmsText         string             `json:"sms_text"`
 	SmsRequestTime  string             `json:"sms_request_time"`
 	SmsResponseTime string             `json:"sms_response_time"`
@@ -188,11 +188,6 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		return ErrRetryFailed
 	}
 
-	orderId, err := strconv.Atoi(nexmoSMS.ClientRef)
-	if err != nil {
-		orderId = 0
-	}
-
 	withRetry := &retryable{
 		maxTries: 3,
 		Backoff: backoff.Backoff{
@@ -209,10 +204,10 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		ns.kafkaProducer,
 		ns.kafkaReportingTopic,
 		&ReportEvent{
-			Type: "tour_arrival_estimate_nexmo",
+			Type: "tour_arrival_estimate_nexmo_v2",
 			Payload: ReportPayload{
-				MessageId: msg.CorrelationID(),
-				OrderId:   orderId,
+				MessageID: msg.CorrelationID(),
+				OrderID:   nexmoSMS.ClientRef,
 				SmsText:   nexmoSMS.Text,
 			},
 		})
