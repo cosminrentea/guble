@@ -94,8 +94,8 @@ type NexmoMessageReport struct {
 }
 
 type ReportPayload struct {
-	OrderId         string             `json:"order_id,omitempty"`
-	MessageId       string             `json:"message_id"`
+	OrderID         string             `json:"order_id,omitempty"`
+	MessageID       string             `json:"message_id"`
 	SmsText         string             `json:"sms_text"`
 	SmsRequestTime  string             `json:"sms_request_time"`
 	SmsResponseTime string             `json:"sms_response_time"`
@@ -206,8 +206,8 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		&ReportEvent{
 			Type: "tour_arrival_estimate_nexmo_v2",
 			Payload: ReportPayload{
-				MessageId: msg.CorrelationID(),
-				OrderId:   nexmoSMS.ClientRef,
+				MessageID: msg.CorrelationID(),
+				OrderID:   nexmoSMS.ClientRef,
 				SmsText:   nexmoSMS.Text,
 			},
 		})
