@@ -57,8 +57,6 @@ func Test_StartStop(t *testing.T) {
 	err = gw.Stop()
 	a.NoError(err)
 
-	time.Sleep(100 * time.Millisecond)
-
 	// try to start & stop for a second time
 	err = gw.Start()
 	a.NoError(err)
