@@ -88,7 +88,8 @@ func (s *Service) PrometheusEndpoint(endpointPrefix string) *Service {
 	return s
 }
 
-// Start checks the modules for the following interfaces and registers and/or starts:
+// Start the health-check, old-format metrics, and Prometheus metrics endpoint,
+// and then check the modules for the following interfaces and registers and/or start:
 //   Startable:
 //   health.Checker:
 //   Endpoint: Register the handler function of the Endpoint in the http service at prefix
