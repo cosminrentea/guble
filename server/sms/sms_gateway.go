@@ -65,6 +65,7 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 	}, nil
 }
 
+// Start the sms gateway; it is an idempotent operation.
 func (g *gateway) Start() error {
 	g.logger.Info("Starting gateway")
 	if g.cancelFunc != nil {
@@ -190,6 +191,7 @@ func (g *gateway) proxyLoop() error {
 	//TODO Cosmin Bogdan returning this error can mean 2 things: overflow of route's channel, or intentional stopping of router / gubled.
 	return connector.ErrRouteChannelClosed
 }
+
 func (g *gateway) send(receivedMsg *protocol.Message) error {
 	err := g.sender.Send(receivedMsg)
 	if err != nil {
@@ -229,6 +231,7 @@ func (g *gateway) Restart() error {
 	return nil
 }
 
+// Stop the sms gateway; it is an idempotent operation.
 func (g *gateway) Stop() error {
 	g.logger.Info("Stopping gateway")
 	if g.cancelFunc != nil {
