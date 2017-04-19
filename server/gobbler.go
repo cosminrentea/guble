@@ -186,7 +186,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 	}
 
 	if *Config.SMS.Enabled {
-		logger.Info("Nexmo SMS: enabled")
+		logger.Info("SMS: enabled")
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {
 			logger.Panic("The API Key has to be provided when NEXMO SMS connector is enabled")
 		}
@@ -194,11 +194,11 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		if err != nil {
 			logger.WithError(err).Error("Error creating Nexmo Sender")
 		}
-		smsConn, err := sms.New(router, nexmoSender, Config.SMS)
+		smsGateway, err := sms.New(router, nexmoSender, Config.SMS)
 		if err != nil {
 			logger.WithError(err).Error("Error creating SMS Gateway")
 		} else {
-			modules = append(modules, smsConn)
+			modules = append(modules, smsGateway)
 		}
 	} else {
 		logger.Info("SMS: disabled")
