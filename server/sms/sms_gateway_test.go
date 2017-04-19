@@ -38,11 +38,28 @@ func Test_StartStop(t *testing.T) {
 	routerMock.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
 		a.Equal("sms", r.Path.Partition())
 		return r, nil
-	})
+	}).Times(2)
 
 	gw, err := New(routerMock, mockSmsSender, config)
 	a.NoError(err)
 
+	err = gw.Start()
+	a.NoError(err)
+
+	// try to start for the second time in a row
+	err = gw.Start()
+	a.NoError(err)
+
+	err = gw.Stop()
+	a.NoError(err)
+
+	// try to stop for the second time in a row
+	err = gw.Stop()
+	a.NoError(err)
+
+	time.Sleep(100 * time.Millisecond)
+
+	// try to start & stop for a second time
 	err = gw.Start()
 	a.NoError(err)
 

@@ -54,7 +54,7 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 	if *config.Workers <= 0 {
 		*config.Workers = connector.DefaultWorkers
 	}
-	logger.WithField("number", *config.Workers).Debug("sms workers")
+	logger.WithField("number", *config.Workers).Info("sms workers")
 	config.Schema = SMSSchema
 	config.Name = SMSDefaultTopic
 	return &gateway{
@@ -66,7 +66,11 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 }
 
 func (g *gateway) Start() error {
-	g.logger.Debug("Starting gateway")
+	g.logger.Info("Starting gateway")
+	if g.cancelFunc != nil {
+		g.logger.Info("Gateway already started")
+		return nil
+	}
 
 	err := g.ReadLastID()
 	if err != nil {
@@ -81,7 +85,7 @@ func (g *gateway) Start() error {
 
 	g.startMetrics()
 
-	g.logger.Debug("Started gateway")
+	g.logger.Info("Started gateway")
 	return nil
 }
 
@@ -107,7 +111,7 @@ func (g *gateway) fetchRequest() (fr *store.FetchRequest) {
 }
 
 func (g *gateway) Run() {
-	g.logger.Debug("Run gateway")
+	g.logger.Info("Run gateway")
 	var provideErr error
 	go func() {
 		err := g.route.Provide(g.router, true)
@@ -206,7 +210,7 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 }
 
 func (g *gateway) Restart() error {
-	g.logger.WithField("LastIDSent", g.LastIDSent).Debug("Restart in progress")
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("Restart in progress")
 
 	g.Cancel()
 	g.cancelFunc = nil
@@ -221,17 +225,18 @@ func (g *gateway) Restart() error {
 
 	go g.Run()
 
-	g.logger.WithField("LastIDSent", g.LastIDSent).Debug("Restart finished")
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("Restart finished")
 	return nil
 }
 
 func (g *gateway) Stop() error {
-	g.logger.Debug("Stopping gateway")
+	g.logger.Info("Stopping gateway")
 	if g.cancelFunc != nil {
-		g.logger.Debug("Canceling in Stop")
+		g.logger.Info("Canceling in Stop")
 		g.cancelFunc()
+		g.cancelFunc = nil
 	}
-	g.logger.Debug("Stopped gateway")
+	g.logger.Info("Stopped gateway")
 	return nil
 }
 
