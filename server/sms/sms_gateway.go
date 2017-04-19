@@ -235,8 +235,10 @@ func (g *gateway) Stop() error {
 		g.logger.Info("Canceling in Stop")
 		g.cancelFunc()
 		g.cancelFunc = nil
+		g.logger.Info("Stopped gateway")
+	} else {
+		g.logger.Info("Gateway was already stopped")
 	}
-	g.logger.Info("Stopped gateway")
 	return nil
 }
 
