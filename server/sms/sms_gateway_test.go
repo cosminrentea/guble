@@ -43,21 +43,27 @@ func Test_StartStop(t *testing.T) {
 	gw, err := New(routerMock, mockSmsSender, config)
 	a.NoError(err)
 
-	err = gw.Start()
-	a.NoError(err)
-
-	// try to start for the second time in a row
+	// try to start & stop
 	err = gw.Start()
 	a.NoError(err)
 
 	err = gw.Stop()
 	a.NoError(err)
 
-	// try to stop for the second time in a row
+	// try to start twice, and then stop twice
+	err = gw.Start()
+	a.NoError(err)
+
+	err = gw.Start()
+	a.NoError(err)
+
 	err = gw.Stop()
 	a.NoError(err)
 
-	// try to start & stop for a second time
+	err = gw.Stop()
+	a.NoError(err)
+
+	// try to start & stop once again
 	err = gw.Start()
 	a.NoError(err)
 
