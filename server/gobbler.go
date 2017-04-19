@@ -196,7 +196,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		}
 		smsConn, err := sms.New(router, nexmoSender, Config.SMS)
 		if err != nil {
-			logger.WithError(err).Error("Error creating Nexmo Sender")
+			logger.WithError(err).Error("Error creating SMS Gateway")
 		} else {
 			modules = append(modules, smsConn)
 		}
