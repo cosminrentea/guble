@@ -3,15 +3,17 @@ package service
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/distribution/health"
+	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/webserver"
 
-	"github.com/hashicorp/go-multierror"
+	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -30,6 +32,7 @@ type Service struct {
 	healthThreshold    int
 	metricsEndpoint    string
 	prometheusEndpoint string
+	togglesEndpoint    string
 }
 
 // New creates a new Service, using the given Router and WebServer.
@@ -88,6 +91,12 @@ func (s *Service) PrometheusEndpoint(endpointPrefix string) *Service {
 	return s
 }
 
+// TogglesEndpoint sets the endpoint used for Feature-Toggles. Parameter for disabling the endpoint is: "". Returns the updated service.
+func (s *Service) TogglesEndpoint(endpointPrefix string) *Service {
+	s.togglesEndpoint = endpointPrefix
+	return s
+}
+
 // Start the health-check, old-format metrics, and Prometheus metrics endpoint,
 // and then check the modules for the following interfaces and registers and/or start:
 //   Startable:
@@ -112,6 +121,12 @@ func (s *Service) Start() error {
 		s.webserver.Handle(s.prometheusEndpoint, promhttp.Handler())
 	} else {
 		logger.Info("Prometheus metrics endpoint disabled")
+	}
+	if s.togglesEndpoint != "" {
+		logger.WithField("togglesEndpoint", s.togglesEndpoint).Info("Toggles endpoint")
+		s.webserver.Handle(s.togglesEndpoint, http.HandlerFunc(s.togglesHandlerFunc))
+	} else {
+		logger.Info("Toggles endpoint disabled")
 	}
 	for order, iface := range s.ModulesSortedByStartOrder() {
 		name := reflect.TypeOf(iface).String()
@@ -172,4 +187,50 @@ func (s *Service) modulesSortedBy(criteria by) []interface{} {
 		sorted = append(sorted, m.iface)
 	}
 	return sorted
+}
+
+func (s *Service) togglesHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	logger.Info("toggles")
+	for key, values := range r.URL.Query() {
+		if len(values) != 1 {
+			logger.WithFields(log.Fields{
+				"key": key,
+			}).Info("ignoring toggles parameter since it has more than one value")
+			continue
+		}
+		value := values[0]
+		enable, err := strconv.ParseBool(value)
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"key":   key,
+				"value": value,
+			}).Info("ignoring toggles single parameter since it is not boolean")
+			continue
+		}
+		for order, iface := range s.ModulesSortedByStartOrder() {
+			name := reflect.TypeOf(iface).String()
+			if name == key {
+				logger.WithFields(log.Fields{
+					"key":   key,
+					"value": value,
+				}).Info("toggles single boolean valid parameter")
+
+				if s, ok := iface.(Startable); ok && enable {
+					logger.WithFields(log.Fields{"name": name, "order": order}).Info("Starting module")
+					if err := s.Start(); err != nil {
+						logger.WithError(err).WithField("name", name).Error("Error while starting module")
+					}
+					w.Write([]byte(fmt.Sprintf("%s was started.\n", key)))
+				}
+
+				if s, ok := iface.(Stopable); ok && !enable {
+					logger.WithFields(log.Fields{"name": name, "order": order}).Info("Stopping module")
+					if err := s.Stop(); err != nil {
+						logger.WithError(err).WithField("name", name).Error("Error while stopping module")
+					}
+					w.Write([]byte(fmt.Sprintf("%s was stopped.\n", key)))
+				}
+			}
+		}
+	}
 }

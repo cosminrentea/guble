@@ -271,7 +271,8 @@ func StartService() *service.Service {
 	srv := service.New(r, websrv).
 		HealthEndpoint(*Config.HealthEndpoint).
 		MetricsEndpoint(*Config.MetricsEndpoint).
-		PrometheusEndpoint(*Config.PrometheusEndpoint)
+		PrometheusEndpoint(*Config.PrometheusEndpoint).
+		TogglesEndpoint(*Config.TogglesEndpoint)
 
 	srv.RegisterModules(0, 6, kvStore, messageStore)
 	srv.RegisterModules(4, 3, CreateModules(r)...)

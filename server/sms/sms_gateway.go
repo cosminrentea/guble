@@ -131,10 +131,9 @@ func (g *gateway) Run() {
 		// If Route channel closed, try restarting
 		if err == connector.ErrRouteChannelClosed {
 			g.logger.Info("Restarting because ErrRouteChannelClosed")
-			g.Restart()
+			g.restart()
 			return
 		}
-
 	}
 
 	if provideErr != nil {
@@ -144,7 +143,7 @@ func (g *gateway) Run() {
 		// Router closed the route, try restart
 		if provideErr == router.ErrInvalidRoute {
 			g.logger.Info("Restarting because ErrInvalidRoute")
-			g.Restart()
+			g.restart()
 			return
 		}
 		// Router module is stopping, exit the process
@@ -211,15 +210,15 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 	return nil
 }
 
-func (g *gateway) Restart() error {
-	g.logger.WithField("LastIDSent", g.LastIDSent).Info("Restart in progress")
+func (g *gateway) restart() error {
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("restart in progress")
 
 	g.Cancel()
 	g.cancelFunc = nil
 
 	err := g.ReadLastID()
 	if err != nil {
-		g.logger.WithError(err).Error("Could not ReadLastID in Restart")
+		g.logger.WithError(err).Error("Could not ReadLastID in restart")
 		return err
 	}
 
@@ -227,7 +226,7 @@ func (g *gateway) Restart() error {
 
 	go g.Run()
 
-	g.logger.WithField("LastIDSent", g.LastIDSent).Info("Restart finished")
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("restart finished")
 	return nil
 }
 

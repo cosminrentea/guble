@@ -24,6 +24,7 @@ const (
 	defaultHealthEndpoint     = "/admin/healthcheck"
 	defaultMetricsEndpoint    = "/admin/metrics-old"
 	defaultPrometheusEndpoint = "/admin/metrics"
+	defaultTogglesEndpoint    = "/admin/toggles"
 	defaultKVSBackend         = "file"
 	defaultMSBackend          = "file"
 	defaultStoragePath        = "/var/lib/guble"
@@ -71,6 +72,7 @@ type (
 		HealthEndpoint     *string
 		MetricsEndpoint    *string
 		PrometheusEndpoint *string
+		TogglesEndpoint    *string
 		Profile            *string
 		Postgres           PostgresConfig
 		FCM                fcm.Config
@@ -123,6 +125,10 @@ var (
 		PrometheusEndpoint: kingpin.Flag("prometheus-endpoint", `The metrics Prometheus endpoint to be used by the HTTP server (value for disabling it: "")`).
 			Default(defaultPrometheusEndpoint).
 			Envar("GUBLE_PROMETHEUS_ENDPOINT").
+			String(),
+		TogglesEndpoint: kingpin.Flag("toggles-endpoint", `The Feature-Toggles endpoint to be used by the HTTP server (value for disabling it: "")`).
+			Default(defaultTogglesEndpoint).
+			Envar("GUBLE_TOGGLES_ENDPOINT").
 			String(),
 		Profile: kingpin.Flag("profile", `The profiler to be used (default: none): mem | cpu | block`).
 			Default("").
