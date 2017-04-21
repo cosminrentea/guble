@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -208,8 +209,13 @@ func (s *Service) togglesHandlerFunc(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		for order, iface := range s.ModulesSortedByStartOrder() {
-			name := reflect.TypeOf(iface).String()
-			if name == key {
+			packagePath := reflect.TypeOf(iface).String()
+			names := strings.Split(packagePath, ".")
+			var name string
+			if len(names) > 0 {
+				name = strings.TrimPrefix(names[0],"*")
+			}
+			if key == name {
 				logger.WithFields(log.Fields{
 					"key":   key,
 					"value": value,
