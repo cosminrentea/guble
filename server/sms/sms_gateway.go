@@ -27,7 +27,6 @@ type Config struct {
 	APISecret       *string
 	Workers         *int
 	SMSTopic        *string
-	Fetch           *bool
 	IntervalMetrics *bool
 
 	KafkaReportingTopic *string
@@ -81,7 +80,7 @@ func (g *gateway) Start() error {
 	}
 
 	g.ctx, g.cancelFunc = context.WithCancel(context.Background())
-	g.initRoute()
+	g.initRoute(false)
 
 	go g.Run()
 
@@ -91,23 +90,26 @@ func (g *gateway) Start() error {
 	return nil
 }
 
-func (g *gateway) initRoute() {
+func (g *gateway) initRoute(fetch bool) {
 	g.route = router.NewRoute(router.RouteConfig{
 		Path:         protocol.Path(*g.config.SMSTopic),
 		ChannelSize:  5000,
 		QueueSize:    -1,
 		Timeout:      -1,
-		FetchRequest: g.fetchRequest(),
 	})
+	if fetch {
+		g.route.FetchRequest = g.fetchRequest()
+	}
 }
 
 func (g *gateway) fetchRequest() (fr *store.FetchRequest) {
-	if *g.config.Fetch && g.LastIDSent > 0 {
+	if g.LastIDSent > 0 {
 		fr = store.NewFetchRequest(
 			protocol.Path(*g.config.SMSTopic).Partition(),
 			g.LastIDSent+1,
 			0,
-			store.DirectionForward, -1)
+			store.DirectionForward,
+			-1)
 	}
 	return
 }
@@ -223,7 +225,7 @@ func (g *gateway) restart() error {
 		return err
 	}
 
-	g.initRoute()
+	g.initRoute(true)
 
 	go g.Run()
 
