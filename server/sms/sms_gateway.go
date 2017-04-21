@@ -27,6 +27,7 @@ type Config struct {
 	APISecret       *string
 	Workers         *int
 	SMSTopic        *string
+	Fetch           *bool
 	IntervalMetrics *bool
 
 	KafkaReportingTopic *string
@@ -69,7 +70,7 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 func (g *gateway) Start() error {
 	g.logger.Info("Starting gateway")
 	if g.cancelFunc != nil {
-		g.logger.Info("Gateway already started")
+		g.logger.Info("Gateway was already started")
 		return nil
 	}
 
@@ -101,7 +102,7 @@ func (g *gateway) initRoute() {
 }
 
 func (g *gateway) fetchRequest() (fr *store.FetchRequest) {
-	if g.LastIDSent > 0 {
+	if *g.config.Fetch && g.LastIDSent > 0 {
 		fr = store.NewFetchRequest(
 			protocol.Path(*g.config.SMSTopic).Partition(),
 			g.LastIDSent+1,
@@ -234,7 +235,9 @@ func (g *gateway) restart() error {
 func (g *gateway) Stop() error {
 	g.logger.Info("Stopping gateway")
 	if g.cancelFunc != nil {
-		g.logger.Info("Canceling in Stop")
+		g.logger.Info("Unsubscribing sms route")
+		g.router.Unsubscribe(g.route)
+		g.logger.Info("Calling the cancel function")
 		g.cancelFunc()
 		g.cancelFunc = nil
 		g.logger.Info("Stopped gateway")
