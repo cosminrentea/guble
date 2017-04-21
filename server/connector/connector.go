@@ -259,14 +259,19 @@ func (c *connector) Substitute(w http.ResponseWriter, req *http.Request) {
 
 // Start will run start all current subscriptions and workers to process the messages
 func (c *connector) Start() error {
+	c.logger.Info("Starting connector")
+	if c.cancel != nil {
+		c.logger.Info("Connector was already started")
+		return nil
+	}
 	c.queue.Start()
 
-	c.logger.Info("Starting connector")
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
 	c.logger.Info("Loading subscriptions")
 	err := c.manager.Load()
 	if err != nil {
+		c.logger.Error("error while loading subscriptions")
 		return err
 	}
 
@@ -340,7 +345,11 @@ func (c *connector) restart(s Subscriber) error {
 // Stop the connector (the context, the queue, the subscription loops)
 func (c *connector) Stop() error {
 	c.logger.Info("Stopping connector")
+	if c.cancel == nil{
+		return nil
+	}
 	c.cancel()
+	c.cancel=nil
 	c.queue.Stop()
 	c.wg.Wait()
 	c.logger.Info("Stopped connector")
