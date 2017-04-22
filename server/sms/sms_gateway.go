@@ -28,6 +28,7 @@ type Config struct {
 	Workers         *int
 	SMSTopic        *string
 	IntervalMetrics *bool
+	SkipFetch	*bool
 
 	KafkaReportingTopic *string
 
@@ -97,7 +98,7 @@ func (g *gateway) initRoute(fetch bool) {
 		QueueSize:    -1,
 		Timeout:      -1,
 	})
-	if fetch {
+	if fetch || !*g.config.SkipFetch {
 		g.route.FetchRequest = g.fetchRequest()
 	}
 }
@@ -237,8 +238,6 @@ func (g *gateway) restart() error {
 func (g *gateway) Stop() error {
 	g.logger.Info("Stopping gateway")
 	if g.cancelFunc != nil {
-		g.logger.Info("Unsubscribing sms route")
-		g.router.Unsubscribe(g.route)
 		g.logger.Info("Calling the cancel function")
 		g.cancelFunc()
 		g.cancelFunc = nil

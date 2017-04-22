@@ -228,6 +228,9 @@ var (
 				Envar("GUBLE_SMS_TOPIC").
 				Default(sms.SMSDefaultTopic).
 				String(),
+			SkipFetch: kingpin.Flag("sms-skip-fetch", "If sms gateway should skip fetching from message-store when starting").
+				Envar("GUBLE_SMS_SKIP_FETCH").
+				Bool(),
 			Workers: kingpin.Flag("sms-workers", "The number of workers handling traffic with Nexmo sms endpoint(default: number of CPUs)").
 				Default(strconv.Itoa(runtime.NumCPU())).
 				Envar("GUBLE_SMS_WORKERS").
