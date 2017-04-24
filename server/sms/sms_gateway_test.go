@@ -99,7 +99,7 @@ func Test_SendOneSms(t *testing.T) {
 	})
 	routerMock.EXPECT().Unsubscribe(gomock.Any()).Do(func(r *router.Route) {
 		a.Equal(*config.SMSTopic, string(r.Path))
-	})
+	}).AnyTimes()
 
 	gw, err := New(routerMock, mockSmsSender, config)
 	a.NoError(err)
@@ -278,11 +278,11 @@ func Test_RetryLoop(t *testing.T) {
 	skipFetch := false
 	gateway, err := New(routerMock, mockSmsSender,
 		Config{
-			Workers: &worker,
-			Name: SMSDefaultTopic,
-			Schema: SMSSchema,
-			SMSTopic: &topic,
-			SkipFetch: &skipFetch,
+			Workers:         &worker,
+			Name:            SMSDefaultTopic,
+			Schema:          SMSSchema,
+			SMSTopic:        &topic,
+			Toggleable:      &skipFetch,
 			IntervalMetrics: &enableMetrics,
 		})
 	a.NoError(err)

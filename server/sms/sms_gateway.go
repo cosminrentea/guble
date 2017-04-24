@@ -28,7 +28,7 @@ type Config struct {
 	Workers         *int
 	SMSTopic        *string
 	IntervalMetrics *bool
-	SkipFetch	*bool
+	Toggleable      *bool
 
 	KafkaReportingTopic *string
 
@@ -98,7 +98,7 @@ func (g *gateway) initRoute(fetch bool) {
 		QueueSize:    -1,
 		Timeout:      -1,
 	})
-	if fetch || !*g.config.SkipFetch {
+	if fetch || !*g.config.Toggleable {
 		g.route.FetchRequest = g.fetchRequest()
 	}
 }
@@ -122,7 +122,7 @@ func (g *gateway) Run() {
 		err := g.route.Provide(g.router, true)
 		if err != nil {
 			// cancel subscription loop if there is an error on the provider
-			logger.WithField("error", err.Error()).Error("Provide returned error")
+			logger.WithError(err).Error("Provide returned error")
 			provideErr = err
 			g.Cancel()
 		} else {
@@ -134,7 +134,7 @@ func (g *gateway) Run() {
 	if err != nil && provideErr == nil {
 		// If Route channel closed, try restarting
 		if err == connector.ErrRouteChannelClosed {
-			g.logger.Info("Restarting because ErrRouteChannelClosed")
+			g.logger.WithError(err).Info("Restarting")
 			g.restart()
 			return
 		}
@@ -146,7 +146,7 @@ func (g *gateway) Run() {
 
 		// Router closed the route, try restart
 		if provideErr == router.ErrInvalidRoute {
-			g.logger.Info("Restarting because ErrInvalidRoute")
+			g.logger.WithError(provideErr).Info("Restarting")
 			g.restart()
 			return
 		}
@@ -215,7 +215,7 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 }
 
 func (g *gateway) restart() error {
-	g.logger.WithField("LastIDSent", g.LastIDSent).Info("restart in progress")
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("SMS Gateway restarting")
 
 	g.Cancel()
 	g.cancelFunc = nil
@@ -230,23 +230,26 @@ func (g *gateway) restart() error {
 
 	go g.Run()
 
-	g.logger.WithField("LastIDSent", g.LastIDSent).Info("restart finished")
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("SMS Gateway restarted")
 	return nil
 }
 
 // Stop the sms gateway; it is an idempotent operation.
 func (g *gateway) Stop() error {
 	g.logger.Info("Stopping gateway")
-	if g.cancelFunc != nil {
+	if g.cancelFunc == nil {
+		g.logger.Info("Gateway was already stopped")
+		return nil
+	}
+	if *g.config.Toggleable {
 		g.logger.Info("Unsubscribing the sms route")
 		g.router.Unsubscribe(g.route)
-		g.logger.Info("Calling the cancel function")
-		g.cancelFunc()
-		g.cancelFunc = nil
-		g.logger.Info("Stopped gateway")
-	} else {
-		g.logger.Info("Gateway was already stopped")
 	}
+	g.logger.Info("Calling the cancel function")
+	g.cancelFunc()
+	g.cancelFunc = nil
+	g.logger.Info("Stopped gateway")
+
 	return nil
 }
 

@@ -59,11 +59,11 @@ func createConfig() Config {
 	intervalMetrics := true
 	skipFetch := false
 	return Config{
-		Workers:   &worker,
-		SMSTopic:  &topic,
-		Name:      "test_gateway",
-		Schema:    SMSSchema,
-		SkipFetch: &skipFetch,
+		Workers:    &worker,
+		SMSTopic:   &topic,
+		Name:       "test_gateway",
+		Schema:     SMSSchema,
+		Toggleable: &skipFetch,
 
 		IntervalMetrics: &intervalMetrics,
 	}
