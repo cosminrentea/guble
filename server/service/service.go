@@ -194,15 +194,11 @@ func (s *Service) togglesHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	logger.Info("togglesHandlerFunc")
 	for key, values := range r.URL.Query() {
 		if !toggleAllowed(key) {
-			logger.WithFields(log.Fields{
-				"key": key,
-			}).Info("toggling this module is not explicitly allowed")
+			logger.WithField("key", key).Info("toggling this module is not explicitly allowed")
 			continue
 		}
 		if len(values) != 1 {
-			logger.WithFields(log.Fields{
-				"key": key,
-			}).Info("ignoring toggles parameter since it has more than one value")
+			logger.WithField("key", key).Info("ignoring toggles parameter since it has more than one value")
 			continue
 		}
 		value := values[0]
