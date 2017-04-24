@@ -257,7 +257,7 @@ func (c *connector) Substitute(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"modified":"%d"}`, totalSubscribersUpdated)
 }
 
-// Start will run start all current subscriptions and workers to process the messages
+// Start all current subscriptions and workers to process the messages
 func (c *connector) Start() error {
 	c.logger.Info("Starting connector")
 	if c.cancel != nil {
