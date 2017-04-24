@@ -238,6 +238,8 @@ func (g *gateway) restart() error {
 func (g *gateway) Stop() error {
 	g.logger.Info("Stopping gateway")
 	if g.cancelFunc != nil {
+		g.logger.Info("Unsubscribing the sms route")
+		g.router.Unsubscribe(g.route)
 		g.logger.Info("Calling the cancel function")
 		g.cancelFunc()
 		g.cancelFunc = nil

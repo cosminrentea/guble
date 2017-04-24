@@ -39,6 +39,9 @@ func Test_StartStop(t *testing.T) {
 		a.Equal("sms", r.Path.Partition())
 		return r, nil
 	}).Times(3)
+	routerMock.EXPECT().Unsubscribe(gomock.Any()).Do(func(r *router.Route) {
+		a.Equal("sms", r.Path.Partition())
+	}).AnyTimes()
 
 	gw, err := New(routerMock, mockSmsSender, config)
 	a.NoError(err)
@@ -93,6 +96,9 @@ func Test_SendOneSms(t *testing.T) {
 	routerMock.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
 		a.Equal(*config.SMSTopic, string(r.Path))
 		return r, nil
+	})
+	routerMock.EXPECT().Unsubscribe(gomock.Any()).Do(func(r *router.Route) {
+		a.Equal(*config.SMSTopic, string(r.Path))
 	})
 
 	gw, err := New(routerMock, mockSmsSender, config)
