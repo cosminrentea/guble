@@ -345,11 +345,11 @@ func (c *connector) restart(s Subscriber) error {
 // Stop the connector (the context, the queue, the subscription loops)
 func (c *connector) Stop() error {
 	c.logger.Info("Stopping connector")
-	if c.cancel == nil{
+	if c.cancel == nil {
 		return nil
 	}
 	c.cancel()
-	c.cancel=nil
+	c.cancel = nil
 	c.queue.Stop()
 	c.wg.Wait()
 	c.logger.Info("Stopped connector")
