@@ -245,14 +245,18 @@ func (s *Service) toggleModule(modulePackage string, enable bool, iface interfac
 		le.Info("Starting module")
 		if err := s.Start(); err != nil {
 			le.WithError(err).Error("Error while starting module")
+			w.Write([]byte(fmt.Sprintf("%s could not be started.\n", modulePackage)))
+			return
 		}
-		w.Write([]byte(fmt.Sprintf("%s was started.\n", modulePackage)))
+		w.Write([]byte(fmt.Sprintf("%s was successfully started.\n", modulePackage)))
 	}
 	if s, ok := iface.(Stopable); ok && !enable {
 		le.Info("Stopping module")
 		if err := s.Stop(); err != nil {
 			le.WithError(err).Error("Error while stopping module")
+			w.Write([]byte(fmt.Sprintf("%s could not be stopped.\n", modulePackage)))
+			return
 		}
-		w.Write([]byte(fmt.Sprintf("%s was stopped.\n", modulePackage)))
+		w.Write([]byte(fmt.Sprintf("%s was successfully stopped.\n", modulePackage)))
 	}
 }
