@@ -59,11 +59,12 @@ func createConfig() Config {
 	intervalMetrics := true
 	skipFetch := false
 	return Config{
-		Workers:  &worker,
-		SMSTopic: &topic,
-		Name:     "test_gateway",
-		Schema:   SMSSchema,
+		Workers:   &worker,
+		SMSTopic:  &topic,
+		Name:      "test_gateway",
+		Schema:    SMSSchema,
 		SkipFetch: &skipFetch,
+
 		IntervalMetrics: &intervalMetrics,
 	}
 }
@@ -120,13 +121,9 @@ func encodeUnmarshallableProtocolMessage(ID int) protocol.Message {
 func createGateway(t *testing.T, kvStore kvstore.KVStore) *gateway {
 	a := assert.New(t)
 
-	sender := createNexmoSender(t)
-	config := createConfig()
 	msgStore := dummystore.New(kvStore)
-
 	unstartedRouter := router.New(msgStore, kvStore, nil)
-
-	gw, err := New(unstartedRouter, sender, config)
+	gw, err := New(unstartedRouter, createNexmoSender(t), createConfig())
 	a.NoError(err)
 	err = gw.Start()
 	if err != nil {
