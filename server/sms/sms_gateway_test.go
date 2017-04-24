@@ -272,7 +272,7 @@ func Test_RetryLoop(t *testing.T) {
 	routerMock.EXPECT().MessageStore().AnyTimes().Return(mockMessageStore, nil)
 
 	//setup a new sms gateway
-	worker := 8
+	worker := 1
 	topic := SMSDefaultTopic
 	enableMetrics := false
 	skipFetch := false
