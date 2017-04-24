@@ -108,7 +108,7 @@ func TestParsingOfEnvironmentVariables(t *testing.T) {
 	os.Setenv("GUBLE_SMS_KAFKA_TOPIC", "sms_reporting_topic")
 	defer os.Unsetenv("GUBLE_SMS_KAFKA_TOPIC")
 
-	os.Setenv("GUBLE_SMS_TOGGLEABLE", "sms_toggleable")
+	os.Setenv("GUBLE_SMS_TOGGLEABLE", "true")
 	defer os.Unsetenv("GUBLE_SMS_TOGGLEABLE")
 
 	// when we parse the arguments from environment variables
@@ -158,7 +158,7 @@ func TestParsingArgs(t *testing.T) {
 		"--remotes", "127.0.0.1:8080 127.0.0.1:20002",
 		"--kafka-brokers", "127.0.0.1:9092 127.0.0.1:9091",
 		"--sms-kafka-topic", "sms_reporting_topic",
-		"--sms-toggleable", "sms_toggleable",
+		"--sms-toggleable",
 	}
 
 	// when we parse the arguments from command-line flags
@@ -208,7 +208,7 @@ func assertArguments(a *assert.Assertions) {
 	a.Equal("[127.0.0.1:9092 127.0.0.1:9091]", (*Config.KafkaProducer.Brokers).String())
 	a.Equal("sms_reporting_topic", *Config.SMS.KafkaReportingTopic)
 
-	a.Equal("sms_toggleable", *Config.SMS.Toggleable)
+	a.Equal(true, *Config.SMS.Toggleable)
 
 	assertClusterRemotes(a)
 }
