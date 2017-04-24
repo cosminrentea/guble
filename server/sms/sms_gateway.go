@@ -93,10 +93,10 @@ func (g *gateway) Start() error {
 
 func (g *gateway) initRoute(fetch bool) {
 	g.route = router.NewRoute(router.RouteConfig{
-		Path:         protocol.Path(*g.config.SMSTopic),
-		ChannelSize:  5000,
-		QueueSize:    -1,
-		Timeout:      -1,
+		Path:        protocol.Path(*g.config.SMSTopic),
+		ChannelSize: 5000,
+		QueueSize:   -1,
+		Timeout:     -1,
 	})
 	if fetch || !*g.config.Toggleable {
 		g.route.FetchRequest = g.fetchRequest()

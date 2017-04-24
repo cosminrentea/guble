@@ -214,7 +214,7 @@ func (s *Service) togglesHandlerFunc(w http.ResponseWriter, r *http.Request) {
 			}).Info("ignoring toggles single parameter since it is not boolean")
 			continue
 		}
-		s.toggleModule(key, enable, w)
+		s.tryToggleModule(key, enable, w)
 	}
 }
 
@@ -225,8 +225,8 @@ func toggleAllowed(modulePackage string) bool {
 	return false
 }
 
-func (s *Service) toggleModule(searchedModulePackage string, enable bool, w http.ResponseWriter) {
-	for order, iface := range s.ModulesSortedByStartOrder() {
+func (s *Service) tryToggleModule(searchedModulePackage string, enable bool, w http.ResponseWriter) {
+	for _, iface := range s.ModulesSortedByStartOrder() {
 		packagePath := reflect.TypeOf(iface).String()
 		packagePathTokens := strings.Split(packagePath, ".")
 		var modulePackage string
@@ -236,24 +236,27 @@ func (s *Service) toggleModule(searchedModulePackage string, enable bool, w http
 		if searchedModulePackage != modulePackage {
 			continue
 		}
-		logger.WithFields(log.Fields{
-			"module": searchedModulePackage,
-			"enable": enable,
-		}).Info("toggles single boolean valid parameter")
-		if s, ok := iface.(Startable); ok && enable {
-			logger.WithFields(log.Fields{"modulePackage": modulePackage, "order": order}).Info("Starting module")
-			if err := s.Start(); err != nil {
-				logger.WithError(err).WithField("modulePackage", modulePackage).Error("Error while starting module")
-			}
-			w.Write([]byte(fmt.Sprintf("%s was started.\n", searchedModulePackage)))
-		}
-		if s, ok := iface.(Stopable); ok && !enable {
-			logger.WithFields(log.Fields{"modulePackage": modulePackage, "order": order}).Info("Stopping module")
-			if err := s.Stop(); err != nil {
-				logger.WithError(err).WithField("modulePackage", modulePackage).Error("Error while stopping module")
-			}
-			w.Write([]byte(fmt.Sprintf("%s was stopped.\n", searchedModulePackage)))
-		}
+		s.toggleModule(modulePackage, enable, iface, w)
+	}
+}
 
+func (s *Service) toggleModule(modulePackage string, enable bool, iface interface{}, w http.ResponseWriter) {
+	le := logger.WithFields(log.Fields{
+		"modulePackage": modulePackage,
+		"enable":        enable,
+	})
+	if s, ok := iface.(Startable); ok && enable {
+		le.Info("Starting module")
+		if err := s.Start(); err != nil {
+			le.WithError(err).Error("Error while starting module")
+		}
+		w.Write([]byte(fmt.Sprintf("%s was started.\n", modulePackage)))
+	}
+	if s, ok := iface.(Stopable); ok && !enable {
+		le.Info("Stopping module")
+		if err := s.Stop(); err != nil {
+			le.WithError(err).Error("Error while stopping module")
+		}
+		w.Write([]byte(fmt.Sprintf("%s was stopped.\n", modulePackage)))
 	}
 }
