@@ -188,7 +188,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 	if *Config.SMS.Enabled {
 		logger.Info("SMS: enabled")
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {
-			logger.Panic("The API Key has to be provided when NEXMO SMS connector is enabled")
+			logger.Panic("The API Key and Secret have to be provided when NEXMO SMS connector is enabled")
 		}
 		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, *Config.SMS.KafkaReportingTopic)
 		if err != nil {
