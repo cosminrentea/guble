@@ -28,6 +28,7 @@ type Config struct {
 	Workers         *int
 	SMSTopic        *string
 	IntervalMetrics *bool
+	Toggleable      *bool
 
 	KafkaReportingTopic *string
 
@@ -54,7 +55,7 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 	if *config.Workers <= 0 {
 		*config.Workers = connector.DefaultWorkers
 	}
-	logger.WithField("number", *config.Workers).Debug("sms workers")
+	logger.WithField("number", *config.Workers).Info("sms workers")
 	config.Schema = SMSSchema
 	config.Name = SMSDefaultTopic
 	return &gateway{
@@ -65,8 +66,13 @@ func New(router router.Router, sender Sender, config Config) (*gateway, error) {
 	}, nil
 }
 
+// Start the sms gateway; it is an idempotent operation.
 func (g *gateway) Start() error {
-	g.logger.Debug("Starting gateway")
+	g.logger.Info("Starting gateway")
+	if g.cancelFunc != nil {
+		g.logger.Info("Gateway was already started")
+		return nil
+	}
 
 	err := g.ReadLastID()
 	if err != nil {
@@ -75,24 +81,26 @@ func (g *gateway) Start() error {
 	}
 
 	g.ctx, g.cancelFunc = context.WithCancel(context.Background())
-	g.initRoute()
+	g.initRoute(false)
 
 	go g.Run()
 
 	g.startMetrics()
 
-	g.logger.Debug("Started gateway")
+	g.logger.Info("Started gateway")
 	return nil
 }
 
-func (g *gateway) initRoute() {
+func (g *gateway) initRoute(fetch bool) {
 	g.route = router.NewRoute(router.RouteConfig{
-		Path:         protocol.Path(*g.config.SMSTopic),
-		ChannelSize:  5000,
-		QueueSize:    -1,
-		Timeout:      -1,
-		FetchRequest: g.fetchRequest(),
+		Path:        protocol.Path(*g.config.SMSTopic),
+		ChannelSize: 5000,
+		QueueSize:   -1,
+		Timeout:     -1,
 	})
+	if fetch || !*g.config.Toggleable {
+		g.route.FetchRequest = g.fetchRequest()
+	}
 }
 
 func (g *gateway) fetchRequest() (fr *store.FetchRequest) {
@@ -101,19 +109,20 @@ func (g *gateway) fetchRequest() (fr *store.FetchRequest) {
 			protocol.Path(*g.config.SMSTopic).Partition(),
 			g.LastIDSent+1,
 			0,
-			store.DirectionForward, -1)
+			store.DirectionForward,
+			-1)
 	}
 	return
 }
 
 func (g *gateway) Run() {
-	g.logger.Debug("Run gateway")
+	g.logger.Info("Run gateway")
 	var provideErr error
 	go func() {
 		err := g.route.Provide(g.router, true)
 		if err != nil {
 			// cancel subscription loop if there is an error on the provider
-			logger.WithField("error", err.Error()).Error("Provide returned error")
+			logger.WithError(err).Error("Provide returned error")
 			provideErr = err
 			g.Cancel()
 		} else {
@@ -125,11 +134,10 @@ func (g *gateway) Run() {
 	if err != nil && provideErr == nil {
 		// If Route channel closed, try restarting
 		if err == connector.ErrRouteChannelClosed {
-			g.logger.Info("Restarting because ErrRouteChannelClosed")
-			g.Restart()
+			g.logger.WithError(err).Info("Restarting")
+			g.restart()
 			return
 		}
-
 	}
 
 	if provideErr != nil {
@@ -138,8 +146,8 @@ func (g *gateway) Run() {
 
 		// Router closed the route, try restart
 		if provideErr == router.ErrInvalidRoute {
-			g.logger.Info("Restarting because ErrInvalidRoute")
-			g.Restart()
+			g.logger.WithError(provideErr).Info("Restarting")
+			g.restart()
 			return
 		}
 		// Router module is stopping, exit the process
@@ -186,6 +194,7 @@ func (g *gateway) proxyLoop() error {
 	//TODO Cosmin Bogdan returning this error can mean 2 things: overflow of route's channel, or intentional stopping of router / gubled.
 	return connector.ErrRouteChannelClosed
 }
+
 func (g *gateway) send(receivedMsg *protocol.Message) error {
 	err := g.sender.Send(receivedMsg)
 	if err != nil {
@@ -205,33 +214,42 @@ func (g *gateway) send(receivedMsg *protocol.Message) error {
 	return nil
 }
 
-func (g *gateway) Restart() error {
-	g.logger.WithField("LastIDSent", g.LastIDSent).Debug("Restart in progress")
+func (g *gateway) restart() error {
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("SMS Gateway restarting")
 
 	g.Cancel()
 	g.cancelFunc = nil
 
 	err := g.ReadLastID()
 	if err != nil {
-		g.logger.WithError(err).Error("Could not ReadLastID in Restart")
+		g.logger.WithError(err).Error("Could not ReadLastID in restart")
 		return err
 	}
 
-	g.initRoute()
+	g.initRoute(true)
 
 	go g.Run()
 
-	g.logger.WithField("LastIDSent", g.LastIDSent).Debug("Restart finished")
+	g.logger.WithField("LastIDSent", g.LastIDSent).Info("SMS Gateway restarted")
 	return nil
 }
 
+// Stop the sms gateway; it is an idempotent operation.
 func (g *gateway) Stop() error {
-	g.logger.Debug("Stopping gateway")
-	if g.cancelFunc != nil {
-		g.logger.Debug("Canceling in Stop")
-		g.cancelFunc()
+	g.logger.Info("Stopping gateway")
+	if g.cancelFunc == nil {
+		g.logger.Info("Gateway was already stopped")
+		return nil
 	}
-	g.logger.Debug("Stopped gateway")
+	if *g.config.Toggleable {
+		g.logger.Info("Unsubscribing the sms route")
+		g.router.Unsubscribe(g.route)
+	}
+	g.logger.Info("Calling the cancel function")
+	g.cancelFunc()
+	g.cancelFunc = nil
+	g.logger.Info("Stopped gateway")
+
 	return nil
 }
 

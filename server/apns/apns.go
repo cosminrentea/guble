@@ -67,6 +67,10 @@ func (a *apns) Start() error {
 	return err
 }
 
+func (a *apns) Stop() error {
+	return a.Connector.Stop()
+}
+
 func (a *apns) startMetrics() {
 	mTotalSentMessages.Set(0)
 	mTotalSendErrors.Set(0)

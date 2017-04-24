@@ -63,6 +63,10 @@ func (f *fcm) Start() error {
 	return err
 }
 
+func (f *fcm) Stop() error {
+	return f.Connector.Stop()
+}
+
 func (f *fcm) startMetrics() {
 	mTotalSentMessages.Set(0)
 	mTotalSendErrors.Set(0)

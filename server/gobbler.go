@@ -186,19 +186,19 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 	}
 
 	if *Config.SMS.Enabled {
-		logger.Info("Nexmo SMS: enabled")
+		logger.Info("SMS: enabled")
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {
-			logger.Panic("The API Key has to be provided when NEXMO SMS connector is enabled")
+			logger.Panic("The API Key and Secret have to be provided when NEXMO SMS connector is enabled")
 		}
 		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, *Config.SMS.KafkaReportingTopic)
 		if err != nil {
 			logger.WithError(err).Error("Error creating Nexmo Sender")
 		}
-		smsConn, err := sms.New(router, nexmoSender, Config.SMS)
+		smsGateway, err := sms.New(router, nexmoSender, Config.SMS)
 		if err != nil {
-			logger.WithError(err).Error("Error creating Nexmo Sender")
+			logger.WithError(err).Error("Error creating SMS Gateway")
 		} else {
-			modules = append(modules, smsConn)
+			modules = append(modules, smsGateway)
 		}
 	} else {
 		logger.Info("SMS: disabled")
@@ -271,7 +271,8 @@ func StartService() *service.Service {
 	srv := service.New(r, websrv).
 		HealthEndpoint(*Config.HealthEndpoint).
 		MetricsEndpoint(*Config.MetricsEndpoint).
-		PrometheusEndpoint(*Config.PrometheusEndpoint)
+		PrometheusEndpoint(*Config.PrometheusEndpoint).
+		TogglesEndpoint(*Config.TogglesEndpoint)
 
 	srv.RegisterModules(0, 6, kvStore, messageStore)
 	srv.RegisterModules(4, 3, CreateModules(r)...)
