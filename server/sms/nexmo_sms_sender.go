@@ -96,10 +96,10 @@ type NexmoMessageReport struct {
 type ReportPayload struct {
 	OrderID         string             `json:"order_id,omitempty"`
 	MessageID       string             `json:"message_id"`
-	SmsText         string             `json:"sms_text"`
-	SmsRequestTime  string             `json:"sms_request_time"`
-	SmsResponseTime string             `json:"sms_response_time"`
-	SmsResponse     NexmoMessageReport `json:"sms_response"`
+	SmsText         string             `json:"text"`
+	SmsRequestTime  string             `json:"request_time"`
+	SmsResponseTime string             `json:"response_time"`
+	SmsResponse     NexmoMessageReport `json:"response"`
 }
 
 type ReportEvent struct {
@@ -204,7 +204,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		ns.kafkaProducer,
 		ns.kafkaReportingTopic,
 		&ReportEvent{
-			Type: "tour_arrival_estimate_nexmo_v2",
+			Type: "tour_arrival_estimate_regular_processed",
 			Payload: ReportPayload{
 				MessageID: msg.CorrelationID(),
 				OrderID:   nexmoSMS.ClientRef,
