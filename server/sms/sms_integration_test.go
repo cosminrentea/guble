@@ -296,6 +296,18 @@ func multipleMessageNexmoHandler(t *testing.T, countCh chan bool) http.HandlerFu
 		countCh <- true
 	}
 }
+func succesSenderNexmoHandler(t *testing.T, countCh chan bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		a := assert.New(t)
+		sentSms := decodeSMSMessage(t, r)
+		a.Equal("body", sentSms.Text)
+
+		nexmoResponse := composeNexmoMessageResponse(sentSms, ResponseSuccess, 1)
+		writeNexmoResponse(nexmoResponse, t, w)
+		countCh <- true
+
+	}
+}
 
 func invalidSenderNexmoHandler(t *testing.T, countCh chan bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
