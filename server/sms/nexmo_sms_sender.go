@@ -94,12 +94,13 @@ type NexmoMessageReport struct {
 }
 
 type ReportPayload struct {
-	OrderID         string             `json:"order_id,omitempty"`
-	MessageID       string             `json:"message_id"`
-	SmsText         string             `json:"text"`
-	SmsRequestTime  string             `json:"request_time"`
-	SmsResponseTime string             `json:"response_time"`
-	SmsResponse     NexmoMessageReport `json:"response"`
+	OrderID         string `json:"order_id,omitempty"`
+	MessageID       string `json:"message_id"`
+	SmsText         string `json:"text"`
+	SmsRequestTime  string `json:"request_time"`
+	SmsResponseTime string `json:"response_time"`
+	MobileNumber    string `json:"mobile_number"`
+	DeliveryStatus  string `json:"delivery_status"`
 }
 
 type ReportEvent struct {
@@ -122,7 +123,14 @@ func (event *ReportEvent) report(nexmoMessageReport NexmoMessageReport, kafkaPro
 	event.Id = uuid
 	event.Time = responseTime
 	event.Payload.SmsResponseTime = responseTime
-	event.Payload.SmsResponse = nexmoMessageReport
+
+	event.Payload.MobileNumber = nexmoMessageReport.To
+	if nexmoMessageReport.Status == ResponseSuccess {
+		event.Payload.DeliveryStatus = ResponseSuccess.String()
+	} else {
+		event.Payload.DeliveryStatus = nexmoMessageReport.ErrorText
+	}
+
 	bytesReportEvent, err := json.Marshal(event)
 	if err != nil {
 		logger.WithError(err).Error("Error while marshaling Kafka reporting event to JSON format")
@@ -204,7 +212,7 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		ns.kafkaProducer,
 		ns.kafkaReportingTopic,
 		&ReportEvent{
-			Type: "tour_arrival_estimate_regular_processed",
+			Type: "tour_arrival_estimate_regular_delivered",
 			Payload: ReportPayload{
 				MessageID: msg.CorrelationID(),
 				OrderID:   nexmoSMS.ClientRef,
