@@ -98,6 +98,7 @@ func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
 	}
 
 	msg := protocol.Message{
+		HeaderJSON:`{"Correlation-Id": "7sdks723ksgqn"}`,
 		Path:          protocol.Path(SMSDefaultTopic),
 		UserID:        "samsa",
 		ApplicationID: "sms",

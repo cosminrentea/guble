@@ -3,14 +3,15 @@ package sms
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosminrentea/gobbler/server/router"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/cosminrentea/gobbler/server/router"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NexmoHTTPError(t *testing.T) {
@@ -301,10 +302,11 @@ func succesSenderNexmoHandler(t *testing.T, countCh chan bool) http.HandlerFunc 
 		a := assert.New(t)
 		sentSms := decodeSMSMessage(t, r)
 		a.Equal("body", sentSms.Text)
-
 		nexmoResponse := composeNexmoMessageResponse(sentSms, ResponseSuccess, 1)
 		writeNexmoResponse(nexmoResponse, t, w)
-		countCh <- true
+		go func() {
+			countCh <- true
+		}()
 
 	}
 }

@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
+	"fmt"
+
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +31,7 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 	defer testutil.EnableDebugForMethod()
 	RequestTimeout = time.Second
 	a := assert.New(t)
-	sender, err := NewNexmoSender(KEY, SECRET,nil,"")
+	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	a.NoError(err)
 
 	msg := encodeProtocolMessage(t, 0)
@@ -51,16 +54,30 @@ func TestNexmoSender_SendReport(t *testing.T) {
 	countCh := make(chan bool, 0)
 	go dummyNexmoEndpointWithHandlerFunc(t, countCh, port, succesSenderNexmoHandler)
 	producer := NewMockProducer(ctrl)
-	sender, err := NewNexmoSender(KEY, SECRET, producer, "sms_reporting")
-	a.NoError(err)
+
+	nexmoSender, err := NewNexmoSender(KEY, SECRET, producer, "sms_reporting")
+	if err != nil {
+		a.FailNow("Nexmo sender could not be created.")
+	}
 
 	msg := encodeProtocolMessage(t, 0)
 	producer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
 		a.Equal("sms_reporting", topic)
+
+		var event ReportEvent
+		err := json.Unmarshal(bytes, &event)
+		a.NoError(err)
+		fmt.Println(event)
+		a.Equal(event.Id, key)
+		a.Equal("ref", event.Payload.OrderID)
+		a.Equal("tour_arrival_estimate_regular_delivered", event.Type)
+		a.Equal("toNumber", event.Payload.MobileNumber)
+		a.Equal("Success", event.Payload.DeliveryStatus)
+		a.Equal("7sdks723ksgqn", event.Payload.MessageID)
+		a.Equal("body", event.Payload.SmsText)
+
 	})
-
-	err = sender.Send(&msg)
+	err = nexmoSender.Send(&msg)
 	a.NoError(err)
-
-	readServedResponses(t,1,countCh)
+	readServedResponses(t, 1, countCh)
 }

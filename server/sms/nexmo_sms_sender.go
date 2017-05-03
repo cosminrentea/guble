@@ -272,7 +272,6 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 	req, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(smsEncoded))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Content-Length", strconv.Itoa(len(smsEncoded)))
-
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		logger.WithField("error", err.Error()).Error("Error doing the request to nexmo endpoint")
@@ -282,7 +281,6 @@ func (ns *NexmoSender) sendSms(sms *NexmoSms) (*NexmoMessageResponse, error) {
 		return nil, ErrHTTPClientError
 	}
 	defer resp.Body.Close()
-
 	var messageResponse *NexmoMessageResponse
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
