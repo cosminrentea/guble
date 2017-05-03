@@ -4,8 +4,8 @@
 package server
 
 import (
-	apns2 "github.com/cosminrentea/gobbler/vendor/github.com/sideshow/apns2"
 	gomock "github.com/golang/mock/gomock"
+	apns2 "github.com/sideshow/apns2"
 )
 
 // Mock of Pusher interface
