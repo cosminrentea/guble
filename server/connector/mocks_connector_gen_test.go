@@ -6,7 +6,7 @@ package connector
 import (
 	context "context"
 	protocol "github.com/cosminrentea/gobbler/protocol"
-
+	
 	router "github.com/cosminrentea/gobbler/server/router"
 	gomock "github.com/golang/mock/gomock"
 	http "net/http"

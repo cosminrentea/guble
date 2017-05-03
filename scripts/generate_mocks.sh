@@ -174,6 +174,11 @@ $MOCKGEN -package sms \
       github.com/cosminrentea/gobbler/server/router \
       Router &
 
+$MOCKGEN -package sms \
+      -destination server/sms/mocks_kafka_producer_gen_test.go \
+      github.com/cosminrentea/gobbler/server/kafka \
+      Producer &
+
 $MOCKGEN -self_package router -package sms \
       -destination server/sms/mocks_store_gen_test.go \
       github.com/cosminrentea/gobbler/server/store \
