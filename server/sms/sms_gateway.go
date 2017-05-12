@@ -174,7 +174,7 @@ func (g *gateway) proxyLoop() error {
 			}
 
 			err := g.send(receivedMsg)
-			if err == ErrRetryFailed || err == ErrLastIDCouldNotBeSet {
+			if err == ErrRetryFailed || err == ErrLastIDCouldNotBeSet || err == ErrSmsTooLong {
 				// THIS MAY BE BLOCKING.Maybe not a good idea.
 				for err2 := g.SetLastSentID(receivedMsg.ID); err2 != nil; {
 					g.logger.WithField("error", err2.Error()).Error("Error setting last ID.Retrying")

@@ -84,12 +84,12 @@ func createKVStore(t *testing.T, filename string) (kvstore.KVStore, string) {
 	return kvStore, f
 }
 
-func encodeProtocolMessage(t *testing.T, ID int) protocol.Message {
+func encodeProtocolMessage(t *testing.T, ID int,smsText string ) protocol.Message {
 	a := assert.New(t)
 	sms := NexmoSms{
 		To:        "toNumber",
 		From:      fmt.Sprintf("%d", ID),
-		Text:      "body",
+		Text:      smsText,
 		ClientRef: "ref",
 	}
 	d, err := json.Marshal(&sms)

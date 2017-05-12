@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"expvar"
+	"os"
+
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store/dummystore"
 	"github.com/golang/mock/gomock"
-	"os"
 )
 
 func Test_StartStop(t *testing.T) {
@@ -106,7 +107,7 @@ func Test_SendOneSms(t *testing.T) {
 
 	err = gw.Start()
 	a.NoError(err)
-	msg := encodeProtocolMessage(t, 4)
+	msg := encodeProtocolMessage(t, 4, "body")
 
 	mockSmsSender.EXPECT().Send(gomock.Eq(&msg)).Return(nil)
 	a.NotNil(gw.route)
@@ -153,7 +154,7 @@ func Test_Restart(t *testing.T) {
 	err = gw.Start()
 	a.NoError(err)
 
-	msg := encodeProtocolMessage(t, 4)
+	msg := encodeProtocolMessage(t, 4, "body")
 
 	mockSmsSender.EXPECT().Send(gomock.Eq(&msg)).Times(1).Return(connector.ErrRouteChannelClosed)
 
@@ -299,7 +300,7 @@ func Test_RetryLoop(t *testing.T) {
 	err = gateway.Start()
 	a.NoError(err)
 
-	msg := encodeProtocolMessage(t, 4)
+	msg := encodeProtocolMessage(t, 4, "body")
 
 	// when sms is sent simulate an error.No Sms will be delivered with success for 4 times.
 	mockSmsSender.EXPECT().Send(gomock.Eq(&msg)).Times(1).Return(ErrRetryFailed)
@@ -312,7 +313,7 @@ func Test_RetryLoop(t *testing.T) {
 	a.Equal(uint64(4), gateway.LastIDSent, "Last id sent should be the msgID since the retry failed.Already try it for 4 time.Anymore retries would be useless")
 
 	//Send a new message afterwards.
-	successMsg := encodeProtocolMessage(t, 9)
+	successMsg := encodeProtocolMessage(t, 9, "body")
 
 	//no error will be raised for second message.
 	mockSmsSender.EXPECT().Send(gomock.Eq(&successMsg)).Times(1).Return(nil)

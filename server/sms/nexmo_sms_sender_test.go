@@ -19,7 +19,7 @@ func Test_HttpClientRecreation(t *testing.T) {
 	URL = "http://127.0.0.1" + port
 
 	sender := createNexmoSender(t)
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 
 	err := sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
@@ -34,12 +34,31 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	a.NoError(err)
 
-	msg := encodeProtocolMessage(t, 0)
+	msg := encodeProtocolMessage(t, 0, "body")
 
 	err = sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
 	a.Error(err)
 	a.Equal(ErrRetryFailed, err)
+}
+
+func TestNexmoSender_SendSmsTooLong(t *testing.T) {
+	defer testutil.EnableDebugForMethod()
+	RequestTimeout = time.Second
+	a := assert.New(t)
+	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
+	a.NoError(err)
+
+
+	bodyToLong :=""
+	for i:=0 ;i<190;i++{
+		bodyToLong += string(i)
+	}
+
+	msg := encodeProtocolMessage(t, 0, bodyToLong)
+
+	err = sender.Send(&msg)
+	a.Equal(ErrSmsTooLong, err)
 }
 
 func TestNexmoSender_SendReport(t *testing.T) {
@@ -60,7 +79,7 @@ func TestNexmoSender_SendReport(t *testing.T) {
 		a.FailNow("Nexmo sender could not be created.")
 	}
 
-	msg := encodeProtocolMessage(t, 0)
+	msg := encodeProtocolMessage(t, 0, "body")
 	producer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
 		a.Equal("sms_reporting", topic)
 

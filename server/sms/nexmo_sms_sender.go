@@ -54,6 +54,7 @@ var (
 	ErrEncodeFailed                = errors.New("Encoding of message to be sent to Nexmo  failed")
 	ErrLastIDCouldNotBeSet         = errors.New("Setting last id failed")
 	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Nexmo is not correctly configured")
+	ErrSmsTooLong                  = errors.New("Sms maximum length exceeded.")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -194,6 +195,11 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 	if err != nil {
 		logger.WithField("msg", msg).WithField("error", err.Error()).Error("Could not decode message body to send to nexmo.No retries will be made for this message.")
 		return ErrRetryFailed
+	}
+
+	if len([]rune(nexmoSMS.Text)) >=  160 {
+		logger.WithField("sms", nexmoSMS).Error("Sms is too long.Do not send it")
+		return ErrSmsTooLong
 	}
 
 	withRetry := &retryable{
