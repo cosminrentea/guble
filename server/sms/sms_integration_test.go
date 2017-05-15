@@ -27,7 +27,7 @@ func Test_NexmoHTTPError(t *testing.T) {
 
 	gw := createGateway(t, kvStore)
 
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
@@ -54,7 +54,7 @@ func Test_NexmoInvalidSenderError(t *testing.T) {
 
 	gw := createGateway(t, kvStore)
 
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 
@@ -81,7 +81,7 @@ func Test_NexmoMultipleErrorsFollowedBySuccess(t *testing.T) {
 
 	gw := createGateway(t, kvStore)
 
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 
@@ -108,7 +108,7 @@ func Test_NexmoResponseCodeError(t *testing.T) {
 
 	gw := createGateway(t, kvStore)
 
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 	//3 retries should be made
@@ -152,7 +152,7 @@ func Test_GatewaySanity(t *testing.T) {
 	gw := createGateway(t, kvStore)
 
 	//deliver message with ID=2 should be success
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 	err := gw.route.Deliver(&msg, false)
 	a.NoError(err)
 
@@ -162,7 +162,7 @@ func Test_GatewaySanity(t *testing.T) {
 	a.Equal(msg.ID, gw.LastIDSent, fmt.Sprintf("Sucess.No Retry needed.Last id  sent should be %d", msg.ID))
 
 	//deliver message with ID=5 should have invalid sender response.Only one request should be made
-	invalidSenderMsg := encodeProtocolMessage(t, 5)
+	invalidSenderMsg := encodeProtocolMessage(t, 5, "body")
 	err = gw.route.Deliver(&invalidSenderMsg, false)
 	a.NoError(err)
 	//only one request should be made to server
@@ -172,7 +172,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Invalid Sender.No Retry needed.Last id  sent should be %d", invalidSenderMsg.ID))
 
 	//deliver message with ID=6 should be success
-	successMsg := encodeProtocolMessage(t, 6)
+	successMsg := encodeProtocolMessage(t, 6, "body")
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
 	//only one request should be made to server
@@ -182,7 +182,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Success.No Retry needed.Last id  sent should be %d", successMsg.ID))
 
 	//deliver message with ID=8 should made 3 retries(server will always close the connection) and fail.LastID sent should be 8
-	closedConnectionMsg := encodeProtocolMessage(t, 8)
+	closedConnectionMsg := encodeProtocolMessage(t, 8, "body")
 	err = gw.route.Deliver(&closedConnectionMsg, false)
 	a.NoError(err)
 	//3 request should be made to server by retries
@@ -192,7 +192,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", closedConnectionMsg.ID))
 
 	//deliver message with ID=10 should be success
-	successMsg = encodeProtocolMessage(t, 10)
+	successMsg = encodeProtocolMessage(t, 10, "body")
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
 	//3 request should be made to server by retries
@@ -202,7 +202,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Success.No Retry needed.Last id  sent should be %d", successMsg.ID))
 
 	//deliver message with ID=11 should made 3 retries(server will return  NexmoResponse statusCode not ResponseOk) and fail.LastID sent should be 11
-	randomNexmoErrMsg := encodeProtocolMessage(t, 11)
+	randomNexmoErrMsg := encodeProtocolMessage(t, 11, "body")
 	err = gw.route.Deliver(&randomNexmoErrMsg, false)
 	//3 request should be made to server by retries
 	readServedResponses(t, 3, countCh)
@@ -211,7 +211,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", randomNexmoErrMsg.ID))
 
 	//deliver message with ID=13 should made 3 retries(server will respond with a message that does not have the NexmoResponse Structure) and fail.LastID sent should be 13
-	undecodableNexmoResponseMsg := encodeProtocolMessage(t, 13)
+	undecodableNexmoResponseMsg := encodeProtocolMessage(t, 13, "body")
 	err = gw.route.Deliver(&undecodableNexmoResponseMsg, false)
 	a.NoError(err)
 	//3 request should be made to server by retries
@@ -221,7 +221,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", undecodableNexmoResponseMsg.ID))
 
 	//deliver message with ID=14 should made 3 retries(Server will return a wrong MessageCount) and fail.LastID sent should be 14
-	wrongMessageCountMsg := encodeProtocolMessage(t, 14)
+	wrongMessageCountMsg := encodeProtocolMessage(t, 14, "body")
 	err = gw.route.Deliver(&wrongMessageCountMsg, false)
 	a.NoError(err)
 	//3 request should be made to server by retries
@@ -231,7 +231,7 @@ func Test_GatewaySanity(t *testing.T) {
 		fmt.Sprintf("Retry failed.No retries should be made further.Last id  sent should be %d", wrongMessageCountMsg.ID))
 
 	//deliver message with ID=16 should be success
-	successMsg = encodeProtocolMessage(t, 16)
+	successMsg = encodeProtocolMessage(t, 16, "body")
 	err = gw.route.Deliver(&successMsg, false)
 	a.NoError(err)
 	//only one request should be made to server

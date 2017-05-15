@@ -45,15 +45,16 @@ var (
 	MaxIdleConnections = 100
 	RequestTimeout     = 500 * time.Millisecond
 
-	ErrHTTPClientError             = errors.New("Http client sending to Nexmo Failed.No sms was sent")
+	ErrHTTPClientError             = errors.New("Http client sending to Nexmo Failed. No sms was sent")
 	ErrNexmoResponseStatusNotOk    = errors.New("Nexmo response status not ResponseSuccess")
 	ErrSMSResponseDecodingFailed   = errors.New("Nexmo response decoding failed")
 	ErrInvalidSender               = errors.New("Sms destination phoneNumber is invalid")
-	ErrMultipleSmsSent             = errors.New("Multiple  or no sms we're sent.SMS message may be too long")
+	ErrMultipleSmsSent             = errors.New("Multiple or no sms were sent. SMS message may be too long")
 	ErrRetryFailed                 = errors.New("Failed retrying to send message")
-	ErrEncodeFailed                = errors.New("Encoding of message to be sent to Nexmo  failed")
+	ErrEncodeFailed                = errors.New("Encoding of message to be sent to Nexmo failed")
 	ErrLastIDCouldNotBeSet         = errors.New("Setting last id failed")
 	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Nexmo is not correctly configured")
+	ErrSmsTooLong                  = errors.New("Sms maximum length exceeded")
 )
 
 var nexmoResponseCodeMap = map[ResponseCode]string{
@@ -194,6 +195,11 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 	if err != nil {
 		logger.WithField("msg", msg).WithField("error", err.Error()).Error("Could not decode message body to send to nexmo.No retries will be made for this message.")
 		return ErrRetryFailed
+	}
+
+	if len([]rune(nexmoSMS.Text)) >  160 {
+		logger.WithField("sms", nexmoSMS).Error("Sms is too long, not sending it")
+		return ErrSmsTooLong
 	}
 
 	withRetry := &retryable{

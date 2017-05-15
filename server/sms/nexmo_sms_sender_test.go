@@ -10,6 +10,7 @@ import (
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"strings"
 )
 
 func Test_HttpClientRecreation(t *testing.T) {
@@ -19,7 +20,7 @@ func Test_HttpClientRecreation(t *testing.T) {
 	URL = "http://127.0.0.1" + port
 
 	sender := createNexmoSender(t)
-	msg := encodeProtocolMessage(t, 2)
+	msg := encodeProtocolMessage(t, 2, "body")
 
 	err := sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
@@ -34,11 +35,29 @@ func TestNexmoSender_SendWithError(t *testing.T) {
 	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	a.NoError(err)
 
-	msg := encodeProtocolMessage(t, 0)
+	msg := encodeProtocolMessage(t, 0, "body")
 
 	err = sender.Send(&msg)
 	time.Sleep(3 * timeInterval)
 	a.Error(err)
+	a.Equal(ErrRetryFailed, err)
+}
+
+func TestNexmoSender_SendSmsTooLong(t *testing.T) {
+	defer testutil.EnableDebugForMethod()
+	RequestTimeout = time.Second
+	a := assert.New(t)
+	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
+	a.NoError(err)
+
+	msgTooLong := encodeProtocolMessage(t, 0, strings.Repeat("x",161))
+
+	err = sender.Send(&msgTooLong)
+	a.Equal(ErrSmsTooLong, err)
+
+	msgMaxLength := encodeProtocolMessage(t, 0, strings.Repeat("x",160))
+
+	err = sender.Send(&msgMaxLength)
 	a.Equal(ErrRetryFailed, err)
 }
 
@@ -60,7 +79,7 @@ func TestNexmoSender_SendReport(t *testing.T) {
 		a.FailNow("Nexmo sender could not be created.")
 	}
 
-	msg := encodeProtocolMessage(t, 0)
+	msg := encodeProtocolMessage(t, 0, "body")
 	producer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
 		a.Equal("sms_reporting", topic)
 

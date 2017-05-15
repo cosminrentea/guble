@@ -174,16 +174,16 @@ func (g *gateway) proxyLoop() error {
 			}
 
 			err := g.send(receivedMsg)
-			if err == ErrRetryFailed || err == ErrLastIDCouldNotBeSet {
+			if err == ErrRetryFailed || err == ErrLastIDCouldNotBeSet || err == ErrSmsTooLong {
 				// THIS MAY BE BLOCKING.Maybe not a good idea.
-				for err2 := g.SetLastSentID(receivedMsg.ID); err2 != nil; {
-					g.logger.WithField("error", err2.Error()).Error("Error setting last ID.Retrying")
+				for errSetLastSentId := g.SetLastSentID(receivedMsg.ID); errSetLastSentId != nil; {
+					g.logger.WithError(errSetLastSentId).Error("Error setting last ID, retrying")
 					time.Sleep(time.Second)
 				}
-				g.logger.WithField("id", receivedMsg.ID).Info("Set last id to ")
+				g.logger.WithError(err).WithField("id", receivedMsg.ID).Info("Set last sent id after acceptable error occurred")
 				continue
 			} else if err != nil {
-				g.logger.WithField("err", err.Error()).Error("Exiting from proxyLoop.")
+				g.logger.WithError(err).Error("Exiting from proxyLoop.")
 				return err
 			}
 		case <-g.ctx.Done():
