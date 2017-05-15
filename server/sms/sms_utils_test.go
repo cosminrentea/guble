@@ -84,7 +84,7 @@ func createKVStore(t *testing.T, filename string) (kvstore.KVStore, string) {
 	return kvStore, f
 }
 
-func encodeProtocolMessage(t *testing.T, ID int,smsText string ) protocol.Message {
+func encodeProtocolMessage(t *testing.T, ID int, smsText string) protocol.Message {
 	a := assert.New(t)
 	sms := NexmoSms{
 		To:        "toNumber",
@@ -98,7 +98,7 @@ func encodeProtocolMessage(t *testing.T, ID int,smsText string ) protocol.Messag
 	}
 
 	msg := protocol.Message{
-		HeaderJSON:`{"Correlation-Id": "7sdks723ksgqn"}`,
+		HeaderJSON:    `{"Correlation-Id": "7sdks723ksgqn"}`,
 		Path:          protocol.Path(SMSDefaultTopic),
 		UserID:        "samsa",
 		ApplicationID: "sms",
