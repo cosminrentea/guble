@@ -10,6 +10,7 @@ import (
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"strings"
 )
 
 func Test_HttpClientRecreation(t *testing.T) {
@@ -49,13 +50,7 @@ func TestNexmoSender_SendSmsTooLong(t *testing.T) {
 	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	a.NoError(err)
 
-
-	bodyToLong :=""
-	for i:=0 ;i<190;i++{
-		bodyToLong += string(i)
-	}
-
-	msg := encodeProtocolMessage(t, 0, bodyToLong)
+	msg := encodeProtocolMessage(t, 0, strings.Repeat("x",160))
 
 	err = sender.Send(&msg)
 	a.Equal(ErrSmsTooLong, err)
