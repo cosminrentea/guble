@@ -180,7 +180,7 @@ func (g *gateway) proxyLoop() error {
 					g.logger.WithField("error", err2.Error()).Error("Error setting last ID.Retrying")
 					time.Sleep(time.Second)
 				}
-				g.logger.WithField("id", receivedMsg.ID).Info("Set last id to ")
+				g.logger.WithField("id", receivedMsg.ID).Info("Set last sent id after acceptable error occurred")
 				continue
 			} else if err != nil {
 				g.logger.WithField("err", err.Error()).Error("Exiting from proxyLoop.")

@@ -197,8 +197,8 @@ func (ns *NexmoSender) Send(msg *protocol.Message) error {
 		return ErrRetryFailed
 	}
 
-	if len([]rune(nexmoSMS.Text)) >=  160 {
-		logger.WithField("sms", nexmoSMS).Error("Sms is too long.Do not send it")
+	if len([]rune(nexmoSMS.Text)) >  160 {
+		logger.WithField("sms", nexmoSMS).Error("Sms is too long, not sending it")
 		return ErrSmsTooLong
 	}
 

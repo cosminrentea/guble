@@ -50,10 +50,15 @@ func TestNexmoSender_SendSmsTooLong(t *testing.T) {
 	sender, err := NewNexmoSender(KEY, SECRET, nil, "")
 	a.NoError(err)
 
-	msg := encodeProtocolMessage(t, 0, strings.Repeat("x",160))
+	msgTooLong := encodeProtocolMessage(t, 0, strings.Repeat("x",161))
 
-	err = sender.Send(&msg)
+	err = sender.Send(&msgTooLong)
 	a.Equal(ErrSmsTooLong, err)
+
+	msgMaxLength := encodeProtocolMessage(t, 0, strings.Repeat("x",160))
+
+	err = sender.Send(&msgMaxLength)
+	a.Equal(ErrRetryFailed, err)
 }
 
 func TestNexmoSender_SendReport(t *testing.T) {
