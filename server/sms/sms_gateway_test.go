@@ -1,23 +1,21 @@
 package sms
 
 import (
-	"testing"
-
-	"github.com/cosminrentea/gobbler/server/kvstore"
-	"github.com/cosminrentea/gobbler/testutil"
-	"github.com/stretchr/testify/assert"
-
-	"strings"
-	"time"
-
 	"expvar"
 	"os"
+	"strings"
+	"testing"
+	"time"
 
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
+	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/store/dummystore"
+	"github.com/cosminrentea/gobbler/testutil"
+
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_StartStop(t *testing.T) {
