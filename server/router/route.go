@@ -184,11 +184,13 @@ REFETCH:
 			r.logger.WithField("fetchedMessageID", fetchedMessage.ID).Debug("Fetched message")
 			message, err := protocol.ParseMessage(fetchedMessage.Message)
 			if err != nil {
+				log.WithError(err).Error("Parsing Message failed.")
 				return err
 			}
 
 			r.logger.WithField("messageID", message.ID).Debug("Sending fetched message in channel")
 			if err := r.Deliver(message, true); err != nil {
+				log.WithError(err).Error("Deliver Message failed.")
 				return err
 			}
 			lastID = message.ID
@@ -304,6 +306,7 @@ func (r *Route) consume() {
 					return
 				}
 			}
+			r.logger.WithField("message", msg).Debug("Sent message")
 			// remove the first item from the queue
 			r.queue.remove()
 		}
