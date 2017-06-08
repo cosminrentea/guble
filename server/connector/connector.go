@@ -88,8 +88,8 @@ type connector struct {
 
 	logger              *log.Entry
 	wg                  sync.WaitGroup
-	kafkaProducer       kafka.Producer
-	kafkaReportingTopic string
+	KafkaProducer       kafka.Producer
+	KafkaReportingTopic string
 }
 
 type Config struct {
@@ -176,8 +176,8 @@ func NewConnector(router router.Router, sender Sender, config Config, kafkaProdu
 		queue:               NewQueue(sender, config.Workers),
 		router:              router,
 		logger:              logger.WithField("name", config.Name),
-		kafkaProducer:       kafkaProducer,
-		kafkaReportingTopic: kafkaReportingTopic,
+		KafkaProducer:       kafkaProducer,
+		KafkaReportingTopic: kafkaReportingTopic,
 	}
 	c.initMuxRouter()
 	return c, nil
@@ -280,7 +280,7 @@ func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"subscribed":"/%v"}`, topic)
 
 	if errFill == nil {
-		err = event.report(c.kafkaProducer, c.kafkaReportingTopic)
+		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
 		if err != nil {
 			logger.WithError(err).Error("Could not report sent subscribe sms to Kafka topic")
 		}
@@ -328,7 +328,7 @@ func (c *connector) Delete(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"unsubscribed":"/%v"}`, topic)
 
 	if errFill == nil {
-		err = event.report(c.kafkaProducer, c.kafkaReportingTopic)
+		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
 		if err != nil {
 			logger.WithError(err).Error("Could not report sent subscribe sms to Kafka topic")
 		}
