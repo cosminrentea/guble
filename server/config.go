@@ -27,7 +27,7 @@ const (
 	defaultTogglesEndpoint    = "/admin/toggles"
 	defaultKVSBackend         = "file"
 	defaultMSBackend          = "file"
-	defaultStoragePath        = "/var/lib/guble"
+	defaultStoragePath        = "/var/lib/gobbler"
 	defaultNodePort           = "10000"
 	development               = "dev"
 	integration               = "int"

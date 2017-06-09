@@ -13,10 +13,6 @@ Gobbler is a simple user-facing messaging and data replication server written in
 [![Awesome-Go](https://camo.githubusercontent.com/13c4e50d88df7178ae1882a203ed57b641674f94/68747470733a2f2f63646e2e7261776769742e636f6d2f73696e647265736f726875732f617765736f6d652f643733303566333864323966656437386661383536353265336136336531353464643865383832392f6d656469612f62616467652e737667)](https://awesome-go.com)
 
 # Overview
-Gobbler is in an early state (release 0.4). 
-It is already working well and is very useful, but the protocol, API and storage formats 
-may still change (until reaching 0.7). 
-If you intend to use Gobbler, please get in contact with us.
 
 The goal of Gobbler is to be a simple and fast message bus for user interaction and replication of data between multiple devices:
 * Very easy consumption of messages with web and mobile clients
@@ -26,28 +22,33 @@ The goal of Gobbler is to be a simple and fast message bus for user interaction 
 * Batteries included: usable as front-facing server, without the need of a proxy layer
 * Self-contained: no mandatory dependencies to other services
 
-## Working Features (0.4)
+## Working Features (release 0.5)
 
 * Publishing and subscription of messages to topics and subtopics
 * Persistent message store with transparent live and offline fetching
-* WebSocket and REST APIs for message publishing
+* WebSocket API for message publishing
+* REST APIs for message publishing
+* Firebase Cloud Messaging (FCM) connector: delivery of messages as FCM push notifications
+* Support for Apple Push Notification services (APNS)
+* Support for SMS-sending (using Nexmo as a first provider / implementation)
 * Commandline client and Go client library
-* Firebase Cloud Messaging (FCM) adapter: delivery of messages as FCM push notifications
 * Docker images for server and client
-* Simple Authentication and Access-Management
-* Clean shutdown
-* Improved logging using [logrus](https://github.com/Sirupsen/logrus) and logstash formatter
+* Logging using [logrus](https://github.com/Sirupsen/logrus) and logstash formatter
 * Health-Check with Endpoint
-* Collection of Basic Metrics, with Endpoint
-* Added Postgresql as KV Backend
+* Prometheus metrics
+* PostgreSQL as KV Backend
+* Cluster-mode (can be disabled at compile-time)
 * Load testing with 5000 messages per instance
-* Support for Apple Push Notification services (a new connector alongside Firebase)
-* Upgrade, cleanup, abstraction, documentation, and test coverage of the Firebase connector
+* Unified handling of APNS and Firebase push-notifications and subscriptions under a common API
 * GET list of subscribers / list of topics per subscriber (userID , deviceID) 
-* Support for SMS-sending using Nexmo (a new connector alongside Firebase)
+* Filtering of messages in gobbler server (e.g. sent by the REST client) according to URL parameters: UserID, DeviceID, Connector name
+* Reporting individual events (sent push-notifications / subscriptions / sent sms) using Kafka
+* Feature-toggle endpoint for disabling/enabling push-notification and SMS connectors at runtime
+* Using `glide` for vendoring / dependency management 
 
 ## Throughput
-Measured on an old notebook with i5-2520M, dual core and SSD. Message payload was 'Hello Word'.
+Measured on an old notebook with i5-2520M, dual core and SSD.
+Message payload was 'Hello Word'.
 Load driver and server were set up on the same machine, so 50% of the cpu was allocated to the load driver.
 
 * End-2-End: Delivery of ~35.000 persistent messages per second
@@ -80,16 +81,14 @@ During the tests, the memory consumption of the server was around ~25 MB.
     - [Subtopics](#subtopics)
 
 # Roadmap
-This is the current (and fast changing) roadmap and todo list:
 
-## Roadmap Release 0.5
+## Roadmap Release 0.6
 * Replication across multiple servers (in a Gobbler cluster)
 * Acknowledgement of message delivery for connectors
 * Storing the sequence-Id of topics in KV store, if we turn off persistence
-* Filtering of messages in gobbler server (e.g. sent by the REST client) according to URL parameters: UserID, DeviceID, Connector name
-* Updating README to show subscribe/unsubscribe/get/posting, health/metrics 
+* Updating README to show examples for subscribe/unsubscribe/get/posting 
 
-## Roadmap Release 0.6
+## Roadmap Release 0.7
 * Make notification messages optional by client configuration
 * Correct behaviour of receive command with `maxCount` on subtopics
 * Cancel of fetch in the message store and multiple concurrent fetch commands for the same topic
@@ -99,7 +98,7 @@ This is the current (and fast changing) roadmap and todo list:
 * Client: (re-)setup of subscriptions after client reconnect
 * Message size limit configurable by the client with fetching by URL
 
-## Roadmap Release 0.7
+## Roadmap Release 0.8
 * HTTPS support in the service
 * Minimal example: chat application
 * (TBD) Improved authentication and access-management
@@ -110,7 +109,7 @@ This is the current (and fast changing) roadmap and todo list:
 We are providing Docker images of the server and client for your convenience.
 
 ## Start the Gobbler Server
-There is an automated Docker build for the master at the Docker Hub.
+There is an automated Docker build for the master branch at Docker Hub.
 To start the server with Docker simply type:
 ```
 docker run -p 8080:8080 cosminrentea/gobbler
@@ -122,7 +121,7 @@ docker run cosminrentea/gobbler --help
 ```
 
 All options can be supplied on the commandline or by a corresponding environment variable with the prefix `GUBLE_`.
-So to let gobbler be more verbose, you can either use:
+So to let `gobbler` be more verbose, you can either use:
 ```
 docker run cosminrentea/gobbler --log=info
 ```
@@ -164,7 +163,7 @@ bin/gobbler --log=info
 ### Configuration
 
 |CLI Option|Env Variable|Values|Default|Description|
-|--- |--- |--- |--- |--- |--- |
+|--- |--- |--- |--- |--- |
 |--env|GUBLE_ENV|development &#124; integration &#124; preproduction &#124; production|development|Name of the environment on which the application is running. Used mainly for logging|
 |--health-endpoint|GUBLE_HEALTH_ENDPOINT|resource/path/to/healthendpoint|/admin/healthcheck|The health endpoint to be used by the HTTP server.Can be disabled by setting the value to ""|
 |--http|GUBLE_HTTP_LISTEN|format: [host]:port||The address to for the HTTP server to listen on|
@@ -179,7 +178,7 @@ bin/gobbler --log=info
 #### APNS
 
 |CLI Option|Env Variable|Values|Default|Description|
-|--- |--- |--- |--- |--- |--- |
+|--- |--- |--- |--- |--- |
 |--apns|GUBLE_APNS|true &#124; false|false|Enable the APNS module in general as well as the connector to the development endpoint|
 |--apns-production|GUBLE_APNS_PRODUCTION|true &#124; false|false|Enables the connector to the apns production endpoint, requires the apns option to be set|
 |--apns-cert-file|GUBLE_APNS_CERT_FILE|path/to/cert/file||The APNS certificate file name, use this as an alternative to the certificate bytes option|
@@ -193,7 +192,7 @@ bin/gobbler --log=info
 #### SMS
 
 |CLI Option|Env Variable|Values|Default |Description|
-|--- |--- |--- |--- |--- |--- |
+|--- |--- |--- |--- |--- |
 |sms|GUBLE_SMS|true &#124; false|false |Enable the SMS gateway|
 |sms_api_key|GUBLE_SMS_API_KEY|api key||The Nexmo API Key for Sending sms|
 |sms_api_secret|GUBLE_SMS_API_SECRET|api secret||The Nexmo API Secret for Sending sms|
@@ -210,10 +209,10 @@ bin/gobbler --log=info
 |--fcm-endpoint|GUBLE_FCM_ENDPOINT|format: url-schema|https://fcm.googleapis.com/fcm/send|The Google Firebase Cloud Messaging endpoint|
 |--fcm-prefix|GUBLE_FCM_PREFIX|prefix|/fcm/|The FCM prefix / endpoint|
 
-#### Postgres
+#### PostgreSQL
 
 |CLI Option|Env Variable|Values|Default|Description|
-|--- |--- |--- |--- |--- |--- |
+|--- |--- |--- |--- |--- |
 |--pg-host|GUBLE_PG_HOST|hostname|localhost|The PostgreSQL hostname|
 |--pg-port|GUBLE_PG_PORT|port|5432|The PostgreSQL port|
 |--pg-user|GUBLE_PG_USER|user|gobbler|The PostgreSQL user|
@@ -231,7 +230,6 @@ go test github.com/cosminrentea/gobbler/...
 The following clients are available:
 * __Commandline Client__: https://github.com/cosminrentea/gobbler/tree/master/gobbler-cli
 * __Go client library__: https://github.com/cosminrentea/gobbler/tree/master/client
-* __JavaScript library__: (in early stage) https://github.com/cosminrentea/gobbler-js
 
 # Protocol Reference
 
@@ -252,7 +250,7 @@ Curl example with the resulting message:
 ```
 curl -X POST -H "x-Gobbler-Key: Value" --data Hello 'http://127.0.0.1:8080/api/message/foo?userId=marvin&messageId=42'
 ```
-Results in:
+results in:
 ```
 16,/foo,marvin,VoAdxGO3DBEn8vv8,42,1451236804
 {"Key":"Value"}
@@ -397,6 +395,7 @@ Be aware, that a server may send more receive notifications that you would have 
     #fetch-done <path>
     ```
     * `path`: the topic path
+
 3. When the subscription to new messages was taken:
 
     ```
