@@ -378,7 +378,7 @@ func getTestConnector(t *testing.T, config Config, mockManager bool, mockQueue b
 	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
 	mSender := NewMockSender(testutil.MockCtrl)
 
-	conn, err := NewConnector(mRouter, mSender, config)
+	conn, err := NewConnector(mRouter, mSender, config, nil, "sub_reporting_topic")
 	a.NoError(err)
 
 	if mockManager {
