@@ -81,6 +81,13 @@ $MOCKGEN -package apns \
       github.com/cosminrentea/gobbler/server/apns \
       Pusher &
 
+$MOCKGEN -package apns \
+      -destination server/apns/mocks_kafka_producer_gen_test.go \
+      github.com/cosminrentea/gobbler/server/kafka \
+      Producer &
+
+
+
 # server/fcm mocks
 $MOCKGEN -package fcm \
       -destination server/fcm/mocks_router_gen_test.go \
@@ -102,6 +109,11 @@ $MOCKGEN -self_package fcm -package fcm \
       github.com/Bogh/gcm \
       Sender &
 
+$MOCKGEN -package fcm \
+      -destination server/fcm/mocks_kafka_producer_gen_test.go \
+      github.com/cosminrentea/gobbler/server/kafka \
+      Producer &
+
 # server mocks
 $MOCKGEN -package server \
       -destination server/mocks_router_gen_test.go \
@@ -117,6 +129,7 @@ $MOCKGEN -package server \
       -destination server/mocks_apns_pusher_gen_test.go \
       github.com/cosminrentea/gobbler/server/apns \
       Pusher &
+
 
 
 # server/connector mocks
