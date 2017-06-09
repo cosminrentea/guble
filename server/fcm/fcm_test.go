@@ -206,7 +206,10 @@ func testFCM(t *testing.T, mockStore bool) (connector.ResponsiveConnector, *mock
 		Endpoint:        &endpoint,
 		Prefix:          &prefix,
 		IntervalMetrics: &intervalMetrics,
-	})
+	},
+		nil,
+		"sub_topic",
+	)
 	assert.NoError(t, err)
 	if mockStore {
 		mcks.store = NewMockMessageStore(testutil.MockCtrl)
