@@ -1,6 +1,6 @@
-FROM alpine
-COPY ./guble ./guble-cli/guble-cli /usr/local/bin/
-RUN mkdir -p /var/lib/guble
-VOLUME ["/var/lib/guble"]
-ENTRYPOINT ["/usr/local/bin/guble"]
+FROM alpine:latest
+COPY ./gobbler ./guble-cli/guble-cli /usr/local/bin/
+RUN mkdir -p /var/lib/gobbler
+VOLUME ["/var/lib/gobbler"]
+ENTRYPOINT ["/usr/local/bin/gobbler"]
 EXPOSE 8080
