@@ -231,7 +231,7 @@ var (
 			Toggleable: kingpin.Flag("sms-toggleable", "If sms gateway should be able to be stopped and restarted at runtime").
 				Envar("GUBLE_SMS_TOGGLEABLE").
 				Bool(),
-			Workers: kingpin.Flag("sms-workers", "The number of workers handling traffic with Nexmo sms endpoint(default: number of CPUs)").
+			Workers: kingpin.Flag("sms-workers", "The number of workers handling traffic with Nexmo sms endpoint").
 				Default(strconv.Itoa(runtime.NumCPU())).
 				Envar("GUBLE_SMS_WORKERS").
 				Int(),
