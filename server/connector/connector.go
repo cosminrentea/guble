@@ -104,7 +104,7 @@ type SubscribeUnsubscribePayload struct {
 	Service   string `json:"service"`
 	Topic     string `json:"topic"`
 	DeviceID  string `json:"device_id"`
-	UserID    string `json:"id"`
+	UserID    string `json:"user_id"`
 	Action    string `json:"action"`
 	ErrorText string `json:"error_text"`
 }
@@ -155,7 +155,7 @@ func (event *SubscribeUnsubscribeEvent) fillParams(params map[string]string) err
 	if !ok {
 		return errInvalidParams
 	}
-	event.Payload.DeviceID = userID
+	event.Payload.UserID = userID
 	return nil
 }
 
