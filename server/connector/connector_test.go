@@ -365,6 +365,20 @@ func TestConnector_StartAndStopWithoutSubscribers(t *testing.T) {
 	a.NoError(err)
 }
 
+//func Test_ReportSubscribeUnsubscribe(t *testing.T) {
+//	_, finish := testutil.NewMockCtrl(t)
+//	defer finish()
+//	a := assert.New(t)
+//
+//	mKVS := NewMockKVStore(testutil.MockCtrl)
+//	mRouter := NewMockRouter(testutil.MockCtrl)
+//	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
+//	mSender := NewMockSender(testutil.MockCtrl)
+//
+//	mKafkaProducer := n
+//
+//}
+
 func getTestConnector(t *testing.T, config Config, mockManager bool, mockQueue bool) (Connector, *connectorMocks) {
 	a := assert.New(t)
 

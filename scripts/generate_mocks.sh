@@ -86,8 +86,6 @@ $MOCKGEN -package apns \
       github.com/cosminrentea/gobbler/server/kafka \
       Producer &
 
-
-
 # server/fcm mocks
 $MOCKGEN -package fcm \
       -destination server/fcm/mocks_router_gen_test.go \
@@ -150,6 +148,11 @@ $MOCKGEN -self_package connector -package connector \
       -destination server/connector/mocks_kvstore_gen_test.go \
       github.com/cosminrentea/gobbler/server/kvstore \
       KVStore &
+
+$MOCKGEN -package connector \
+      -destination server/connector/mocks_kafka_producer_gen_test.go \
+      github.com/cosminrentea/gobbler/server/kafka \
+      Producer &
 
 # server/websocket mocks
 $MOCKGEN  -self_package websocket -package websocket \
