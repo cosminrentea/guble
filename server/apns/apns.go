@@ -3,8 +3,8 @@ package apns
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/server/connector"
-	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/sideshow/apns2"
 	"time"
