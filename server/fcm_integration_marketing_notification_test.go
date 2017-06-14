@@ -60,8 +60,8 @@ func Test_SendMarketingNotification(t *testing.T) {
 	fcmConn.SetSender(sender)
 
 	//subscribe a client
+	subscribe(s, t)
 
-	subcribe(s, t)
 	topic := "marketing_notifications_general"
 	body := []byte(`{"to":"","data":{"deep_link":"rewe://angebote","notification_body":"Die größte Sonderangebot!","notification_title":"REWE","time":"2016-09-08T08:25:13+02:00","type":"general"}`)
 	userID := "samsa"
@@ -86,9 +86,9 @@ func Test_SendMarketingNotification(t *testing.T) {
 	//for ensuring the stop is done correctly.
 	time.Sleep(250 * time.Millisecond)
 	a.NoError(err)
-
 }
-func subcribe(s *service.Service, t *testing.T) {
+
+func subscribe(s *service.Service, t *testing.T) {
 	a := assert.New(t)
 	topic := "marketing_notifications_general"
 	url := fmt.Sprintf("http://%s/fcm/%s/%s/%s", s.WebServer().GetAddr(), "samsa", "1337", topic)
