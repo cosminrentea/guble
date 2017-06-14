@@ -15,14 +15,14 @@ func TestParsingOfEnvironmentVariables(t *testing.T) {
 	defer func() { os.Args = originalArgs }()
 
 	// given: some environment variables
-	os.Setenv("GOBBLER_HTTP_LISTEN", "http_listen")
+	os.Setenv("GUBLE_HTTP_LISTEN", "http_listen")
 	defer os.Unsetenv("GOBBLER_HTTP_LISTEN")
 
 	os.Setenv("GUBLE_LOG", "debug")
 	defer os.Unsetenv("GUBLE_LOG")
 
 	os.Setenv("GUBLE_ENV", "dev")
-	defer os.Unsetenv("GUBLE_ENV")
+	defer os.Unsetenv("GOBBLER_ENV")
 
 	os.Setenv("GUBLE_PROFILE", "mem")
 	defer os.Unsetenv("GUBLE_PROFILE")
@@ -220,4 +220,8 @@ func assertClusterRemotes(a *assert.Assertions) {
 	ipList = append(ipList, ip1)
 	ipList = append(ipList, ip2)
 	a.Equal(ipList, *Config.Cluster.Remotes)
+}
+
+func TestPrefixEnvar(t *testing.T) {
+	assert.Equal(t, "GUBLE_SOMEVAR", g("SOMEVAR"))
 }

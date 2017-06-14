@@ -261,7 +261,7 @@ var (
 )
 
 func g(s string) string {
-	return "GUBLE_" + s + "\n" + "GOBBLER_" + s
+	return "GUBLE_" + s
 }
 
 func logLevels() (levels []string) {
