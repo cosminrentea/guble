@@ -174,8 +174,27 @@ bin/gobbler --log=info
 |--profile|GOBBLER_PROFILE|cpu &#124; mem &#124; block||The profiler to be used|
 |--storage-path|GOBBLER_STORAGE_PATH|path/to/storage|/var/lib/gobbler|The path for storing messages and key-value data like subscriptions if defined.The path must exists!|
 
+#### PostgreSQL
 
-#### APNS
+|CLI Option|Env Variable|Values|Default|Description|
+|--- |--- |--- |--- |--- |
+|--pg-host|GOBBLER_PG_HOST|hostname|localhost|The PostgreSQL hostname|
+|--pg-port|GOBBLER_PG_PORT|port|5432|The PostgreSQL port|
+|--pg-user|GOBBLER_PG_USER|user|gobbler|The PostgreSQL user|
+|--pg-password|GOBBLER_PG_PASSWORD|password|gobbler|The PostgreSQL password|
+|--pg-dbname|GOBBLER_PG_DBNAME|database|gobbler|The PostgreSQL database name|
+
+#### FCM (Firebase Cloud Messaging)
+
+|CLI Option|Env Variable|Values|Default|Description|
+|--- |--- |--- |--- |--- |
+|--fcm|GOBBLER_FCM|true &#124; false|false|Enable the Google Firebase Cloud Messaging connector|
+|--fcm-api-key|GOBBLER_FCM_API_KEY|api key||The Google API Key for Google Firebase Cloud Messaging|
+|--fcm-workers|GOBBLER_FCM_WORKERS|number of workers|Number of CPUs|The number of workers handling traffic with Firebase Cloud Messaging|
+|--fcm-endpoint|GOBBLER_FCM_ENDPOINT|format: url-schema|https://fcm.googleapis.com/fcm/send|The Google Firebase Cloud Messaging endpoint|
+|--fcm-prefix|GOBBLER_FCM_PREFIX|prefix|/fcm/|The FCM prefix / endpoint|
+
+#### APNS (Apple Push Notifications Service)
 
 |CLI Option|Env Variable|Values|Default|Description|
 |--- |--- |--- |--- |--- |
@@ -188,7 +207,6 @@ bin/gobbler --log=info
 |--apns-prefix|GOBBLER_APNS_PREFIX|prefix|/apns/|The APNS prefix / endpoint|
 |--apns-workers|GOBBLER_APNS_WORKERS|number of workers|Number of CPUs|The number of workers handling traffic with APNS (default: number of CPUs)|
 
-
 #### SMS
 
 |CLI Option|Env Variable|Values|Default |Description|
@@ -198,27 +216,6 @@ bin/gobbler --log=info
 |sms_api_secret|GOBBLER_SMS_API_SECRET|api secret||The Nexmo API Secret for Sending sms|
 |sms_topic|GOBBLER_SMS_TOPIC|topic|/sms|The topic for sms route|
 |sms_workers|GOBBLER_SMS_WORKERS|number of workers|Number of CPUs|The number of workers handling traffic with Nexmo sms endpoint|
-
-#### FCM
-
-|CLI Option|Env Variable|Values|Default|Description|
-|--- |--- |--- |--- |--- |--- |
-|--fcm|GOBBLER_FCM|true &#124; false|false|Enable the Google Firebase Cloud Messaging connector|
-|--fcm-api-key|GOBBLER_FCM_API_KEY|api key||The Google API Key for Google Firebase Cloud Messaging|
-|--fcm-workers|GOBBLER_FCM_WORKERS|number of workers|Number of CPUs|The number of workers handling traffic with Firebase Cloud Messaging|
-|--fcm-endpoint|GOBBLER_FCM_ENDPOINT|format: url-schema|https://fcm.googleapis.com/fcm/send|The Google Firebase Cloud Messaging endpoint|
-|--fcm-prefix|GOBBLER_FCM_PREFIX|prefix|/fcm/|The FCM prefix / endpoint|
-
-#### PostgreSQL
-
-|CLI Option|Env Variable|Values|Default|Description|
-|--- |--- |--- |--- |--- |
-|--pg-host|GOBBLER_PG_HOST|hostname|localhost|The PostgreSQL hostname|
-|--pg-port|GOBBLER_PG_PORT|port|5432|The PostgreSQL port|
-|--pg-user|GOBBLER_PG_USER|user|gobbler|The PostgreSQL user|
-|--pg-password|GOBBLER_PG_PASSWORD|password|gobbler|The PostgreSQL password|
-|--pg-dbname|GOBBLER_PG_DBNAME|database|gobbler|The PostgreSQL database name|
-
 
 ## Run All Tests
 ```
