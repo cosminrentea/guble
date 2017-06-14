@@ -15,8 +15,8 @@ func TestParsingOfEnvironmentVariables(t *testing.T) {
 	defer func() { os.Args = originalArgs }()
 
 	// given: some environment variables
-	os.Setenv("GUBLE_HTTP_LISTEN", "http_listen")
-	defer os.Unsetenv("GUBLE_HTTP_LISTEN")
+	os.Setenv("GOBBLER_HTTP_LISTEN", "http_listen")
+	defer os.Unsetenv("GOBBLER_HTTP_LISTEN")
 
 	os.Setenv("GUBLE_LOG", "debug")
 	defer os.Unsetenv("GUBLE_LOG")

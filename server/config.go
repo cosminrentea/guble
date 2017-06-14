@@ -91,171 +91,178 @@ var (
 	Config = &GubleConfig{
 		Log: kingpin.Flag("log", "Log level").
 			Default(log.ErrorLevel.String()).
-			Envar("GUBLE_LOG").
+			Envar(g("LOG")).
 			Enum(logLevels()...),
 		EnvName: kingpin.Flag("env", `Name of the environment on which the application is running`).
 			Default(development).
-			Envar("GUBLE_ENV").
+			Envar(g("ENV")).
 			Enum(environments...),
 		HttpListen: kingpin.Flag("http", `The address to for the HTTP server to listen on (format: "[Host]:Port")`).
 			Default(defaultHttpListen).
-			Envar("GUBLE_HTTP_LISTEN").
+			Envar(g("HTTP_LISTEN")).
 			String(),
 		KVS: kingpin.Flag("kvs", "The storage backend for the key-value store to use : file | memory | postgres ").
 			Default(defaultKVSBackend).
-			Envar("GUBLE_KVS").
+			Envar(g("KVS")).
 			String(),
 		MS: kingpin.Flag("ms", "The message storage backend : file | memory").
 			Default(defaultMSBackend).
 			HintOptions("file", "memory").
-			Envar("GUBLE_MS").
+			Envar(g("MS")).
 			String(),
 		StoragePath: kingpin.Flag("storage-path", "The path for storing messages and key-value data if 'file' is selected").
 			Default(defaultStoragePath).
-			Envar("GUBLE_STORAGE_PATH").
+			Envar(g("STORAGE_PATH")).
 			ExistingDir(),
 		HealthEndpoint: kingpin.Flag("health-endpoint", `The health endpoint to be used by the HTTP server (value for disabling it: "")`).
 			Default(defaultHealthEndpoint).
-			Envar("GUBLE_HEALTH_ENDPOINT").
+			Envar(g("HEALTH_ENDPOINT")).
 			String(),
 		MetricsEndpoint: kingpin.Flag("metrics-endpoint", `The metrics endpoint to be used by the HTTP server (value for disabling it: "")`).
 			Default(defaultMetricsEndpoint).
-			Envar("GUBLE_METRICS_ENDPOINT").
+			Envar(g("METRICS_ENDPOINT")).
 			String(),
 		PrometheusEndpoint: kingpin.Flag("prometheus-endpoint", `The metrics Prometheus endpoint to be used by the HTTP server (value for disabling it: "")`).
 			Default(defaultPrometheusEndpoint).
-			Envar("GUBLE_PROMETHEUS_ENDPOINT").
+			Envar(g("PROMETHEUS_ENDPOINT")).
 			String(),
 		TogglesEndpoint: kingpin.Flag("toggles-endpoint", `The Feature-Toggles endpoint to be used by the HTTP server (value for disabling it: "")`).
 			Default(defaultTogglesEndpoint).
-			Envar("GUBLE_TOGGLES_ENDPOINT").
+			Envar(g("TOGGLES_ENDPOINT")).
 			String(),
 		Profile: kingpin.Flag("profile", `The profiler to be used (default: none): mem | cpu | block`).
 			Default("").
-			Envar("GUBLE_PROFILE").
+			Envar(g("PROFILE")).
 			Enum("mem", "cpu", "block", ""),
 		Postgres: PostgresConfig{
 			Host: kingpin.Flag("pg-host", "The PostgreSQL hostname").
 				Default("localhost").
-				Envar("GUBLE_PG_HOST").
+				Envar(g("PG_HOST")).
 				String(),
 			Port: kingpin.Flag("pg-port", "The PostgreSQL port").
 				Default("5432").
-				Envar("GUBLE_PG_PORT").
+				Envar(g("PG_PORT")).
 				Int(),
 			User: kingpin.Flag("pg-user", "The PostgreSQL user").
 				Default("guble").
-				Envar("GUBLE_PG_USER").
+				Envar(g("PG_USER")).
 				String(),
 			Password: kingpin.Flag("pg-password", "The PostgreSQL password").
 				Default("guble").
-				Envar("GUBLE_PG_PASSWORD").
+				Envar(g("PG_PASSWORD")).
 				String(),
 			DbName: kingpin.Flag("pg-dbname", "The PostgreSQL database name").
 				Default("guble").
-				Envar("GUBLE_PG_DBNAME").
+				Envar(g("PG_DBNAME")).
 				String(),
 		},
 		FCM: fcm.Config{
 			Enabled: kingpin.Flag("fcm", "Enable the Google Firebase Cloud Messaging connector").
-				Envar("GUBLE_FCM").
+				Envar(g("FCM")).
 				Bool(),
 			APIKey: kingpin.Flag("fcm-api-key", "The Google API Key for Google Firebase Cloud Messaging").
-				Envar("GUBLE_FCM_API_KEY").
+				Envar(g("FCM_API_KEY")).
 				String(),
 			Workers: kingpin.Flag("fcm-workers", "The number of workers handling traffic with Firebase Cloud Messaging (default: number of CPUs)").
 				Default(strconv.Itoa(runtime.NumCPU())).
-				Envar("GUBLE_FCM_WORKERS").
+				Envar(g("FCM_WORKERS")).
 				Int(),
 			Endpoint: kingpin.Flag("fcm-endpoint", "The Google Firebase Cloud Messaging endpoint").
 				Default(defaultFCMEndpoint).
-				Envar("GUBLE_FCM_ENDPOINT").
+				Envar(g("FCM_ENDPOINT")).
 				String(),
 			Prefix: kingpin.Flag("fcm-prefix", "The FCM prefix / endpoint").
-				Envar("GUBLE_FCM_PREFIX").
+				Envar(g("FCM_PREFIX")).
 				Default("/fcm/").
 				String(),
 			IntervalMetrics: &defaultFCMMetrics,
 		},
 		APNS: apns.Config{
 			Enabled: kingpin.Flag("apns", "Enable the APNS connector (by default, in Development mode)").
-				Envar("GUBLE_APNS").
+				Envar(g("APNS")).
 				Bool(),
 			Production: kingpin.Flag("apns-production", "Enable the APNS connector in Production mode").
-				Envar("GUBLE_APNS_PRODUCTION").
+				Envar(g("APNS_PRODUCTION")).
 				Bool(),
 			CertificateFileName: kingpin.Flag("apns-cert-file", "The APNS certificate file name").
-				Envar("GUBLE_APNS_CERT_FILE").
+				Envar(g("APNS_CERT_FILE")).
 				String(),
 			CertificateBytes: kingpin.Flag("apns-cert-bytes", "The APNS certificate bytes, as a string of hex-values").
-				Envar("GUBLE_APNS_CERT_BYTES").
+				Envar(g("APNS_CERT_BYTES")).
 				HexBytes(),
 			CertificatePassword: kingpin.Flag("apns-cert-password", "The APNS certificate password").
-				Envar("GUBLE_APNS_CERT_PASSWORD").
+				Envar(g("APNS_CERT_PASSWORD")).
 				String(),
 			AppTopic: kingpin.Flag("apns-app-topic", "The APNS topic (as used by the mobile application)").
-				Envar("GUBLE_APNS_APP_TOPIC").
+				Envar(g("APNS_APP_TOPIC")).
 				String(),
 			Prefix: kingpin.Flag("apns-prefix", "The APNS prefix / endpoint").
-				Envar("GUBLE_APNS_PREFIX").
+				Envar(g("APNS_PREFIX")).
 				Default("/apns/").
 				String(),
 			Workers: kingpin.Flag("apns-workers", "The number of workers handling traffic with APNS (default: number of CPUs)").
 				Default(strconv.Itoa(runtime.NumCPU())).
-				Envar("GUBLE_APNS_WORKERS").
+				Envar(g("APNS_WORKERS")).
 				Int(),
 			IntervalMetrics: &defaultAPNSMetrics,
 		},
 		Cluster: ClusterConfig{
 			NodeID: kingpin.Flag("node-id", "(cluster mode) This guble node's own ID: a strictly positive integer number which must be unique in cluster").
-				Envar("GUBLE_NODE_ID").Uint8(),
+				Envar(g("NODE_ID")).
+				Uint8(),
 			NodePort: kingpin.Flag("node-port", "(cluster mode) This guble node's own local port: a strictly positive integer number").
-				Default(defaultNodePort).Envar("GUBLE_NODE_PORT").Int(),
+				Default(defaultNodePort).
+				Envar(g("NODE_PORT")).
+				Int(),
 			Remotes: tcpAddrListParser(kingpin.Flag("remotes", `(cluster mode) The list of TCP addresses of some other guble nodes (format: "IP:port")`).
-				Envar("GUBLE_NODE_REMOTES")),
+				Envar(g("NODE_REMOTES"))),
 		},
 		SMS: sms.Config{
 			Enabled: kingpin.Flag("sms", "Enable the SMS gateway").
-				Envar("GUBLE_SMS").
+				Envar(g("SMS")).
 				Bool(),
 			APIKey: kingpin.Flag("sms-api-key", "The Nexmo API Key for Sending sms").
-				Envar("GUBLE_SMS_API_KEY").
+				Envar(g("SMS_API_KEY")).
 				String(),
 			APISecret: kingpin.Flag("sms-api-secret", "The Nexmo API Secret for Sending sms").
-				Envar("GUBLE_SMS_API_SECRET").
+				Envar(g("SMS_API_SECRET")).
 				String(),
 			SMSTopic: kingpin.Flag("sms-topic", "The topic for sms route").
-				Envar("GUBLE_SMS_TOPIC").
+				Envar(g("SMS_TOPIC")).
 				Default(sms.SMSDefaultTopic).
 				String(),
 			Toggleable: kingpin.Flag("sms-toggleable", "If sms gateway should be able to be stopped and restarted at runtime").
-				Envar("GUBLE_SMS_TOGGLEABLE").
+				Envar(g("SMS_TOGGLEABLE")).
 				Bool(),
 			Workers: kingpin.Flag("sms-workers", "The number of workers handling traffic with Nexmo sms endpoint").
 				Default(strconv.Itoa(runtime.NumCPU())).
-				Envar("GUBLE_SMS_WORKERS").
+				Envar(g("SMS_WORKERS")).
 				Int(),
 			KafkaReportingTopic: kingpin.Flag("sms-kafka-topic", "The name of the SMS-Reporting Kafka topic").
-				Envar("GUBLE_SMS_KAFKA_TOPIC").
+				Envar(g("SMS_KAFKA_TOPIC")).
 				String(),
 			IntervalMetrics: &defaultSMSMetrics,
 		},
 		WS: websocket.Config{
 			Enabled: kingpin.Flag("ws", "Enable the websocket module").
-				Envar("GUBLE_WS").
+				Envar(g("WS")).
 				Bool(),
 			Prefix: kingpin.Flag("ws-prefix", "The Websocket prefix").
-				Envar("GUBLE_WS_PREFIX").
+				Envar(g("WS_PREFIX")).
 				Default("/stream/").
 				String(),
 		},
 		KafkaProducer: kafka.Config{
 			Brokers: configstring.NewFromKingpin(
 				kingpin.Flag("kafka-brokers", `The list Kafka brokers to which Guble should connect (formatted as host:port, separated by spaces or commas)`).
-					Envar("GUBLE_KAFKA_BROKERS")),
+					Envar(g("KAFKA_BROKERS"))),
 		},
 	}
 )
+
+func g(s string) string {
+	return "GUBLE_" + s + "\n" + "GOBBLER_" + s
+}
 
 func logLevels() (levels []string) {
 	for _, level := range log.AllLevels {
