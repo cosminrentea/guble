@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/cosminrentea/gobbler/server/metrics"
+	"github.com/cosminrentea/expvarmetrics"
 )
 
 var (

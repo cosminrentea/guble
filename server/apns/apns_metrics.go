@@ -1,7 +1,7 @@
 package apns
 
 import (
-	"github.com/cosminrentea/gobbler/server/metrics"
+	"github.com/cosminrentea/expvarmetrics"
 	"time"
 )
 

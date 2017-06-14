@@ -378,11 +378,11 @@ func (p *messagePartition) store(messageID uint64, data []byte) error {
 	p.totalNumberOfMessages++
 
 	logger.WithFields(log.Fields{
-		"p.noOfEntriesInIndexFile": p.entriesCount,
-		"msgID":                    messageID,
-		"msgSize":                  uint32(len(data)),
-		"msgOffset":                messageOffset,
-		"filename":                 p.indexFile.Name(),
+		"entriesInIndexFile": p.entriesCount,
+		"msgID":              messageID,
+		"msgSize":            uint32(len(data)),
+		"msgOffset":          messageOffset,
+		"filename":           p.indexFile.Name(),
 	}).Debug("Wrote in indexFile")
 
 	//create entry for l

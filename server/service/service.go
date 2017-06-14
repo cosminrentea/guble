@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/cosminrentea/gobbler/server/metrics"
+	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/webserver"
 

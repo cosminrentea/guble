@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/Bogh/gcm"
+	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/kafka"
-	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/router"
 )
 

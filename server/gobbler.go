@@ -7,8 +7,8 @@ import (
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/apns"
 	"github.com/cosminrentea/gobbler/server/fcm"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/kvstore"
-	"github.com/cosminrentea/gobbler/server/metrics"
 	"github.com/cosminrentea/gobbler/server/rest"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/server/service"
@@ -29,7 +29,6 @@ import (
 	"syscall"
 
 	"github.com/Bogh/gcm"
-	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/pkg/profile"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -305,7 +304,8 @@ func waitForTermination(callback func()) {
 	sig := <-signalC
 	logger.Infof("Got signal '%v' .. exiting gracefully now", sig)
 	callback()
-	metrics.LogOnDebugLevel()
+	//TODO Cosmin: re-enable metrics-collection at stop-time & check that field names do not contain "." (logstash compatibility)
+	//expvarmetrics.LogOnDebugLevel()
 	logger.Info("Exit gracefully now")
 	os.Exit(0)
 }
