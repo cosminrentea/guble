@@ -13,8 +13,8 @@ before_script:
 script:
   - GO_TEST_DISABLED=true go test -v -short $(go list ./... | grep -v /vendor/) && GO_TEST_DISABLED=true go test -v -tags cluster $(go list ./... | grep -v /vendor/)
 after_success:
-  - scripts/generate_coverage.sh
-  - goveralls -coverprofile=full_cov.out -service=travis-ci
+  - scripts/generate_coverage.sh full_coverage.out
+  - goveralls -coverprofile=full_coverage.out -service=travis-ci
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
       GOOS=linux go build -a --ldflags '-linkmode external -extldflags "-static"' . ;
       GOOS=linux go build -a --ldflags '-linkmode external -extldflags "-static"' -o ./guble-cli/guble-cli ./guble-cli ;
