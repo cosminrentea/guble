@@ -5,10 +5,11 @@ sudo: required
 services:
   - docker
   - postgresql
-before_script:
-  - psql -c 'create database guble;' -U postgres
 before_install:
   - go get github.com/wadey/gocovmerge github.com/mattn/goveralls golang.org/x/tools/cmd/cover
+install: true
+before_script:
+  - psql -c 'create database guble;' -U postgres
 script:
   - GO_TEST_DISABLED=true go test -v -short $(go list ./... | grep -v /vendor/) && GO_TEST_DISABLED=true go test -v -tags cluster $(go list ./... | grep -v /vendor/)
 after_success:
