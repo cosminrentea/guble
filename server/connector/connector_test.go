@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
+
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/testutil"
@@ -365,6 +367,150 @@ func TestConnector_StartAndStopWithoutSubscribers(t *testing.T) {
 	a.NoError(err)
 }
 
+func Test_ReportSubscribe(t *testing.T) {
+	_, finish := testutil.NewMockCtrl(t)
+	testutil.EnableDebugForMethod()()
+	defer finish()
+	a := assert.New(t)
+
+	mKVS := NewMockKVStore(testutil.MockCtrl)
+	mRouter := NewMockRouter(testutil.MockCtrl)
+	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
+	mSender := NewMockSender(testutil.MockCtrl)
+
+	mKafkaProducer := NewMockProducer(testutil.MockCtrl)
+
+	config := Config{
+		Name:       "test",
+		Schema:     "test",
+		Prefix:     "/connector",
+		URLPattern: "/{device_token}/{user_id}/{topic:.*}",
+	}
+
+	entriesC := make(chan [2]string)
+	mKVS.EXPECT().Iterate(gomock.Eq("test"), gomock.Eq("")).Return(entriesC)
+	close(entriesC)
+
+	mKVS.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any())
+
+	conn, err := NewConnector(mRouter, mSender, config, mKafkaProducer, "sub_reporting_topic")
+	a.NoError(err)
+
+	mRouter.EXPECT().Subscribe(gomock.Any())
+
+	err = conn.Start()
+	a.NoError(err)
+	defer conn.Stop()
+
+	mKafkaProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
+		a.Equal("sub_reporting_topic", topic)
+
+		var event SubscribeUnsubscribeEvent
+		err = json.Unmarshal(bytes, &event)
+		a.NoError(err)
+		a.Equal("marketing_notification_subscription_information", event.Type)
+		a.Equal("subscribe", event.Payload.Action)
+		a.Equal("test", event.Payload.Service)
+		a.Equal("device1", event.Payload.DeviceID)
+		a.Equal("user1", event.Payload.UserID)
+		a.Equal("topic1", event.Payload.Topic)
+		fmt.Println(event)
+	})
+
+	recorder := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodPost, "/connector/device1/user1/topic1", strings.NewReader(""))
+	a.NoError(err)
+	conn.ServeHTTP(recorder, req)
+	a.Equal(`{"subscribed":"/topic1"}`, recorder.Body.String())
+	time.Sleep(100 * time.Millisecond)
+
+}
+
+func Test_ReportUnSubscribe(t *testing.T) {
+	_, finish := testutil.NewMockCtrl(t)
+	testutil.EnableDebugForMethod()()
+	defer finish()
+	a := assert.New(t)
+
+	mKVS := NewMockKVStore(testutil.MockCtrl)
+	mRouter := NewMockRouter(testutil.MockCtrl)
+	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
+	mSender := NewMockSender(testutil.MockCtrl)
+
+	mKafkaProducer := NewMockProducer(testutil.MockCtrl)
+
+	config := Config{
+		Name:       "test",
+		Schema:     "test",
+		Prefix:     "/connector",
+		URLPattern: "/{device_token}/{user_id}/{topic:.*}",
+	}
+
+	entriesC := make(chan [2]string)
+	mKVS.EXPECT().Iterate(gomock.Eq("test"), gomock.Eq("")).Return(entriesC)
+	close(entriesC)
+
+	mKVS.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any())
+
+	conn, err := NewConnector(mRouter, mSender, config, mKafkaProducer, "sub_reporting_topic")
+	a.NoError(err)
+
+	mRouter.EXPECT().Subscribe(gomock.Any())
+
+	err = conn.Start()
+	a.NoError(err)
+	defer conn.Stop()
+
+	mKafkaProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
+		a.Equal("sub_reporting_topic", topic)
+
+		var event SubscribeUnsubscribeEvent
+		err = json.Unmarshal(bytes, &event)
+		a.NoError(err)
+		a.Equal("marketing_notification_subscription_information", event.Type)
+		a.Equal("subscribe", event.Payload.Action)
+		a.Equal("test", event.Payload.Service)
+		a.Equal("device1", event.Payload.DeviceID)
+		a.Equal("user1", event.Payload.UserID)
+		a.Equal("topic1", event.Payload.Topic)
+		fmt.Println(event)
+	})
+
+	recorder := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodPost, "/connector/device1/user1/topic1", strings.NewReader(""))
+	a.NoError(err)
+	conn.ServeHTTP(recorder, req)
+	a.Equal(`{"subscribed":"/topic1"}`, recorder.Body.String())
+	time.Sleep(100 * time.Millisecond)
+
+	//unsubscribe
+	mKVS.EXPECT().Delete(gomock.Any(), gomock.Any())
+	mRouter.EXPECT().Unsubscribe(gomock.Any())
+
+	mKafkaProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
+		a.Equal("sub_reporting_topic", topic)
+
+		var event SubscribeUnsubscribeEvent
+		err = json.Unmarshal(bytes, &event)
+		a.NoError(err)
+		a.Equal("marketing_notification_subscription_information", event.Type)
+		a.Equal("unsubscribe", event.Payload.Action)
+		a.Equal("test", event.Payload.Service)
+		a.Equal("device1", event.Payload.DeviceID)
+		a.Equal("user1", event.Payload.UserID)
+		a.Equal("topic1", event.Payload.Topic)
+		fmt.Println(event)
+	})
+
+	recorder2 := httptest.NewRecorder()
+	req, err = http.NewRequest(http.MethodDelete, "/connector/device1/user1/topic1", strings.NewReader(""))
+	a.NoError(err)
+	conn.ServeHTTP(recorder2, req)
+	a.Equal(`{"unsubscribed":"/topic1"}`, recorder2.Body.String())
+	time.Sleep(100 * time.Millisecond)
+
+}
+
 func getTestConnector(t *testing.T, config Config, mockManager bool, mockQueue bool) (Connector, *connectorMocks) {
 	a := assert.New(t)
 
@@ -378,7 +524,7 @@ func getTestConnector(t *testing.T, config Config, mockManager bool, mockQueue b
 	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
 	mSender := NewMockSender(testutil.MockCtrl)
 
-	conn, err := NewConnector(mRouter, mSender, config)
+	conn, err := NewConnector(mRouter, mSender, config, nil, "sub_reporting_topic")
 	a.NoError(err)
 
 	if mockManager {

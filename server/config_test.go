@@ -1,10 +1,11 @@
 package server
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParsingOfEnvironmentVariables(t *testing.T) {
@@ -108,6 +109,15 @@ func TestParsingOfEnvironmentVariables(t *testing.T) {
 	os.Setenv("GUBLE_SMS_KAFKA_TOPIC", "sms_reporting_topic")
 	defer os.Unsetenv("GUBLE_SMS_KAFKA_TOPIC")
 
+	os.Setenv("GUBLE_SUBSCRIBE_KAFKA_TOPIC", "sub_topic")
+	defer os.Unsetenv("GUBLE_SUBSCRIBE_KAFKA_TOPIC")
+
+	os.Setenv("GUBLE_APNS_KAFKA_TOPIC", "apns_topic")
+	defer os.Unsetenv("GUBLE_APNS_KAFKA_TOPIC")
+
+	os.Setenv("GUBLE_FCM_KAFKA_TOPIC", "fcm_topic")
+	defer os.Unsetenv("GUBLE_FCM_KAFKA_TOPIC")
+
 	os.Setenv("GUBLE_SMS_TOGGLEABLE", "true")
 	defer os.Unsetenv("GUBLE_SMS_TOGGLEABLE")
 
@@ -158,6 +168,9 @@ func TestParsingArgs(t *testing.T) {
 		"--remotes", "127.0.0.1:8080 127.0.0.1:20002",
 		"--kafka-brokers", "127.0.0.1:9092 127.0.0.1:9091",
 		"--sms-kafka-topic", "sms_reporting_topic",
+		"--subscribe-kafka-topic", "sub_topic",
+		"--apns-kafka-topic", "apns_topic",
+		"--fcm-kafka-topic", "fcm_topic",
 		"--sms-toggleable",
 	}
 
@@ -206,7 +219,7 @@ func assertArguments(a *assert.Assertions) {
 	a.Equal("mem", *Config.Profile)
 
 	a.Equal("[127.0.0.1:9092 127.0.0.1:9091]", (*Config.KafkaProducer.Brokers).String())
-	a.Equal("sms_reporting_topic", *Config.SMS.KafkaReportingTopic)
+	a.Equal("sms_reporting_topic", *Config.KafkaReportingConfig.SmsReportingTopic)
 
 	a.Equal(true, *Config.SMS.Toggleable)
 
