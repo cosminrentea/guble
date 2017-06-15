@@ -231,7 +231,7 @@ var createModulesWebsocketAndMockAPNSPusher = func(receiveC chan bool, simulated
 			if err != nil {
 				logger.Panic("APNS Sender could not be created")
 			}
-			if apnsConn, err := apns.New(router, apnsSender, Config.APNS); err != nil {
+			if apnsConn, err := apns.New(router, apnsSender, Config.APNS, nil, "sub_reporting_topic"); err != nil {
 				logger.WithError(err).Error("Error creating APNS connector")
 			} else {
 				modules = append(modules, apnsConn)

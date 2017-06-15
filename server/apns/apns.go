@@ -5,6 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/server/connector"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/sideshow/apns2"
 	"time"
@@ -35,7 +36,7 @@ type apns struct {
 }
 
 // New creates a new connector.ResponsiveConnector without starting it
-func New(router router.Router, sender connector.Sender, config Config) (connector.ResponsiveConnector, error) {
+func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string) (connector.ResponsiveConnector, error) {
 	baseConn, err := connector.NewConnector(
 		router,
 		sender,
@@ -46,6 +47,8 @@ func New(router router.Router, sender connector.Sender, config Config) (connecto
 			URLPattern: fmt.Sprintf("/{%s}/{%s}/{%s:.*}", deviceIDKey, userIDKey, connector.TopicParam),
 			Workers:    *config.Workers,
 		},
+		kafkaProducer,
+		kafkaReportingTopic,
 	)
 	if err != nil {
 		logger.WithError(err).Error("Base connector error")

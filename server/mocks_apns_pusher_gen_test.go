@@ -4,8 +4,8 @@
 package server
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	apns2 "github.com/sideshow/apns2"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // Mock of Pusher interface

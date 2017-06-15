@@ -30,8 +30,6 @@ type Config struct {
 	IntervalMetrics *bool
 	Toggleable      *bool
 
-	KafkaReportingTopic *string
-
 	Name   string
 	Schema string
 }

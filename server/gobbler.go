@@ -145,7 +145,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 			gcm.GcmSendEndpoint = *Config.FCM.Endpoint
 		}
 		sender := fcm.NewSender(*Config.FCM.APIKey)
-		if fcmConn, err := fcm.New(router, sender, Config.FCM); err != nil {
+		if fcmConn, err := fcm.New(router, sender, Config.FCM, kafkaProducer, *Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic); err != nil {
 			logger.WithError(err).Error("Error creating FCM connector")
 		} else {
 			modules = append(modules, fcmConn)
@@ -175,7 +175,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 			logger.Panic("APNS Sender could not be created")
 		}
 		*Config.APNS.IntervalMetrics = true
-		if apnsConn, err := apns.New(router, apnsSender, Config.APNS); err != nil {
+		if apnsConn, err := apns.New(router, apnsSender, Config.APNS, kafkaProducer, *Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic); err != nil {
 			logger.WithError(err).Error("Error creating APNS connector")
 		} else {
 			modules = append(modules, apnsConn)
@@ -189,7 +189,7 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 		if *Config.SMS.APIKey == "" || *Config.SMS.APISecret == "" {
 			logger.Panic("The API Key and Secret have to be provided when NEXMO SMS connector is enabled")
 		}
-		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, *Config.SMS.KafkaReportingTopic)
+		nexmoSender, err := sms.NewNexmoSender(*Config.SMS.APIKey, *Config.SMS.APISecret, kafkaProducer, *Config.KafkaReportingConfig.SmsReportingTopic)
 		if err != nil {
 			logger.WithError(err).Error("Error creating Nexmo Sender")
 		}

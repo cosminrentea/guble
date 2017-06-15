@@ -3,12 +3,14 @@ package fcm
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/Bogh/gcm"
 	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/router"
-	"time"
 )
 
 const (
@@ -37,14 +39,18 @@ type fcm struct {
 }
 
 // New creates a new *fcm and returns it as an connector.ResponsiveConnector
-func New(router router.Router, sender connector.Sender, config Config) (connector.ResponsiveConnector, error) {
+func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string) (connector.ResponsiveConnector, error) {
 	baseConn, err := connector.NewConnector(router, sender, connector.Config{
 		Name:       "fcm",
 		Schema:     schema,
 		Prefix:     *config.Prefix,
 		URLPattern: fmt.Sprintf("/{%s}/{%s}/{%s:.*}", deviceTokenKey, userIDKEy, connector.TopicParam),
 		Workers:    *config.Workers,
-	})
+	},
+		kafkaProducer,
+		kafkaReportingTopic,
+	)
+
 	if err != nil {
 		logger.WithError(err).Error("Base connector error")
 		return nil, err

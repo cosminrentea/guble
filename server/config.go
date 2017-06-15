@@ -47,6 +47,13 @@ var (
 )
 
 type (
+	KafkaReportingConfig struct {
+		SmsReportingTopic                  *string
+		SubscribeUnsubscribeReportingTopic *string
+		FcmReportingTopic                  *string
+		ApnsReportingTopic                 *string
+	}
+
 	// PostgresConfig is used for configuring the Postgresql connection.
 	PostgresConfig struct {
 		Host     *string
@@ -63,24 +70,25 @@ type (
 	}
 	// GubleConfig is used for configuring Guble server (including its modules / connectors).
 	GubleConfig struct {
-		Log                *string
-		EnvName            *string
-		HttpListen         *string
-		KVS                *string
-		MS                 *string
-		StoragePath        *string
-		HealthEndpoint     *string
-		MetricsEndpoint    *string
-		PrometheusEndpoint *string
-		TogglesEndpoint    *string
-		Profile            *string
-		Postgres           PostgresConfig
-		FCM                fcm.Config
-		APNS               apns.Config
-		SMS                sms.Config
-		WS                 websocket.Config
-		KafkaProducer      kafka.Config
-		Cluster            ClusterConfig
+		Log                  *string
+		EnvName              *string
+		HttpListen           *string
+		KVS                  *string
+		MS                   *string
+		StoragePath          *string
+		HealthEndpoint       *string
+		MetricsEndpoint      *string
+		PrometheusEndpoint   *string
+		TogglesEndpoint      *string
+		Profile              *string
+		Postgres             PostgresConfig
+		FCM                  fcm.Config
+		APNS                 apns.Config
+		SMS                  sms.Config
+		WS                   websocket.Config
+		KafkaProducer        kafka.Config
+		Cluster              ClusterConfig
+		KafkaReportingConfig KafkaReportingConfig
 	}
 )
 
@@ -235,9 +243,6 @@ var (
 				Default(strconv.Itoa(runtime.NumCPU())).
 				Envar("GUBLE_SMS_WORKERS").
 				Int(),
-			KafkaReportingTopic: kingpin.Flag("sms-kafka-topic", "The name of the SMS-Reporting Kafka topic").
-				Envar("GUBLE_SMS_KAFKA_TOPIC").
-				String(),
 			IntervalMetrics: &defaultSMSMetrics,
 		},
 		WS: websocket.Config{
@@ -253,6 +258,20 @@ var (
 			Brokers: configstring.NewFromKingpin(
 				kingpin.Flag("kafka-brokers", `The list Kafka brokers to which Guble should connect (formatted as host:port, separated by spaces or commas)`).
 					Envar("GUBLE_KAFKA_BROKERS")),
+		},
+		KafkaReportingConfig: KafkaReportingConfig{
+			SmsReportingTopic: kingpin.Flag("sms-kafka-topic", "The name of the SMS-Reporting Kafka topic").
+				Envar("GUBLE_SMS_KAFKA_TOPIC").
+				String(),
+			SubscribeUnsubscribeReportingTopic: kingpin.Flag("subscribe-kafka-topic", "The name of the  Subscribe/Unsubscribe Reporting Kafka topic").
+				Envar("GUBLE_SUBSCRIBE_KAFKA_TOPIC").
+				String(),
+			ApnsReportingTopic: kingpin.Flag("apns-kafka-topic", "The name of the Apns-Reporting Kafka topic").
+				Envar("GUBLE_APNS_KAFKA_TOPIC").
+				String(),
+			FcmReportingTopic: kingpin.Flag("fcm-kafka-topic", "The name of the fcm-Reporting Kafka topic").
+				Envar("GUBLE_FCM_KAFKA_TOPIC").
+				String(),
 		},
 	}
 )

@@ -32,7 +32,7 @@ func TestNew_WithoutKVStore(t *testing.T) {
 	}
 
 	//when
-	c, err := New(mRouter, mSender, cfg)
+	c, err := New(mRouter, mSender, cfg, nil, "sub_kafka_reporting")
 
 	//then
 	a.Error(err)
@@ -227,7 +227,7 @@ func newAPNSConnector(t *testing.T) (c connector.ResponsiveConnector, mKVS *Mock
 		CertificatePassword: &password,
 		CertificateBytes:    &bytes,
 	}
-	c, err := New(mRouter, mSender, cfg)
+	c, err := New(mRouter, mSender, cfg, nil,"sub_reporting")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
