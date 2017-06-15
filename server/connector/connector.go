@@ -22,6 +22,8 @@ import (
 const (
 	DefaultWorkers = 1
 	SubstitutePath = "/substitute/"
+	deviceTokenKey = "device_token"
+	userIDKEy      = "user_id"
 )
 
 var (
@@ -117,7 +119,7 @@ type SubscribeUnsubscribeEvent struct {
 }
 
 var (
-	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Subscribe/unsubcribe is not correctly configured")
+	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Subscribe/Unsubscribe is not correctly configured")
 	errInvalidParams               = errors.New("Could not extract params")
 )
 
@@ -145,13 +147,13 @@ func (event *SubscribeUnsubscribeEvent) report(kafkaProducer kafka.Producer, kaf
 }
 
 func (event *SubscribeUnsubscribeEvent) fillParams(params map[string]string) error {
-	deviceID, ok := params["device_token"]
+	deviceID, ok := params[deviceTokenKey]
 	if !ok {
 		return errInvalidParams
 	}
 	event.Payload.DeviceID = deviceID
 
-	userID, ok := params["user_id"]
+	userID, ok := params[userIDKEy]
 	if !ok {
 		return errInvalidParams
 	}
@@ -179,6 +181,14 @@ func NewConnector(router router.Router, sender Sender, config Config, kafkaProdu
 		KafkaProducer:       kafkaProducer,
 		KafkaReportingTopic: kafkaReportingTopic,
 	}
+
+	if kafkaProducer == nil || kafkaReportingTopic == "" {
+		c.logger.Info("Kafka reporting for subscribe/unsubscribe is  INACTIVE")
+	} else {
+		c.logger.WithField("kafka_reporting_topic_subsribe", kafkaReportingTopic).
+			Info("Kafka reporting for subscribe/unsubscribe is  ACTIVE")
+	}
+
 	c.initMuxRouter()
 	return c, nil
 }
@@ -281,8 +291,8 @@ func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 
 	if errFill == nil {
 		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
-		if err != nil {
-			logger.WithError(err).Error("Could not report sent subscribe sms to Kafka topic")
+		if err != nil && err != errKafkaReportingConfiguration {
+			logger.WithError(err).Error("Could not report sent subscribe  to Kafka topic")
 		}
 	}
 
@@ -329,8 +339,8 @@ func (c *connector) Delete(w http.ResponseWriter, req *http.Request) {
 
 	if errFill == nil {
 		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
-		if err != nil {
-			logger.WithError(err).Error("Could not report sent subscribe sms to Kafka topic")
+		if err != nil && err != errKafkaReportingConfiguration {
+			logger.WithError(err).Error("Could not report sent unsubscribe  to Kafka topic")
 		}
 	}
 
