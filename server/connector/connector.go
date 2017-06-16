@@ -68,6 +68,7 @@ type Connector interface {
 	Runner
 	Manager() Manager
 	Context() context.Context
+	KafkaProducer() kafka.Producer
 }
 
 type ResponsiveConnector interface {
@@ -88,10 +89,10 @@ type connector struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	logger              *log.Entry
-	wg                  sync.WaitGroup
-	KafkaProducer       kafka.Producer
-	KafkaReportingTopic string
+	logger                 *log.Entry
+	wg                     sync.WaitGroup
+	ConnectorKafkaProducer kafka.Producer
+	KafkaReportingTopic    string
 }
 
 type Config struct {
@@ -172,14 +173,14 @@ func NewConnector(router router.Router, sender Sender, config Config, kafkaProdu
 	}
 
 	c := &connector{
-		config:              config,
-		sender:              sender,
-		manager:             NewManager(config.Schema, kvs),
-		queue:               NewQueue(sender, config.Workers),
-		router:              router,
-		logger:              logger.WithField("name", config.Name),
-		KafkaProducer:       kafkaProducer,
-		KafkaReportingTopic: kafkaReportingTopic,
+		config:                 config,
+		sender:                 sender,
+		manager:                NewManager(config.Schema, kvs),
+		queue:                  NewQueue(sender, config.Workers),
+		router:                 router,
+		logger:                 logger.WithField("name", config.Name),
+		ConnectorKafkaProducer: kafkaProducer,
+		KafkaReportingTopic:    kafkaReportingTopic,
 	}
 
 	if kafkaProducer == nil || kafkaReportingTopic == "" {
@@ -290,7 +291,7 @@ func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"subscribed":"/%v"}`, topic)
 
 	if errFill == nil {
-		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
+		err = event.report(c.ConnectorKafkaProducer, c.KafkaReportingTopic)
 		if err != nil && err != errKafkaReportingConfiguration {
 			logger.WithError(err).Error("Could not report sent subscribe  to Kafka topic")
 		}
@@ -338,7 +339,7 @@ func (c *connector) Delete(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"unsubscribed":"/%v"}`, topic)
 
 	if errFill == nil {
-		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
+		err = event.report(c.ConnectorKafkaProducer, c.KafkaReportingTopic)
 		if err != nil && err != errKafkaReportingConfiguration {
 			logger.WithError(err).Error("Could not report sent unsubscribe  to Kafka topic")
 		}
@@ -479,6 +480,9 @@ func (c *connector) Manager() Manager {
 	return c.manager
 }
 
+func (c *connector) KafkaProducer() kafka.Producer {
+	return c.ConnectorKafkaProducer
+}
 func (c *connector) Context() context.Context {
 	return c.ctx
 }

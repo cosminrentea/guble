@@ -2,13 +2,14 @@ package apns
 
 import (
 	"fmt"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/sideshow/apns2"
-	"time"
 )
 
 const (
@@ -33,10 +34,11 @@ type Config struct {
 type apns struct {
 	Config
 	connector.Connector
+	apnsKafkaReportingTopic string
 }
 
 // New creates a new connector.ResponsiveConnector without starting it
-func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string) (connector.ResponsiveConnector, error) {
+func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, subUnsubKafkaReportingTopic, apnsKafkaReportingTopic string) (connector.ResponsiveConnector, error) {
 	baseConn, err := connector.NewConnector(
 		router,
 		sender,
@@ -48,15 +50,16 @@ func New(router router.Router, sender connector.Sender, config Config, kafkaProd
 			Workers:    *config.Workers,
 		},
 		kafkaProducer,
-		kafkaReportingTopic,
+		subUnsubKafkaReportingTopic,
 	)
 	if err != nil {
 		logger.WithError(err).Error("Base connector error")
 		return nil, err
 	}
 	a := &apns{
-		Config:    config,
-		Connector: baseConn,
+		Config:                  config,
+		Connector:               baseConn,
+		apnsKafkaReportingTopic: apnsKafkaReportingTopic,
 	}
 	a.SetResponseHandler(a)
 	return a, nil

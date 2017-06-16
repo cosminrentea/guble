@@ -2,14 +2,15 @@ package apns
 
 import (
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/sideshow/apns2"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 var ErrSendRandomError = errors.New("A Sender error")
@@ -32,7 +33,7 @@ func TestNew_WithoutKVStore(t *testing.T) {
 	}
 
 	//when
-	c, err := New(mRouter, mSender, cfg, nil, "sub_kafka_reporting")
+	c, err := New(mRouter, mSender, cfg, nil, "sub_kafka_reporting", "apns_Reporting")
 
 	//then
 	a.Error(err)
@@ -100,6 +101,7 @@ func TestConn_HandleResponse(t *testing.T) {
 func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 	_, finish := testutil.NewMockCtrl(t)
 	defer finish()
+	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	//given
@@ -227,9 +229,43 @@ func newAPNSConnector(t *testing.T) (c connector.ResponsiveConnector, mKVS *Mock
 		CertificatePassword: &password,
 		CertificateBytes:    &bytes,
 	}
-	c, err := New(mRouter, mSender, cfg, nil,"sub_reporting")
-
+	c, err := New(mRouter, mSender, cfg, nil, "sub_reporting", "apns_Reporting")
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	return
+}
+
+func TestConn_HandleResponseReporting(t *testing.T) {
+	_, finish := testutil.NewMockCtrl(t)
+	defer finish()
+	a := assert.New(t)
+
+	//given
+	c, mKVS := newAPNSConnector(t)
+
+	mSubscriber := NewMockSubscriber(testutil.MockCtrl)
+	mSubscriber.EXPECT().SetLastID(gomock.Any())
+	mSubscriber.EXPECT().Key().Return("key").AnyTimes()
+	mSubscriber.EXPECT().Encode().Return([]byte("{}"), nil).AnyTimes()
+	mKVS.EXPECT().Put(schema, "key", []byte("{}")).Times(2)
+
+	c.Manager().Add(mSubscriber)
+	message := &protocol.Message{
+		ID:         42,
+		HeaderJSON: `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
+	}
+	mRequest := NewMockRequest(testutil.MockCtrl)
+	mRequest.EXPECT().Message().Return(message).AnyTimes()
+	mRequest.EXPECT().Subscriber().Return(mSubscriber).AnyTimes()
+
+	response := &apns2.Response{
+		ApnsID:     "id-life",
+		StatusCode: 200,
+	}
+
+	//when
+	err := c.HandleResponse(mRequest, response, nil, nil)
+
+	//then
+	a.NoError(err)
 }

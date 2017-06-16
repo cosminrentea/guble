@@ -7,6 +7,7 @@ import (
 	context "context"
 	protocol "github.com/cosminrentea/gobbler/protocol"
 	
+	kafka "github.com/cosminrentea/gobbler/server/kafka"
 	router "github.com/cosminrentea/gobbler/server/router"
 	gomock "github.com/golang/mock/gomock"
 	http "net/http"
@@ -51,6 +52,16 @@ func (_m *MockConnector) GetPrefix() string {
 
 func (_mr *_MockConnectorRecorder) GetPrefix() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPrefix")
+}
+
+func (_m *MockConnector) KafkaProducer() kafka.Producer {
+	ret := _m.ctrl.Call(_m, "KafkaProducer")
+	ret0, _ := ret[0].(kafka.Producer)
+	return ret0
+}
+
+func (_mr *_MockConnectorRecorder) KafkaProducer() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "KafkaProducer")
 }
 
 func (_m *MockConnector) Manager() Manager {
