@@ -473,7 +473,6 @@ func Test_ReportUnSubscribe(t *testing.T) {
 		a.Equal("device1", event.Payload.DeviceID)
 		a.Equal("user1", event.Payload.UserID)
 		a.Equal("topic1", event.Payload.Topic)
-		fmt.Println(event)
 	})
 
 	recorder := httptest.NewRecorder()
@@ -499,7 +498,6 @@ func Test_ReportUnSubscribe(t *testing.T) {
 		a.Equal("device1", event.Payload.DeviceID)
 		a.Equal("user1", event.Payload.UserID)
 		a.Equal("topic1", event.Payload.Topic)
-		fmt.Println(event)
 	})
 
 	recorder2 := httptest.NewRecorder()

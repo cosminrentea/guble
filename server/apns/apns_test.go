@@ -5,11 +5,15 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
+
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
+	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/sideshow/apns2"
+	_ "github.com/sideshow/apns2/payload"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +50,7 @@ func TestConn_HandleResponseOnSendError(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, _ := newAPNSConnector(t)
+	c, _ := newAPNSConnector(t, nil)
 	mRequest := NewMockRequest(testutil.MockCtrl)
 	message := &protocol.Message{
 		HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`,
@@ -68,7 +72,7 @@ func TestConn_HandleResponse(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t, nil)
 
 	mSubscriber := NewMockSubscriber(testutil.MockCtrl)
 	mSubscriber.EXPECT().SetLastID(gomock.Any())
@@ -105,7 +109,7 @@ func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t, nil)
 
 	removeForReasons := []string{
 		apns2.ReasonMissingDeviceToken,
@@ -152,7 +156,7 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t, nil)
 
 	noActionForReasons := []string{
 		apns2.ReasonPayloadEmpty,
@@ -211,7 +215,7 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 	}
 }
 
-func newAPNSConnector(t *testing.T) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
+func newAPNSConnector(t *testing.T, producer *MockProducer) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
 	mKVS = NewMockKVStore(testutil.MockCtrl)
 	mRouter := NewMockRouter(testutil.MockCtrl)
 	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
@@ -229,39 +233,84 @@ func newAPNSConnector(t *testing.T) (c connector.ResponsiveConnector, mKVS *Mock
 		CertificatePassword: &password,
 		CertificateBytes:    &bytes,
 	}
-	c, err := New(mRouter, mSender, cfg, nil, "sub_reporting", "apns_Reporting")
+	c, err := New(mRouter, mSender, cfg, producer, "sub_reporting", "apns_Reporting")
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	return
 }
 
+func testRoute() *router.Route {
+	options := router.RouteConfig{
+		RouteParams: router.RouteParams{
+			deviceIDKey: "device_id",
+			userIDKey:   "user_id",
+		},
+	}
+	return router.NewRoute(options)
+}
+
 func TestConn_HandleResponseReporting(t *testing.T) {
-	_, finish := testutil.NewMockCtrl(t)
+	ctrl, finish := testutil.NewMockCtrl(t)
+	//defer testutil.EnableDebugForMethod()()
 	defer finish()
 	a := assert.New(t)
 
+	mockProducer := NewMockProducer(ctrl)
+
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t, mockProducer)
+
+	route := testRoute()
 
 	mSubscriber := NewMockSubscriber(testutil.MockCtrl)
 	mSubscriber.EXPECT().SetLastID(gomock.Any())
 	mSubscriber.EXPECT().Key().Return("key").AnyTimes()
 	mSubscriber.EXPECT().Encode().Return([]byte("{}"), nil).AnyTimes()
+	mSubscriber.EXPECT().Route().Return(route).AnyTimes()
 	mKVS.EXPECT().Put(schema, "key", []byte("{}")).Times(2)
 
 	c.Manager().Add(mSubscriber)
 	message := &protocol.Message{
+		UserID:     "user_id",
 		ID:         42,
 		HeaderJSON: `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
+		Body: []byte(`{
+		"aps":{
+		"alert":{"body":"Die größte Sonderangebot!","title":"Valid Title"},
+		"badge":0,
+		"content-available":1
+		},
+		"topic":"marketing_notifications",
+		"deeplink":"rewe://angebote"
+		}`),
 	}
 	mRequest := NewMockRequest(testutil.MockCtrl)
 	mRequest.EXPECT().Message().Return(message).AnyTimes()
 	mRequest.EXPECT().Subscriber().Return(mSubscriber).AnyTimes()
 
 	response := &apns2.Response{
-		ApnsID:     "id-life",
+		ApnsID:     "apns_id",
 		StatusCode: 200,
 	}
+
+	mockProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
+		a.Equal("apns_Reporting", topic)
+
+		var event ApnsEvent
+		err := json.Unmarshal(bytes, &event)
+		a.NoError(err)
+		a.Equal("pn_reporting_apns", event.Type)
+		a.Equal("Success", event.Payload.Status)
+		a.Equal("apns_id", event.Payload.ApnsID)
+		a.Equal("7sdks723ksgqn", event.Payload.CorrelationID)
+		a.Equal("device_id", event.Payload.DeviceID)
+		a.Equal("user_id", event.Payload.UserID)
+		a.Equal("Valid Title", event.Payload.NotificationTitle)
+		a.Equal("Die größte Sonderangebot!", event.Payload.NotificationBody)
+		a.Equal("rewe://angebote", event.Payload.DeepLink)
+		a.Equal("marketing_notifications", event.Payload.Topic)
+		a.Equal("", event.Payload.ErrorText)
+	})
 
 	//when
 	err := c.HandleResponse(mRequest, response, nil, nil)
