@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/protocol"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -49,7 +49,7 @@ func main() {
 
 	origin := "http://localhost/"
 	url := fmt.Sprintf("%v/user/%v", removeTrailingSlash(*url), *user)
-	client, err := client.Open(url, origin, 100, true)
+	client, err := wsclient.Open(url, origin, 100, true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func main() {
 	waitForTermination(func() {})
 }
 
-func readLoop(client client.Client) {
+func readLoop(client wsclient.Client) {
 	for {
 		select {
 		case incomingMessage := <-client.Messages():
@@ -84,7 +84,7 @@ func readLoop(client client.Client) {
 	}
 }
 
-func writeLoop(client client.Client) {
+func writeLoop(client wsclient.Client) {
 	shouldStop := false
 	for !shouldStop {
 		func() {

@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"io/ioutil"
 
-	"github.com/cosminrentea/gobbler/restclient"
+	"github.com/cosminrentea/gobbler/client/restclient"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/fcm"
 	"github.com/cosminrentea/gobbler/server/service"

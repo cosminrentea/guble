@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosminrentea/gobbler/restclient"
+	"github.com/cosminrentea/gobbler/client/restclient"
 	"github.com/cosminrentea/gobbler/server/configstring"
 	"github.com/cosminrentea/gobbler/testutil"
 )
