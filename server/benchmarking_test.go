@@ -10,10 +10,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/configstring"
 	"github.com/cosminrentea/gobbler/testutil"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 )
 
 type testgroup struct {
@@ -22,7 +23,7 @@ type testgroup struct {
 	addr                string
 	doneC               chan bool
 	messagesToSend      int
-	consumer, publisher client.Client
+	consumer, publisher wsclient.Client
 	topic               string
 }
 
@@ -118,11 +119,11 @@ func (tg *testgroup) Init() {
 	location := "ws://" + tg.addr + "/stream/user/xy"
 	//location := "ws://gathermon.mancke.net:8080/stream/"
 	//location := "ws://127.0.0.1:8080/stream/"
-	tg.consumer, err = client.Open(location, "http://localhost/", 10, false)
+	tg.consumer, err = wsclient.Open(location, "http://localhost/", 10, false)
 	if err != nil {
 		panic(err)
 	}
-	tg.publisher, err = client.Open(location, "http://localhost/", 10, false)
+	tg.publisher, err = wsclient.Open(location, "http://localhost/", 10, false)
 	if err != nil {
 		panic(err)
 	}

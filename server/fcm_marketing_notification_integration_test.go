@@ -1,14 +1,12 @@
 package server
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
-
-	"fmt"
-
-	"bytes"
-	"io/ioutil"
 
 	"github.com/cosminrentea/gobbler/client/restclient"
 	"github.com/cosminrentea/gobbler/server/connector"

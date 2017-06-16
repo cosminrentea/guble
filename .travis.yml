@@ -12,7 +12,7 @@ before_script:
   - psql -c 'create database guble;' -U postgres
   - cat /proc/cpuinfo
 script:
-  - GO_TEST_DISABLED=true go test -v -short $(go list ./... | grep -v /vendor/) && GO_TEST_DISABLED=true go test -v -tags cluster $(go list ./... | grep -v /vendor/)
+  - ./test.sh && ./test.sh cluster
 after_success:
   - scripts/generate_coverage.sh full_coverage.out
   - goveralls -coverprofile=full_coverage.out -service=travis-ci

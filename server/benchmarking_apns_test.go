@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/server/apns"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/router"

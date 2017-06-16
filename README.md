@@ -142,7 +142,7 @@ You can execute it within a running gobbler container and connect to the server:
 docker run -d --name gobbler cosminrentea/gobbler
 docker exec -it gobbler /usr/local/bin/gobbler-cli
 ```
-Visit the [`guble-cli` documentation](https://github.com/cosminrentea/gobbler/tree/master/guble-cli) for more details.
+Visit the [`gobbler-cli` documentation](https://github.com/cosminrentea/gobbler/tree/master/client/cli) for more details.
 
 # Build and Run
 Since Go makes it very easy to build from source, you can compile gobbler using a single command.
@@ -225,8 +225,8 @@ go test github.com/cosminrentea/gobbler/...
 
 # Clients
 The following clients are available:
-* __Commandline Client__: https://github.com/cosminrentea/gobbler/tree/master/gobbler-cli
 * __Go client library__: https://github.com/cosminrentea/gobbler/tree/master/client
+* __Commandline Client__: https://github.com/cosminrentea/gobbler/tree/master/client/cli
 
 # Protocol Reference
 

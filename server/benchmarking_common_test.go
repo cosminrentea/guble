@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/server/service"
 	"github.com/stretchr/testify/assert"
 	"strconv"

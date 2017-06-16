@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,9 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"encoding/json"
-
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/server/configstring"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/fcm"
@@ -166,9 +165,9 @@ func serviceSetUp(t *testing.T) (*service.Service, func()) {
 	}
 }
 
-func clientSetUp(t *testing.T, service *service.Service) client.Client {
+func clientSetUp(t *testing.T, service *service.Service) wsclient.Client {
 	wsURL := "ws://" + service.WebServer().GetAddr() + "/stream/user/user01"
-	c, err := client.Open(wsURL, "http://localhost/", 1000, false)
+	c, err := wsclient.Open(wsURL, "http://localhost/", 1000, false)
 	assert.NoError(t, err)
 	return c
 }
