@@ -12,7 +12,7 @@ mkdir ${COV_DIR}
 for dir in $(find . -maxdepth 10 -not -path './.git*' -not -path './vendor/*' -not -path '*/_test.go' -type d);
 do
     if ls ${dir}/*_test.go &> /dev/null; then
-        COVERAGE_OUT=`echo ${dir} | tr './' '-' `
+        COVERAGE_OUT=$(echo ${dir} | tr './' '-')
         echo "Generating test coverage for dir in file: ${dir} : ${COVERAGE_OUT}"
         GO_TEST_DISABLED=true go test -v -covermode=atomic -coverprofile=${COV_DIR}/${COVERAGE_OUT}.out ./${dir}
     fi
