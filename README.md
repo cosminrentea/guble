@@ -5,7 +5,7 @@ Gobbler is a simple user-facing messaging and data replication server written in
 [![Release](https://img.shields.io/github/release/cosminrentea/gobbler.svg)](https://github.com/cosminrentea/gobbler/releases/latest)
 [![Docker](https://img.shields.io/docker/pulls/cosminrentea/gobbler.svg)](https://hub.docker.com/r/cosminrentea/gobbler/)
 [![Build Status](https://api.travis-ci.org/cosminrentea/gobbler.svg?branch=master)](https://travis-ci.org/cosminrentea/gobbler)
-[![Coverage Status](https://coveralls.io/repos/cosminrentea/gobbler/badge.svg?branch=master&service=github)](https://coveralls.io/github/cosminrentea/gobbler?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/cosminrentea/gobbler/badge.svg?branch=master)](https://coveralls.io/github/cosminrentea/gobbler?branch=master)
 [![GoDoc](https://godoc.org/github.com/cosminrentea/gobbler?status.svg)](https://godoc.org/github.com/cosminrentea/gobbler)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cosminrentea/gobbler)](https://goreportcard.com/report/github.com/cosminrentea/gobbler)
 [![codebeat](https://codebeat.co/badges/363f61b0-caf3-440d-bd55-af92bdca42e1)](https://codebeat.co/projects/github-com-cosminrentea-gobbler-master)
