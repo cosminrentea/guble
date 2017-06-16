@@ -103,7 +103,7 @@ func (m *manager) Filter(filters map[string]string) (subscribers []Subscriber) {
 }
 
 func (m *manager) Add(s Subscriber) error {
-	logger.WithField("subscriber", s).WithField("lock", m.RWMutex).Info("Add subscriber started")
+	logger.WithField("subscriber", s).Info("Add subscriber started")
 
 	if m.Exists(s.Key()) {
 		return ErrSubscriberExists
