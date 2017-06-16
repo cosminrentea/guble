@@ -15,9 +15,9 @@ const (
 	testTopic = "/topic"
 )
 
-type sender func(c client.Client) error
+type sender func(c wsclient.Client) error
 
-func sendMessageSample(c client.Client) error {
+func sendMessageSample(c wsclient.Client) error {
 	return c.Send(testTopic, "test-body", "{id:id}")
 }
 
@@ -40,11 +40,11 @@ type benchParams struct {
 	end   time.Time
 }
 
-func (params *benchParams) createClients() (clients []client.Client) {
+func (params *benchParams) createClients() (clients []wsclient.Client) {
 	wsURL := "ws://" + params.service.WebServer().GetAddr() + "/stream/user/"
 	for clientID := 0; clientID < params.clients; clientID++ {
 		location := wsURL + strconv.Itoa(clientID)
-		c, err := client.Open(location, "http://localhost/", 1000, true)
+		c, err := wsclient.Open(location, "http://localhost/", 1000, true)
 		if err != nil {
 			assert.FailNow(params, "guble client could not connect to server")
 		}
