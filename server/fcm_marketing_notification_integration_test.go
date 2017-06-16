@@ -41,8 +41,9 @@ func Test_SendMarketingNotification(t *testing.T) {
 	receiveC := make(chan bool)
 
 	s := StartService()
-	a.NotNil(s)
-	time.Sleep(time.Millisecond * 400)
+	if s == nil {
+		a.FailNow("Service should not be nil")
+	}
 
 	var fcmConn connector.ResponsiveConnector
 	var ok bool
@@ -52,12 +53,16 @@ func Test_SendMarketingNotification(t *testing.T) {
 			break
 		}
 	}
-	a.True(ok, "There should be a module of type FCMConnector")
+	if !ok {
+		a.FailNow("There should be a module of type ResponsiveConnector for FCM")
+	}
 
 	// add a high timeout so the messages are processed slow
 	sender, err := fcm.CreateFcmSender(fcm.SuccessFCMResponse, receiveC, 10*time.Millisecond)
 	a.NoError(err)
 	fcmConn.SetSender(sender)
+
+	time.Sleep(time.Millisecond * 100)
 
 	//subscribe a client
 	subscribe(s, t)
@@ -84,7 +89,7 @@ func Test_SendMarketingNotification(t *testing.T) {
 
 	err = s.Stop()
 	//for ensuring the stop is done correctly.
-	time.Sleep(250 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	a.NoError(err)
 }
 
