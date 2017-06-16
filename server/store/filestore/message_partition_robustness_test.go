@@ -14,6 +14,7 @@ import (
 )
 
 func Test_MessagePartition_forConcurrentWriteAndReads(t *testing.T) {
+	testutil.EnableDebugForMethod()()
 	testutil.SkipIfShort(t)
 	// testutil.PprofDebug()
 	a := assert.New(t)
@@ -22,7 +23,7 @@ func Test_MessagePartition_forConcurrentWriteAndReads(t *testing.T) {
 
 	store, _ := newMessagePartition(dir, "myMessages")
 
-	n := 2000 * 100
+	n := 500 * 100
 	nReaders := 7
 
 	writerDone := make(chan bool)
