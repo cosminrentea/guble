@@ -234,3 +234,7 @@ func assertClusterRemotes(a *assert.Assertions) {
 	ipList = append(ipList, ip2)
 	a.Equal(ipList, *Config.Cluster.Remotes)
 }
+
+func TestPrefixEnvar(t *testing.T) {
+	assert.Equal(t, "GUBLE_SOMEVAR", g("SOMEVAR"))
+}

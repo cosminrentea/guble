@@ -1,5 +1,5 @@
-hash: c151c13e734cd1886491ba6c72fa76214e0896966b999143a7b6346a62ff592c
-updated: 2017-04-27T12:34:59.885541052+03:00
+hash: 1b823cbadc6dd3b9c08b6ebf2c4c45b5c338819a60413f8e8e5fd13438457828
+updated: 2017-06-14T16:35:13.017487152+03:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -17,6 +17,8 @@ imports:
   - quantile
 - name: github.com/Bogh/gcm
   version: 0fd26bac1a88442cee6dcdc921fe1baf6349838c
+- name: github.com/cosminrentea/expvarmetrics
+  version: 52359e494cd1ead0f9f037b7e43151fc523599f8
 - name: github.com/cosminrentea/go-uuid
   version: 06e37d2c383ef69d650630e0fd56b5075428c3a2
 - name: github.com/davecgh/go-spew

@@ -14,15 +14,17 @@ import (
 )
 
 func Test_MessagePartition_forConcurrentWriteAndReads(t *testing.T) {
+	testutil.EnableDebugForMethod()()
 	testutil.SkipIfShort(t)
 	// testutil.PprofDebug()
 	a := assert.New(t)
-	dir, _ := ioutil.TempDir("", "guble_partition_store_test")
+
+	dir, _ := ioutil.TempDir(os.TempDir(), "guble_partition_store_test")
 	defer os.RemoveAll(dir)
 
 	store, _ := newMessagePartition(dir, "myMessages")
 
-	n := 2000 * 100
+	n := 500 * 100
 	nReaders := 7
 
 	writerDone := make(chan bool)
