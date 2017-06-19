@@ -47,16 +47,22 @@ func TestNew_WithoutKVStore(t *testing.T) {
 func TestConn_HandleResponseOnSendError(t *testing.T) {
 	_, finish := testutil.NewMockCtrl(t)
 	defer finish()
+	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	//given
-	c, _ := newAPNSConnector(t, nil)
+	c, _ := newAPNSConnector(t)
 	mRequest := NewMockRequest(testutil.MockCtrl)
 	message := &protocol.Message{
 		HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`,
 		ID:         42,
 	}
-	mRequest.EXPECT().Message().Return(message)
+	route := testRoute()
+
+	mRequest.EXPECT().Message().Return(message).AnyTimes()
+	mSubscriber := NewMockSubscriber(testutil.MockCtrl)
+	mRequest.EXPECT().Subscriber().Return(mSubscriber).AnyTimes()
+	mSubscriber.EXPECT().Route().Return(route).AnyTimes()
 
 	time.Sleep(100 * time.Millisecond)
 	//when
@@ -69,27 +75,32 @@ func TestConn_HandleResponseOnSendError(t *testing.T) {
 func TestConn_HandleResponse(t *testing.T) {
 	_, finish := testutil.NewMockCtrl(t)
 	defer finish()
+	defer testutil.EnableDebugForMethod()()
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t, nil)
+	c, mKVS := newAPNSConnector(t)
+
+	route := testRoute()
 
 	mSubscriber := NewMockSubscriber(testutil.MockCtrl)
 	mSubscriber.EXPECT().SetLastID(gomock.Any())
 	mSubscriber.EXPECT().Key().Return("key").AnyTimes()
 	mSubscriber.EXPECT().Encode().Return([]byte("{}"), nil).AnyTimes()
-	mKVS.EXPECT().Put(schema, "key", []byte("{}")).Times(2)
+	mSubscriber.EXPECT().Route().Return(route).AnyTimes()
+	mKVS.EXPECT().Put(schema, "key", []byte("{}")).AnyTimes()
 
 	c.Manager().Add(mSubscriber)
-
 	message := &protocol.Message{
 		ID:         42,
 		HeaderJSON: `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
+		Body:       []byte("{}"),
 	}
+
 	mRequest := NewMockRequest(testutil.MockCtrl)
 	mRequest.EXPECT().Message().Return(message).AnyTimes()
 	mRequest.EXPECT().Subscriber().Return(mSubscriber).AnyTimes()
-
+	mSubscriber.EXPECT().Route().Return(route).AnyTimes()
 	response := &apns2.Response{
 		ApnsID:     "id-life",
 		StatusCode: 200,
@@ -109,7 +120,7 @@ func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t, nil)
+	c, mKVS := newAPNSConnector(t)
 
 	removeForReasons := []string{
 		apns2.ReasonMissingDeviceToken,
@@ -117,6 +128,7 @@ func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 		apns2.ReasonDeviceTokenNotForTopic,
 		apns2.ReasonUnregistered,
 	}
+	route := testRoute()
 	for _, reason := range removeForReasons {
 		message := &protocol.Message{
 			ID:         42,
@@ -127,6 +139,7 @@ func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 		mSubscriber.EXPECT().Cancel()
 		mSubscriber.EXPECT().Key().Return("key").AnyTimes()
 		mSubscriber.EXPECT().Encode().Return([]byte("{}"), nil).AnyTimes()
+		mSubscriber.EXPECT().Route().Return(route).AnyTimes()
 		mKVS.EXPECT().Put(schema, "key", []byte("{}")).Times(2)
 		mKVS.EXPECT().Delete(schema, "key")
 
@@ -156,7 +169,8 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t, nil)
+	c, mKVS := newAPNSConnector(t)
+	route := testRoute()
 
 	noActionForReasons := []string{
 		apns2.ReasonPayloadEmpty,
@@ -190,6 +204,7 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 		mSubscriber.EXPECT().Key().Return("key").AnyTimes()
 		mSubscriber.EXPECT().Encode().Return([]byte("{}"), nil).AnyTimes()
 		mSubscriber.EXPECT().Cancel()
+		mSubscriber.EXPECT().Route().Return(route).AnyTimes()
 		mKVS.EXPECT().Put(schema, "key", []byte("{}")).Times(2)
 		mKVS.EXPECT().Delete(schema, "key")
 
@@ -215,7 +230,7 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 	}
 }
 
-func newAPNSConnector(t *testing.T, producer *MockProducer) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
+func newAPNSConnector(t *testing.T) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
 	mKVS = NewMockKVStore(testutil.MockCtrl)
 	mRouter := NewMockRouter(testutil.MockCtrl)
 	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
@@ -233,9 +248,35 @@ func newAPNSConnector(t *testing.T, producer *MockProducer) (c connector.Respons
 		CertificatePassword: &password,
 		CertificateBytes:    &bytes,
 	}
+	c, err := New(mRouter, mSender, cfg, nil, "sub_reporting", "apns_Reporting")
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+	return
+}
+
+func newAPNSConnectorForReporting(t *testing.T, producer *MockProducer) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
+	mKVS = NewMockKVStore(testutil.MockCtrl)
+	mRouter := NewMockRouter(testutil.MockCtrl)
+	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
+	mSender := NewMockSender(testutil.MockCtrl)
+
+	prefix := "/apns/"
+	workers := 1
+	intervalMetrics := false
+	password := "test"
+	bytes := []byte("test")
+	cfg := Config{
+		Prefix:              &prefix,
+		Workers:             &workers,
+		IntervalMetrics:     &intervalMetrics,
+		CertificatePassword: &password,
+		CertificateBytes:    &bytes,
+	}
+
 	c, err := New(mRouter, mSender, cfg, producer, "sub_reporting", "apns_Reporting")
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
+
 	return
 }
 
@@ -258,7 +299,7 @@ func TestConn_HandleResponseReporting(t *testing.T) {
 	mockProducer := NewMockProducer(ctrl)
 
 	//given
-	c, mKVS := newAPNSConnector(t, mockProducer)
+	c, mKVS := newAPNSConnectorForReporting(t, mockProducer)
 
 	route := testRoute()
 
