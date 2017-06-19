@@ -5,7 +5,6 @@ import:
 - package: github.com/Sirupsen/logrus
 - package: github.com/azer/snakecase
 - package: github.com/cosminrentea/go-uuid
-- package: github.com/cosminrentea/expvarmetrics
 - package: github.com/docker/distribution
   subpackages:
   - health
@@ -43,3 +42,4 @@ import:
   subpackages:
   - http2
 - package: gopkg.in/alecthomas/kingpin.v2
+- package: github.com/cosminrentea/expvarmetrics

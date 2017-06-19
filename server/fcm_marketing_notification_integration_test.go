@@ -41,8 +41,9 @@ func Test_SendMarketingNotification(t *testing.T) {
 	receiveC := make(chan bool)
 
 	s := StartService()
-	a.NotNil(s)
-	time.Sleep(time.Millisecond * 400)
+	if s == nil {
+		a.FailNow("Service should not be nil")
+	}
 
 	var fcmConn connector.ResponsiveConnector
 	var ok bool
@@ -52,16 +53,20 @@ func Test_SendMarketingNotification(t *testing.T) {
 			break
 		}
 	}
-	a.True(ok, "There should be a module of type FCMConnector")
+	if !ok {
+		a.FailNow("There should be a module of type ResponsiveConnector for FCM")
+	}
 
 	// add a high timeout so the messages are processed slow
 	sender, err := fcm.CreateFcmSender(fcm.SuccessFCMResponse, receiveC, 10*time.Millisecond)
 	a.NoError(err)
 	fcmConn.SetSender(sender)
 
-	//subscribe a client
+	time.Sleep(time.Millisecond * 100)
 
-	subcribe(s, t)
+	//subscribe a client
+	subscribe(s, t)
+
 	topic := "marketing_notifications_general"
 	body := []byte(`{"to":"","data":{"deep_link":"rewe://angebote","notification_body":"Die größte Sonderangebot!","notification_title":"REWE","time":"2016-09-08T08:25:13+02:00","type":"general"}`)
 	userID := "samsa"
@@ -84,11 +89,11 @@ func Test_SendMarketingNotification(t *testing.T) {
 
 	err = s.Stop()
 	//for ensuring the stop is done correctly.
-	time.Sleep(250 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	a.NoError(err)
-
 }
-func subcribe(s *service.Service, t *testing.T) {
+
+func subscribe(s *service.Service, t *testing.T) {
 	a := assert.New(t)
 	topic := "marketing_notifications_general"
 	url := fmt.Sprintf("http://%s/fcm/%s/%s/%s", s.WebServer().GetAddr(), "samsa", "1337", topic)
