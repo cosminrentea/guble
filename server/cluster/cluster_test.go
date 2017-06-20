@@ -1,10 +1,9 @@
 package cluster
 
 import (
-	"github.com/cosminrentea/gobbler/server/store/filestore"
-
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/store"
+	"github.com/cosminrentea/gobbler/server/store/filestore"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/assert"

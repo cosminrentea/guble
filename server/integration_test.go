@@ -1,10 +1,6 @@
 package server
 
 import (
-	"github.com/cosminrentea/gobbler/client"
-	"github.com/cosminrentea/gobbler/protocol"
-	"github.com/cosminrentea/gobbler/server/service"
-
 	"github.com/stretchr/testify/assert"
 
 	"bytes"
@@ -16,12 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosminrentea/gobbler/restclient"
+	"github.com/cosminrentea/gobbler/client/wsclient"
+	"github.com/cosminrentea/gobbler/client/restclient"
+	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/configstring"
+	"github.com/cosminrentea/gobbler/server/service"
 	"github.com/cosminrentea/gobbler/testutil"
 )
 
-func initServerAndClients(t *testing.T) (*service.Service, client.Client, client.Client, func()) {
+func initServerAndClients(t *testing.T) (*service.Service, wsclient.Client, wsclient.Client, func()) {
 	*Config.HttpListen = "localhost:0"
 	*Config.KVS = "memory"
 	*Config.WS.Enabled = true
@@ -33,14 +32,14 @@ func initServerAndClients(t *testing.T) (*service.Service, client.Client, client
 	time.Sleep(time.Millisecond * 100)
 
 	var err error
-	client1, err := client.Open("ws://"+s.WebServer().GetAddr()+"/stream/user/user1", "http://localhost", 1, false)
+	client1, err := wsclient.Open("ws://"+s.WebServer().GetAddr()+"/stream/user/user1", "http://localhost", 1, false)
 	assert.NoError(t, err)
 
 	checkConnectedNotificationJSON(t, "user1",
 		expectStatusMessage(t, client1, protocol.SUCCESS_CONNECTED, "You are connected to the server."),
 	)
 
-	client2, err := client.Open("ws://"+s.WebServer().GetAddr()+"/stream/user/user2", "http://localhost", 1, false)
+	client2, err := wsclient.Open("ws://"+s.WebServer().GetAddr()+"/stream/user/user2", "http://localhost", 1, false)
 	assert.NoError(t, err)
 	checkConnectedNotificationJSON(t, "user2",
 		expectStatusMessage(t, client2, protocol.SUCCESS_CONNECTED, "You are connected to the server."),
@@ -57,7 +56,7 @@ func initServerAndClients(t *testing.T) (*service.Service, client.Client, client
 	}
 }
 
-func expectStatusMessage(t *testing.T, client client.Client, name string, arg string) string {
+func expectStatusMessage(t *testing.T, client wsclient.Client, name string, arg string) string {
 	select {
 	case notify := <-client.StatusMessages():
 		assert.Equal(t, name, notify.Name)
