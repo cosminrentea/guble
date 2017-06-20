@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/server/apns"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/router"
@@ -171,7 +171,7 @@ func (params *benchParams) throughputAPNS() {
 
 	// send all messages, or fail on any error
 	for _, cl := range clients {
-		go func(cl client.Client) {
+		go func(cl wsclient.Client) {
 			for i := 0; i < params.N; i++ {
 				err := params.sender(cl)
 				if err != nil {

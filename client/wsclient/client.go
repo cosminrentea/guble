@@ -1,4 +1,4 @@
-package client
+package wsclient
 
 import (
 	"github.com/cosminrentea/gobbler/protocol"
@@ -12,7 +12,7 @@ import (
 )
 
 var logger = log.WithFields(log.Fields{
-	"module": "client",
+	"module": "wsclient",
 })
 
 type WSConnection interface {
