@@ -145,7 +145,9 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 			gcm.GcmSendEndpoint = *Config.FCM.Endpoint
 		}
 		sender := fcm.NewSender(*Config.FCM.APIKey)
-		if fcmConn, err := fcm.New(router, sender, Config.FCM, kafkaProducer, *Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic); err != nil {
+		if fcmConn, err := fcm.New(router, sender, Config.FCM, kafkaProducer,
+			*Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic,
+			*Config.KafkaReportingConfig.FcmReportingTopic); err != nil {
 			logger.WithError(err).Error("Error creating FCM connector")
 		} else {
 			modules = append(modules, fcmConn)

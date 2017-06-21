@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/testutil"
 	"github.com/golang/mock/gomock"
@@ -51,7 +52,7 @@ func TestConn_HandleResponseOnSendError(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, _ := newAPNSConnector(t)
+	c, _ := newAPNSConnector(t,nil)
 	mRequest := NewMockRequest(testutil.MockCtrl)
 	message := &protocol.Message{
 		HeaderJSON: `{"Correlation-Id": "7sdks723ksgqn"}`,
@@ -79,7 +80,7 @@ func TestConn_HandleResponse(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t, nil)
 
 	route := testRoute()
 
@@ -120,7 +121,7 @@ func TestNew_HandleResponseHandleSubscriber(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t,nil)
 
 	removeForReasons := []string{
 		apns2.ReasonMissingDeviceToken,
@@ -169,7 +170,7 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 	a := assert.New(t)
 
 	//given
-	c, mKVS := newAPNSConnector(t)
+	c, mKVS := newAPNSConnector(t,nil)
 	route := testRoute()
 
 	noActionForReasons := []string{
@@ -230,31 +231,7 @@ func TestNew_HandleResponseDoNotHandleSubscriber(t *testing.T) {
 	}
 }
 
-func newAPNSConnector(t *testing.T) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
-	mKVS = NewMockKVStore(testutil.MockCtrl)
-	mRouter := NewMockRouter(testutil.MockCtrl)
-	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
-	mSender := NewMockSender(testutil.MockCtrl)
-
-	prefix := "/apns/"
-	workers := 1
-	intervalMetrics := false
-	password := "test"
-	bytes := []byte("test")
-	cfg := Config{
-		Prefix:              &prefix,
-		Workers:             &workers,
-		IntervalMetrics:     &intervalMetrics,
-		CertificatePassword: &password,
-		CertificateBytes:    &bytes,
-	}
-	c, err := New(mRouter, mSender, cfg, nil, "sub_reporting", "apns_Reporting")
-	assert.NoError(t, err)
-	assert.NotNil(t, c)
-	return
-}
-
-func newAPNSConnectorForReporting(t *testing.T, producer *MockProducer) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
+func newAPNSConnector(t *testing.T, producer kafka.Producer) (c connector.ResponsiveConnector, mKVS *MockKVStore) {
 	mKVS = NewMockKVStore(testutil.MockCtrl)
 	mRouter := NewMockRouter(testutil.MockCtrl)
 	mRouter.EXPECT().KVStore().Return(mKVS, nil).AnyTimes()
@@ -299,7 +276,7 @@ func TestConn_HandleResponseReporting(t *testing.T) {
 	mockProducer := NewMockProducer(ctrl)
 
 	//given
-	c, mKVS := newAPNSConnectorForReporting(t, mockProducer)
+	c, mKVS := newAPNSConnector(t, mockProducer)
 
 	route := testRoute()
 

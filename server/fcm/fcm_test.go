@@ -11,6 +11,7 @@ import (
 	"github.com/Bogh/gcm"
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/connector"
+	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/kvstore"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/cosminrentea/gobbler/testutil"
@@ -39,7 +40,7 @@ func TestConnector_GetErrorMessageFromFCM(t *testing.T) {
 	defer finish()
 
 	a := assert.New(t)
-	fcm, mocks := testFCM(t, true)
+	fcm, mocks := testFCM(t, true, nil)
 
 	err := fcm.Start()
 	a.NoError(err)
@@ -103,7 +104,7 @@ func TestFCMFormatMessage(t *testing.T) {
 
 	var subRoute *router.Route
 
-	fcm, mocks := testFCM(t, false)
+	fcm, mocks := testFCM(t, false, nil)
 	fcm.Start()
 	defer fcm.Stop()
 	time.Sleep(50 * time.Millisecond)
@@ -181,7 +182,108 @@ func TestFCMFormatMessage(t *testing.T) {
 	}
 }
 
-func testFCM(t *testing.T, mockStore bool) (connector.ResponsiveConnector, *mocks) {
+func TestConn_HandleResponseReporting(t *testing.T) {
+	ctrl, finish := testutil.NewMockCtrl(t)
+	defer finish()
+	mockProducer := NewMockProducer(ctrl)
+	a := assert.New(t)
+	fcm, mocks := testFCM(t, true, mockProducer)
+
+	err := fcm.Start()
+	a.NoError(err)
+
+	var route *router.Route
+
+	mocks.router.EXPECT().Subscribe(gomock.Any()).Do(func(r *router.Route) (*router.Route, error) {
+		a.Equal("/topic", string(r.Path))
+		a.Equal("user_id", r.Get("user_id"))
+		a.Equal("device_id", r.Get(deviceTokenKey))
+		route = r
+		return r, nil
+	})
+
+
+	mockProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
+		a.Equal("sub_topic", topic)
+	})
+
+	// put a dummy FCM message with minimum information
+	postSubscription(t, fcm, "user_id", "device_id", "topic")
+	time.Sleep(100 * time.Millisecond)
+	a.NoError(err)
+	a.NotNil(route)
+
+
+
+	// expect the route unsubscribed
+	mocks.router.EXPECT().Unsubscribe(gomock.Any()).Do(func(route *router.Route) {
+		a.Equal("/topic", string(route.Path))
+		a.Equal("device_id", route.Get(deviceTokenKey))
+	})
+
+	// expect the route subscribe with the new canonicalID from replaceSubscriptionWithCanonicalID
+	mocks.router.EXPECT().Subscribe(gomock.Any()).Do(func(route *router.Route) {
+		a.Equal("/topic", string(route.Path))
+		a.Equal("user_id", route.Get("user_id"))
+		appid := route.Get(deviceTokenKey)
+		a.Equal("fcmCanonicalID", appid)
+	})
+	// mocks.store.EXPECT().MaxMessageID(gomock.Any()).Return(uint64(4), nil)
+
+	message := &protocol.Message{
+		UserID:     "user_id",
+		ID:         42,
+		HeaderJSON: `{"Content-Type": "text/plain", "Correlation-Id": "7sdks723ksgqn"}`,
+		Body: []byte(`{
+		"to":"",
+		"data":{
+			"time":"2016-09-08T08:25:13+02:00",
+			"type":"general",
+			"notification_title":"Valid Title",
+			"notification_body":"Die größte Sonderangebot!",
+			"deep_link":"rewe://angebote"
+		}
+	}`),
+	}
+
+	mockProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
+		a.Equal("fcm_topic", topic)
+
+		var event FcmEvent
+		err := json.Unmarshal(bytes, &event)
+		a.NoError(err)
+		a.Equal("pn_reporting_fcm", event.Type)
+		a.Equal("Fail", event.Payload.Status)
+		a.Equal("5", event.Payload.CanonicalID)
+		a.Equal("7sdks723ksgqn", event.Payload.CorrelationID)
+		a.Equal("device_id", event.Payload.DeviceID)
+		a.Equal("user_id", event.Payload.UserID)
+		a.Equal("Valid Title", event.Payload.NotificationTitle)
+		a.Equal("Die größte Sonderangebot!", event.Payload.NotificationBody)
+		a.Equal("rewe://angebote", event.Payload.DeepLink)
+		a.Equal("general", event.Payload.Topic)
+		a.Equal("InvalidRegistration", event.Payload.ErrorText)
+	})
+
+	response := new(gcm.Response)
+	err = json.Unmarshal([]byte(ErrorFCMResponse), response)
+	a.NoError(err)
+	mocks.gcmSender.EXPECT().Send(gomock.Any()).Return(response, nil)
+
+	// send the message into the subscription route channel
+	route.Deliver(message, true)
+
+	// wait before closing the FCM connector
+	time.Sleep(100 * time.Millisecond)
+
+	err = fcm.Stop()
+	a.NoError(err)
+
+	//then
+	a.NoError(err)
+}
+
+func testFCM(t *testing.T, mockStore bool, producer kafka.Producer) (connector.ResponsiveConnector, *mocks) {
 	mcks := new(mocks)
 
 	mcks.router = NewMockRouter(testutil.MockCtrl)
@@ -207,8 +309,9 @@ func testFCM(t *testing.T, mockStore bool) (connector.ResponsiveConnector, *mock
 		Prefix:          &prefix,
 		IntervalMetrics: &intervalMetrics,
 	},
-		nil,
+		producer,
 		"sub_topic",
+		"fcm_topic",
 	)
 	assert.NoError(t, err)
 	if mockStore {
