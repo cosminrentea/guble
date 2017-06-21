@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,13 +13,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/fcm"
-
-	"errors"
-
-	"github.com/cosminrentea/gobbler/client"
 	"github.com/cosminrentea/gobbler/server/service"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -122,12 +121,12 @@ func newTestClusterNode(t *testing.T, nodeConfig testClusterNodeConfig) *testClu
 	}
 }
 
-func (tcn *testClusterNode) client(userID string, bufferSize int, autoReconnect bool) (client.Client, error) {
+func (tcn *testClusterNode) client(userID string, bufferSize int, autoReconnect bool) (wsclient.Client, error) {
 	serverAddr := tcn.Service.WebServer().GetAddr()
 	wsURL := "ws://" + serverAddr + "/stream/user/" + userID
 	httpURL := "http://" + serverAddr
 
-	return client.Open(wsURL, httpURL, bufferSize, autoReconnect)
+	return wsclient.Open(wsURL, httpURL, bufferSize, autoReconnect)
 }
 
 func (tcn *testClusterNode) Subscribe(topic, id string) {

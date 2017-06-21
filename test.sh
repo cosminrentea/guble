@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-GO_TEST_DISABLED=true go test -v -short $(go list ./... | grep -v /vendor/)
+GO_TEST_DISABLED=true go test -v -short -tags=$1 $(go list ./... | grep -v /vendor/)
 TESTRESULT=$?
 
 RED='\033[0;31m'
@@ -15,7 +15,7 @@ case ${TESTRESULT} in
   MESSAGE="${RED}Test(s) failing"
   ;;
 2)
-  MESSAGE="${RED}Compilation error"
+  MESSAGE="${RED}Compilation error(s)"
   ;;
 *)
   MESSAGE="${RED}Error(s)"

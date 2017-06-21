@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/cosminrentea/gobbler/client"
+	"github.com/cosminrentea/gobbler/client/wsclient"
 	"github.com/cosminrentea/gobbler/testutil"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,7 @@ func Benchmark_E2E_Fetch_HelloWorld_Messages(b *testing.B) {
 
 	// fill the topic
 	location := "ws://" + service.WebServer().GetAddr() + "/stream/user/xy"
-	c, err := client.Open(location, "http://localhost/", 1000, true)
+	c, err := wsclient.Open(location, "http://localhost/", 1000, true)
 	a.NoError(err)
 
 	for i := 1; i <= b.N; i++ {

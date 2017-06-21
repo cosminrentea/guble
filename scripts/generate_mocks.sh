@@ -20,6 +20,14 @@ function replace {
 
 MOCKGEN=$GOPATH/bin/mockgen
 
+
+# wsclient mocks
+$MOCKGEN  -self_package wsclient -package wsclient \
+      -destination client/wsclient/mocks_wsclient_gen_test.go \
+      github.com/cosminrentea/gobbler/client/wsclient \
+      WSConnection,Client
+replace "client/wsclient/mocks_wsclient_gen_test.go" "wsclient \"github.com\/cosminrentea\/gobbler\/client\/wsclient\"" "wsclient\."
+
 # server/service mocks
 $MOCKGEN  -self_package service -package service \
       -destination server/service/mocks_router_gen_test.go \
@@ -52,13 +60,6 @@ $MOCKGEN -self_package router -package router \
       -destination server/router/mocks_checker_gen_test.go \
       github.com/docker/distribution/health \
       Checker &
-
-# client mocks
-$MOCKGEN  -self_package client -package client \
-      -destination client/mocks_client_gen_test.go \
-      github.com/cosminrentea/gobbler/client \
-      WSConnection,Client
-replace "client/mocks_client_gen_test.go" "client \"github.com\/cosminrentea\/gobbler\/client\"" "client\."
 
 # server/apns mocks
 $MOCKGEN -package apns \
@@ -127,8 +128,6 @@ $MOCKGEN -package server \
       -destination server/mocks_apns_pusher_gen_test.go \
       github.com/cosminrentea/gobbler/server/apns \
       Pusher &
-
-
 
 # server/connector mocks
 $MOCKGEN -self_package connector -package connector \

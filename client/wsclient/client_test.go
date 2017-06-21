@@ -1,4 +1,4 @@
-package client
+package wsclient
 
 import (
 	"github.com/cosminrentea/gobbler/testutil"
