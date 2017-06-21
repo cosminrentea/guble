@@ -202,7 +202,6 @@ func TestConn_HandleResponseReporting(t *testing.T) {
 		return r, nil
 	})
 
-
 	mockProducer.EXPECT().Report(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(topic string, bytes []byte, key string) {
 		a.Equal("sub_topic", topic)
 	})
@@ -212,8 +211,6 @@ func TestConn_HandleResponseReporting(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	a.NoError(err)
 	a.NotNil(route)
-
-
 
 	// expect the route unsubscribed
 	mocks.router.EXPECT().Unsubscribe(gomock.Any()).Do(func(route *router.Route) {
@@ -250,6 +247,7 @@ func TestConn_HandleResponseReporting(t *testing.T) {
 		a.Equal("fcm_topic", topic)
 
 		var event FcmEvent
+
 		err := json.Unmarshal(bytes, &event)
 		a.NoError(err)
 		a.Equal("pn_reporting_fcm", event.Type)
