@@ -98,8 +98,7 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 
 	event := FcmEvent{
-		Type:    "pn_reporting_fcm",
-		Payload: FcmEventPayload{},
+		Payload: kafka.PushEventPayload{},
 	}
 
 	errFill := event.fillApnsEvent(request)
@@ -126,8 +125,6 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 		pResponseErrors.Inc()
 		return fmt.Errorf("Invalid FCM Response")
 	}
-
-	event.Payload.CanonicalID = fmt.Sprintf("%d", response.CanonicalIDs)
 
 	l.WithField("messageID", message.ID).Debug("Delivered message to FCM")
 

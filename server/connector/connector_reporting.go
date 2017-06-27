@@ -14,11 +14,11 @@ const (
 )
 
 type SubscribeUnsubscribePayload struct {
-	Service   string `json:"service"`
-	Topic     string `json:"topic"`
-	DeviceID  string `json:"device_id"`
-	UserID    string `json:"user_id"`
-	Action    string `json:"action"`
+	Service  string `json:"service"`
+	Topic    string `json:"topic"`
+	DeviceID string `json:"device_id"`
+	UserID   string `json:"user_id"`
+	Action   string `json:"action"`
 }
 
 type SubscribeUnsubscribeEvent struct {
@@ -57,6 +57,7 @@ func (event *SubscribeUnsubscribeEvent) report(kafkaProducer kafka.Producer, kaf
 }
 
 func (event *SubscribeUnsubscribeEvent) fillParams(params map[string]string) error {
+	event.Type = "push_subscription_information"
 	deviceID, ok := params[deviceTokenKey]
 	if !ok {
 		return errInvalidParams

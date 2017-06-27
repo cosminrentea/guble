@@ -104,8 +104,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 
 	event := ApnsEvent{
-		Type:    "pn_reporting_apns",
-		Payload: ApnsEventPayload{},
+		Payload: kafka.PushEventPayload{},
 	}
 	errFill := event.fillApnsEvent(request)
 	if errFill != nil {
@@ -141,7 +140,6 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 		return err
 	}
 
-	event.Payload.ApnsID = r.ApnsID
 	if r.Sent() {
 		l.WithField("id", r.ApnsID).Info("APNS notification was successfully sent")
 		mTotalSentMessages.Add(1)

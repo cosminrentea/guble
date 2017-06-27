@@ -12,24 +12,11 @@ import (
 	"github.com/cosminrentea/gobbler/server/kafka"
 )
 
-type ApnsEventPayload struct {
-	Topic             string `json:"topic"`
-	Status            string `json:"status"`
-	ErrorText         string `json:"error_text"`
-	ApnsID            string `json:"apns_id"`
-	CorrelationID     string `json:"correlation_id"`
-	UserID            string `json:"user_id"`
-	DeviceID          string `json:"device_id"`
-	NotificationBody  string `json:"notification_body"`
-	NotificationTitle string `json:"notification_title"`
-	DeepLink          string `json:"deep_link"`
-}
-
 type ApnsEvent struct {
-	Id      string           `json:"id"`
-	Time    string           `json:"time"`
-	Type    string           `json:"type"`
-	Payload ApnsEventPayload `json:"payload"`
+	Id      string                 `json:"id"`
+	Time    string                 `json:"time"`
+	Type    string                 `json:"type"`
+	Payload kafka.PushEventPayload `json:"payload"`
 }
 
 var (
@@ -38,8 +25,7 @@ var (
 )
 
 func (ev *ApnsEvent) fillApnsEvent(request connector.Request) error {
-
-	ev.Payload.CorrelationID = request.Message().CorrelationID()
+	ev.Type = "push_notification_information"
 
 	deviceID := request.Subscriber().Route().Get(deviceIDKey)
 	ev.Payload.DeviceID = deviceID

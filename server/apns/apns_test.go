@@ -317,10 +317,8 @@ func TestConn_HandleResponseReporting(t *testing.T) {
 		var event ApnsEvent
 		err := json.Unmarshal(bytes, &event)
 		a.NoError(err)
-		a.Equal("pn_reporting_apns", event.Type)
+		a.Equal("push_notification_information", event.Type)
 		a.Equal("Success", event.Payload.Status)
-		a.Equal("apns_id", event.Payload.ApnsID)
-		a.Equal("7sdks723ksgqn", event.Payload.CorrelationID)
 		a.Equal("device_id", event.Payload.DeviceID)
 		a.Equal("user_id", event.Payload.UserID)
 		a.Equal("Valid Title", event.Payload.NotificationTitle)
