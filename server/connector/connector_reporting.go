@@ -19,7 +19,6 @@ type SubscribeUnsubscribePayload struct {
 	DeviceID  string `json:"device_id"`
 	UserID    string `json:"user_id"`
 	Action    string `json:"action"`
-	ErrorText string `json:"error_text"`
 }
 
 type SubscribeUnsubscribeEvent struct {

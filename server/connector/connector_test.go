@@ -408,7 +408,7 @@ func Test_ReportSubscribe(t *testing.T) {
 		var event SubscribeUnsubscribeEvent
 		err = json.Unmarshal(bytes, &event)
 		a.NoError(err)
-		a.Equal("marketing_notification_subscription_information", event.Type)
+		a.Equal("push_subscription_information", event.Type)
 		a.Equal("subscribe", event.Payload.Action)
 		a.Equal("test", event.Payload.Service)
 		a.Equal("device1", event.Payload.DeviceID)
@@ -467,7 +467,7 @@ func Test_ReportUnSubscribe(t *testing.T) {
 		var event SubscribeUnsubscribeEvent
 		err = json.Unmarshal(bytes, &event)
 		a.NoError(err)
-		a.Equal("marketing_notification_subscription_information", event.Type)
+		a.Equal("push_subscription_information", event.Type)
 		a.Equal("subscribe", event.Payload.Action)
 		a.Equal("test", event.Payload.Service)
 		a.Equal("device1", event.Payload.DeviceID)
@@ -492,7 +492,7 @@ func Test_ReportUnSubscribe(t *testing.T) {
 		var event SubscribeUnsubscribeEvent
 		err = json.Unmarshal(bytes, &event)
 		a.NoError(err)
-		a.Equal("marketing_notification_subscription_information", event.Type)
+		a.Equal("push_subscription_information", event.Type)
 		a.Equal("unsubscribe", event.Payload.Action)
 		a.Equal("test", event.Payload.Service)
 		a.Equal("device1", event.Payload.DeviceID)

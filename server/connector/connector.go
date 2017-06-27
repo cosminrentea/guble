@@ -194,7 +194,7 @@ func (c *connector) GetList(w http.ResponseWriter, req *http.Request) {
 func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 
 	event := SubscribeUnsubscribeEvent{
-		Type: "marketing_notification_subscription_information",
+		Type: "push_subscription_information",
 		Time: time.Now().UTC().Format(time.RFC3339),
 		Payload: SubscribeUnsubscribePayload{
 			Service: c.config.Name,
@@ -241,7 +241,7 @@ func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 func (c *connector) Delete(w http.ResponseWriter, req *http.Request) {
 
 	event := SubscribeUnsubscribeEvent{
-		Type: "marketing_notification_subscription_information",
+		Type: "push_subscription_information",
 		Time: time.Now().UTC().Format(time.RFC3339),
 		Payload: SubscribeUnsubscribePayload{
 			Service: c.config.Name,
