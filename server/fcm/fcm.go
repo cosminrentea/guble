@@ -36,10 +36,11 @@ type Config struct {
 type fcm struct {
 	Config
 	connector.Connector
+	fcmKafkaReportingTopic string
 }
 
 // New creates a new *fcm and returns it as an connector.ResponsiveConnector
-func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string) (connector.ResponsiveConnector, error) {
+func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string, fcmKafkaReportingTopic string) (connector.ResponsiveConnector, error) {
 	baseConn, err := connector.NewConnector(router, sender, connector.Config{
 		Name:       "fcm",
 		Schema:     schema,
@@ -56,7 +57,7 @@ func New(router router.Router, sender connector.Sender, config Config, kafkaProd
 		return nil, err
 	}
 
-	f := &fcm{config, baseConn}
+	f := &fcm{config, baseConn,fcmKafkaReportingTopic}
 	f.SetResponseHandler(f)
 	return f, nil
 }
@@ -96,6 +97,16 @@ func (f *fcm) startIntervalMetric(m metrics.Map, td time.Duration) {
 func (f *fcm) HandleResponse(request connector.Request, responseIface interface{}, metadata *connector.Metadata, err error) error {
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
 
+	event := FcmEvent{
+		Payload: kafka.PushEventPayload{},
+	}
+
+	errFill := event.fillApnsEvent(request)
+	if errFill != nil {
+		logger.WithError(errFill).Error("Error filling event")
+	}
+
+
 	if err != nil && !isValidResponseError(err) {
 		l.WithField("error", err.Error()).Error("Error sending message to FCM")
 		mTotalSendErrors.Add(1)
@@ -124,17 +135,31 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 		return err
 	}
 	if response.Ok() {
+
+		event.Payload.Status = "Success"
+		event.Payload.ErrorText = ""
+
 		mTotalSentMessages.Add(1)
 		pSent.Inc()
 		if *f.IntervalMetrics && metadata != nil {
 			addToLatenciesAndCountsMaps(currentTotalMessagesLatenciesKey, currentTotalMessagesKey, metadata.Latency)
 		}
+
+		err := event.report(f.KafkaProducer(), f.fcmKafkaReportingTopic)
+		if err !=nil && err != errFcmKafkaReportingConfiguration {
+			logger.WithError(err).Error("Reporting APNS to kafka failed")
+		}
+
 		return nil
 	}
 
 	l.WithField("success", response.Success).Debug("Handling FCM Error")
 
-	switch errText := response.Error.Error(); errText {
+	errText := response.Error.Error()
+	event.Payload.ErrorText = errText
+	event.Payload.Status = "Fail"
+
+	switch errText {
 	case "NotRegistered":
 		l.Debug("Removing not registered FCM subscription")
 		f.Manager().Remove(subscriber)
@@ -145,6 +170,11 @@ func (f *fcm) HandleResponse(request connector.Request, responseIface interface{
 		l.WithField("jsonError", errText).Error("InvalidRegistration of FCM subscription")
 	default:
 		l.WithField("jsonError", errText).Error("Unexpected error while sending to FCM")
+	}
+
+	err = event.report(f.KafkaProducer(), f.fcmKafkaReportingTopic)
+	if err !=nil && err != errFcmKafkaReportingConfiguration {
+		logger.WithError(err).Error("Reporting APNS to kafka failed")
 	}
 
 	if response.CanonicalIDs != 0 {

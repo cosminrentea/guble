@@ -3,7 +3,6 @@ package connector
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -12,7 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
-	"github.com/cosminrentea/go-uuid"
+
 	"github.com/cosminrentea/gobbler/protocol"
 	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/router"
@@ -22,8 +21,6 @@ import (
 const (
 	DefaultWorkers = 1
 	SubstitutePath = "/substitute/"
-	deviceTokenKey = "device_token"
-	userIDKEy      = "user_id"
 )
 
 var (
@@ -68,6 +65,7 @@ type Connector interface {
 	Runner
 	Manager() Manager
 	Context() context.Context
+	KafkaProducer() kafka.Producer
 }
 
 type ResponsiveConnector interface {
@@ -88,10 +86,10 @@ type connector struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	logger              *log.Entry
-	wg                  sync.WaitGroup
-	KafkaProducer       kafka.Producer
-	KafkaReportingTopic string
+	logger                 *log.Entry
+	wg                     sync.WaitGroup
+	ConnectorKafkaProducer kafka.Producer
+	KafkaReportingTopic    string
 }
 
 type Config struct {
@@ -100,65 +98,6 @@ type Config struct {
 	Prefix     string
 	URLPattern string
 	Workers    int
-}
-
-type SubscribeUnsubscribePayload struct {
-	Service   string `json:"service"`
-	Topic     string `json:"topic"`
-	DeviceID  string `json:"device_id"`
-	UserID    string `json:"user_id"`
-	Action    string `json:"action"`
-	ErrorText string `json:"error_text"`
-}
-
-type SubscribeUnsubscribeEvent struct {
-	Id      string                      `json:"id"`
-	Time    string                      `json:"time"`
-	Type    string                      `json:"type"`
-	Payload SubscribeUnsubscribePayload `json:"payload"`
-}
-
-var (
-	errKafkaReportingConfiguration = errors.New("Kafka Reporting for Subscribe/Unsubscribe is not correctly configured")
-	errInvalidParams               = errors.New("Could not extract params")
-)
-
-func (event *SubscribeUnsubscribeEvent) report(kafkaProducer kafka.Producer, kafkaReportingTopic string) error {
-	if kafkaProducer == nil || kafkaReportingTopic == "" {
-		return errKafkaReportingConfiguration
-	}
-	uuid, err := go_uuid.New()
-	if err != nil {
-		logger.WithError(err).Error("Could not get new UUID")
-		return err
-	}
-	responseTime := time.Now().UTC().Format(time.RFC3339)
-	event.Id = uuid
-	event.Time = responseTime
-
-	bytesReportEvent, err := json.Marshal(event)
-	if err != nil {
-		logger.WithError(err).Error("Error while marshaling Kafka reporting event to JSON format")
-		return err
-	}
-	logger.WithField("event", *event).Debug("Reporting sent subscribe unsubscribe to Kafka topic")
-	kafkaProducer.Report(kafkaReportingTopic, bytesReportEvent, uuid)
-	return nil
-}
-
-func (event *SubscribeUnsubscribeEvent) fillParams(params map[string]string) error {
-	deviceID, ok := params[deviceTokenKey]
-	if !ok {
-		return errInvalidParams
-	}
-	event.Payload.DeviceID = deviceID
-
-	userID, ok := params[userIDKEy]
-	if !ok {
-		return errInvalidParams
-	}
-	event.Payload.UserID = userID
-	return nil
 }
 
 func NewConnector(router router.Router, sender Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string) (Connector, error) {
@@ -172,14 +111,14 @@ func NewConnector(router router.Router, sender Sender, config Config, kafkaProdu
 	}
 
 	c := &connector{
-		config:              config,
-		sender:              sender,
-		manager:             NewManager(config.Schema, kvs),
-		queue:               NewQueue(sender, config.Workers),
-		router:              router,
-		logger:              logger.WithField("name", config.Name),
-		KafkaProducer:       kafkaProducer,
-		KafkaReportingTopic: kafkaReportingTopic,
+		config:                 config,
+		sender:                 sender,
+		manager:                NewManager(config.Schema, kvs),
+		queue:                  NewQueue(sender, config.Workers),
+		router:                 router,
+		logger:                 logger.WithField("name", config.Name),
+		ConnectorKafkaProducer: kafkaProducer,
+		KafkaReportingTopic:    kafkaReportingTopic,
 	}
 
 	if kafkaProducer == nil || kafkaReportingTopic == "" {
@@ -255,7 +194,6 @@ func (c *connector) GetList(w http.ResponseWriter, req *http.Request) {
 func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 
 	event := SubscribeUnsubscribeEvent{
-		Type: "marketing_notification_subscription_information",
 		Time: time.Now().UTC().Format(time.RFC3339),
 		Payload: SubscribeUnsubscribePayload{
 			Service: c.config.Name,
@@ -290,7 +228,7 @@ func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"subscribed":"/%v"}`, topic)
 
 	if errFill == nil {
-		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
+		err = event.report(c.ConnectorKafkaProducer, c.KafkaReportingTopic)
 		if err != nil && err != errKafkaReportingConfiguration {
 			logger.WithError(err).Error("Could not report sent subscribe  to Kafka topic")
 		}
@@ -302,7 +240,6 @@ func (c *connector) Post(w http.ResponseWriter, req *http.Request) {
 func (c *connector) Delete(w http.ResponseWriter, req *http.Request) {
 
 	event := SubscribeUnsubscribeEvent{
-		Type: "marketing_notification_subscription_information",
 		Time: time.Now().UTC().Format(time.RFC3339),
 		Payload: SubscribeUnsubscribePayload{
 			Service: c.config.Name,
@@ -338,7 +275,7 @@ func (c *connector) Delete(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, `{"unsubscribed":"/%v"}`, topic)
 
 	if errFill == nil {
-		err = event.report(c.KafkaProducer, c.KafkaReportingTopic)
+		err = event.report(c.ConnectorKafkaProducer, c.KafkaReportingTopic)
 		if err != nil && err != errKafkaReportingConfiguration {
 			logger.WithError(err).Error("Could not report sent unsubscribe  to Kafka topic")
 		}
@@ -479,6 +416,9 @@ func (c *connector) Manager() Manager {
 	return c.manager
 }
 
+func (c *connector) KafkaProducer() kafka.Producer {
+	return c.ConnectorKafkaProducer
+}
 func (c *connector) Context() context.Context {
 	return c.ctx
 }

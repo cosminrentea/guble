@@ -145,7 +145,9 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 			gcm.GcmSendEndpoint = *Config.FCM.Endpoint
 		}
 		sender := fcm.NewSender(*Config.FCM.APIKey)
-		if fcmConn, err := fcm.New(router, sender, Config.FCM, kafkaProducer, *Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic); err != nil {
+		if fcmConn, err := fcm.New(router, sender, Config.FCM, kafkaProducer,
+			*Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic,
+			*Config.KafkaReportingConfig.FcmReportingTopic); err != nil {
 			logger.WithError(err).Error("Error creating FCM connector")
 		} else {
 			modules = append(modules, fcmConn)
@@ -175,7 +177,10 @@ var CreateModules = func(router router.Router) (modules []interface{}) {
 			logger.Panic("APNS Sender could not be created")
 		}
 		*Config.APNS.IntervalMetrics = true
-		if apnsConn, err := apns.New(router, apnsSender, Config.APNS, kafkaProducer, *Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic); err != nil {
+		if apnsConn, err := apns.New(router,
+			apnsSender, Config.APNS, kafkaProducer,
+			*Config.KafkaReportingConfig.SubscribeUnsubscribeReportingTopic,
+			*Config.KafkaReportingConfig.ApnsReportingTopic); err != nil {
 			logger.WithError(err).Error("Error creating APNS connector")
 		} else {
 			modules = append(modules, apnsConn)

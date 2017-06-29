@@ -53,9 +53,11 @@ func TestSender_Send(t *testing.T) {
 	defer finish()
 	a := assert.New(t)
 
+	defer testutil.EnableDebugForMethod() ()
 	// given
 	routeParams := make(map[string]string)
 	routeParams["device_id"] = "1234"
+
 	routeConfig := router.RouteConfig{
 		Path:        protocol.Path("path"),
 		RouteParams: routeParams,
@@ -63,7 +65,16 @@ func TestSender_Send(t *testing.T) {
 	route := router.NewRoute(routeConfig)
 
 	msg := &protocol.Message{
-		Body: []byte("{}"),
+		HeaderJSON:    `{"Correlation-Id": "7sdks723ksgqn"}`,
+		Body: []byte(`{
+		"aps":{
+		"alert":{"body":"Die größte Sonderangebot!","title":"Valid Title"},
+		"badge":0,
+		"content-available":1
+		},
+		"topic":"marketing_notifications",
+		"deeplink":"rewe://angebote"
+	}`),
 	}
 
 	mSubscriber := NewMockSubscriber(testutil.MockCtrl)

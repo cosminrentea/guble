@@ -2,13 +2,14 @@ package apns
 
 import (
 	"fmt"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/cosminrentea/expvarmetrics"
 	"github.com/cosminrentea/gobbler/server/connector"
 	"github.com/cosminrentea/gobbler/server/kafka"
 	"github.com/cosminrentea/gobbler/server/router"
 	"github.com/sideshow/apns2"
-	"time"
 )
 
 const (
@@ -33,10 +34,11 @@ type Config struct {
 type apns struct {
 	Config
 	connector.Connector
+	apnsKafkaReportingTopic string
 }
 
 // New creates a new connector.ResponsiveConnector without starting it
-func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, kafkaReportingTopic string) (connector.ResponsiveConnector, error) {
+func New(router router.Router, sender connector.Sender, config Config, kafkaProducer kafka.Producer, subUnsubKafkaReportingTopic, apnsKafkaReportingTopic string) (connector.ResponsiveConnector, error) {
 	baseConn, err := connector.NewConnector(
 		router,
 		sender,
@@ -48,15 +50,16 @@ func New(router router.Router, sender connector.Sender, config Config, kafkaProd
 			Workers:    *config.Workers,
 		},
 		kafkaProducer,
-		kafkaReportingTopic,
+		subUnsubKafkaReportingTopic,
 	)
 	if err != nil {
 		logger.WithError(err).Error("Base connector error")
 		return nil, err
 	}
 	a := &apns{
-		Config:    config,
-		Connector: baseConn,
+		Config:                  config,
+		Connector:               baseConn,
+		apnsKafkaReportingTopic: apnsKafkaReportingTopic,
 	}
 	a.SetResponseHandler(a)
 	return a, nil
@@ -97,7 +100,17 @@ func (a *apns) startIntervalMetric(m metrics.Map, td time.Duration) {
 }
 
 func (a *apns) HandleResponse(request connector.Request, responseIface interface{}, metadata *connector.Metadata, errSend error) error {
+
 	l := logger.WithField("correlation_id", request.Message().CorrelationID())
+
+	event := ApnsEvent{
+		Payload: kafka.PushEventPayload{},
+	}
+	errFill := event.fillApnsEvent(request)
+	if errFill != nil {
+		logger.WithError(errFill).Error("Error filling event")
+	}
+
 	l.Info("Handle APNS response")
 	if errSend != nil {
 		l.WithFields(log.Fields{
@@ -126,6 +139,7 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 		pResponseInternalErrors.Inc()
 		return err
 	}
+
 	if r.Sent() {
 		l.WithField("id", r.ApnsID).Info("APNS notification was successfully sent")
 		mTotalSentMessages.Add(1)
@@ -133,10 +147,26 @@ func (a *apns) HandleResponse(request connector.Request, responseIface interface
 		if *a.IntervalMetrics && metadata != nil {
 			addToLatenciesAndCountsMaps(currentTotalMessagesLatenciesKey, currentTotalMessagesKey, metadata.Latency)
 		}
+
+		event.Payload.Status = "Success"
+		event.Payload.ErrorText = ""
+		err := event.report(a.KafkaProducer(), a.apnsKafkaReportingTopic)
+		if err !=nil && err != errApnsKafkaReportingConfiguration {
+			logger.WithError(err).Error("Reporting APNS to kafka failed")
+		}
+
 		return nil
 	}
 	l.Error("APNS notification was not sent")
 	l.WithField("id", r.ApnsID).WithField("reason", r.Reason).Info("APNS notification was not sent - details")
+
+	event.Payload.Status = "Fail"
+	event.Payload.ErrorText = r.Reason
+	err := event.report(a.KafkaProducer(), a.apnsKafkaReportingTopic)
+	if err !=nil && err != errApnsKafkaReportingConfiguration {
+		logger.WithError(err).Error("Reporting APNS to kafka failed")
+	}
+
 	switch r.Reason {
 	case
 		apns2.ReasonMissingDeviceToken,
