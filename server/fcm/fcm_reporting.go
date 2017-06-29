@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"fmt"
+
 	"github.com/Bogh/gcm"
 	"github.com/cosminrentea/go-uuid"
 	"github.com/cosminrentea/gobbler/server/connector"
@@ -13,7 +14,7 @@ import (
 )
 
 type FcmEvent struct {
-	Id      string                 `json:"id"`
+	ID      string                 `json:"id"`
 	Time    string                 `json:"time"`
 	Type    string                 `json:"type"`
 	Payload kafka.PushEventPayload `json:"payload"`
@@ -58,7 +59,7 @@ func (event *FcmEvent) report(kafkaProducer kafka.Producer, kafkaReportingTopic 
 		return err
 	}
 	responseTime := time.Now().UTC().Format(time.RFC3339)
-	event.Id = uuid
+	event.ID = uuid
 	event.Time = responseTime
 
 	bytesReportEvent, err := json.Marshal(event)

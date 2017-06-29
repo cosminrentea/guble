@@ -22,7 +22,7 @@ type SubscribeUnsubscribePayload struct {
 }
 
 type SubscribeUnsubscribeEvent struct {
-	Id      string                      `json:"id"`
+	ID      string                      `json:"id"`
 	Time    string                      `json:"time"`
 	Type    string                      `json:"type"`
 	Payload SubscribeUnsubscribePayload `json:"payload"`
@@ -43,7 +43,7 @@ func (event *SubscribeUnsubscribeEvent) report(kafkaProducer kafka.Producer, kaf
 		return err
 	}
 	responseTime := time.Now().UTC().Format(time.RFC3339)
-	event.Id = uuid
+	event.ID = uuid
 	event.Time = responseTime
 
 	bytesReportEvent, err := json.Marshal(event)
